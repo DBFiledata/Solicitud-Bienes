@@ -318,6 +318,10 @@
     <Compile Include="viewsAdmin\ActualizarContraseña.aspx.designer.cs">
       <DependentUpon>ActualizarContraseña.aspx</DependentUpon>
     </Compile>
+    <Compile Include="viewsAdmin\busquedaDocumentos.aspx.cs">
+      <DependentUpon>busquedaDocumentos.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
     <!-- viewsGeneral code-behind -->
     <Compile Include="viewsGeneral\general.Master.cs">
       <DependentUpon>general.Master</DependentUpon>
@@ -474,6 +478,7 @@
     <Content Include="viewsAdmin\UnidadesAdm.aspx" />
     <Content Include="viewsAdmin\DirAdm.aspx" />
     <Content Include="viewsAdmin\ActualizarContraseña.aspx" />
+    <Content Include="viewsAdmin\busquedaDocumentos.aspx" />
     <!-- viewsGeneral content -->
     <Content Include="viewsGeneral\general.Master" />
     <Content Include="viewsGeneral\NestedMasterAprobador.master" />
