@@ -1,0 +1,26 @@
+# Visual Studio
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+.vs/
+
+# Build results
+[Dd]ebug/
+[Bb]in/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+obj/
+
+# Package management
+packages/
+node_modules/
+
+# OS files
+Thumbs.db
+ehthumbs.db
+Desktop.ini
