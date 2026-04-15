@@ -1,0 +1,13 @@
+﻿
+.modal-content {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    pointer-events: auto;
+}
+
+.modalBackground {
+    background-color: Black;
+    opacity: 0.8;
+}

@@ -1,0 +1,525 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>
+    </ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{C6E05576-497C-40F2-8639-8604BA106EAC}</ProjectGuid>
+    <ProjectTypeGuids>{349C5851-65DF-11DA-9384-00065B846F21};{fae04ec0-301f-11d3-bf4b-00c04f79efbc}</ProjectTypeGuids>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>sitemaCompras</RootNamespace>
+    <AssemblyName>sitemaCompras</AssemblyName>
+    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
+    <UseIISExpress>true</UseIISExpress>
+    <Use64BitIISExpress />
+    <IISExpressSSLPort />
+    <IISExpressAnonymousAuthentication />
+    <IISExpressWindowsAuthentication />
+    <IISExpressUseClassicPipelineMode />
+    <UseGlobalApplicationHostFile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Framework References -->
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.EnterpriseServices" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Web.ApplicationServices" />
+    <Reference Include="System.Web.DynamicData" />
+    <Reference Include="System.Web.Entity" />
+    <Reference Include="System.Web.Extensions" />
+    <Reference Include="System.Web.Services" />
+    <Reference Include="System.Xml" />
+    <Reference Include="System.Xml.Linq" />
+    <!-- Third-party DLLs from bin -->
+    <Reference Include="AjaxControlToolkit">
+      <HintPath>bin\AjaxControlToolkit.dll</HintPath>
+    </Reference>
+    <Reference Include="Antlr3.Runtime">
+      <HintPath>bin\Antlr3.Runtime.dll</HintPath>
+    </Reference>
+    <Reference Include="BouncyCastle.Crypto">
+      <HintPath>bin\BouncyCastle.Crypto.dll</HintPath>
+    </Reference>
+    <Reference Include="Google.Protobuf">
+      <HintPath>bin\Google.Protobuf.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4">
+      <HintPath>bin\K4os.Compression.LZ4.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Compression.LZ4.Streams">
+      <HintPath>bin\K4os.Compression.LZ4.Streams.dll</HintPath>
+    </Reference>
+    <Reference Include="K4os.Hash.xxHash">
+      <HintPath>bin\K4os.Hash.xxHash.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.FriendlyUrls">
+      <HintPath>bin\Microsoft.AspNet.FriendlyUrls.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.AspNet.Web.Optimization.WebForms">
+      <HintPath>bin\Microsoft.AspNet.Web.Optimization.WebForms.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeDom.Providers.DotNetCompilerPlatform">
+      <HintPath>bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Web.Infrastructure">
+      <HintPath>bin\Microsoft.Web.Infrastructure.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Data">
+      <HintPath>bin\MySql.Data.dll</HintPath>
+    </Reference>
+    <Reference Include="MySql.Web">
+      <HintPath>bin\MySql.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>bin\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers">
+      <HintPath>bin\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines">
+      <HintPath>bin\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory">
+      <HintPath>bin\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe">
+      <HintPath>bin\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions">
+      <HintPath>bin\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Helpers">
+      <HintPath>bin\System.Web.Helpers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Optimization">
+      <HintPath>bin\System.Web.Optimization.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.Razor">
+      <HintPath>bin\System.Web.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages">
+      <HintPath>bin\System.Web.WebPages.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Deployment">
+      <HintPath>bin\System.Web.WebPages.Deployment.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Web.WebPages.Razor">
+      <HintPath>bin\System.Web.WebPages.Razor.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Web.UI">
+      <HintPath>bin\Telerik.Web.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Web.UI.Skins">
+      <HintPath>bin\Telerik.Web.UI.Skins.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Web.Design">
+      <HintPath>bin\Telerik.Web.Design.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Web.Device.Detection">
+      <HintPath>bin\Telerik.Web.Device.Detection.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Core">
+      <HintPath>bin\Telerik.Windows.Documents.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Fixed">
+      <HintPath>bin\Telerik.Windows.Documents.Fixed.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Flow">
+      <HintPath>bin\Telerik.Windows.Documents.Flow.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet">
+      <HintPath>bin\Telerik.Windows.Documents.Spreadsheet.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml">
+      <HintPath>bin\Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf">
+      <HintPath>bin\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls">
+      <HintPath>bin\Telerik.Windows.Documents.Spreadsheet.FormatProviders.Xls.dll</HintPath>
+    </Reference>
+    <Reference Include="Telerik.Windows.Zip">
+      <HintPath>bin\Telerik.Windows.Zip.dll</HintPath>
+    </Reference>
+    <Reference Include="WebGrease">
+      <HintPath>bin\WebGrease.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Properties -->
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <!-- App_Start -->
+    <Compile Include="App_Start\BundleConfig.cs" />
+    <Compile Include="App_Start\RouteConfig.cs" />
+    <!-- Controlers -->
+    <Compile Include="Controlers\BaseDatos.cs" />
+    <Compile Include="Controlers\Mailer.cs" />
+    <Compile Include="Controlers\ReporteCompras.cs" />
+    <!-- Root code-behind -->
+    <Compile Include="Global.asax.cs">
+      <DependentUpon>Global.asax</DependentUpon>
+    </Compile>
+    <Compile Include="Default.aspx.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="Default.aspx.designer.cs">
+      <DependentUpon>Default.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="login.aspx.cs">
+      <DependentUpon>login.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="login.aspx.designer.cs">
+      <DependentUpon>login.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="errores.aspx.cs">
+      <DependentUpon>errores.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="errores.aspx.designer.cs">
+      <DependentUpon>errores.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="ViewSwitcher.ascx.cs">
+      <DependentUpon>ViewSwitcher.ascx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="ViewSwitcher.ascx.designer.cs">
+      <DependentUpon>ViewSwitcher.ascx</DependentUpon>
+    </Compile>
+    <!-- viewsAdmin code-behind -->
+    <Compile Include="viewsAdmin\admin.Master.cs">
+      <DependentUpon>admin.Master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\admin.Master.designer.cs">
+      <DependentUpon>admin.Master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\superAdmin.master.cs">
+      <DependentUpon>superAdmin.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\superAdmin.master.designer.cs">
+      <DependentUpon>superAdmin.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\adminUsers.master.cs">
+      <DependentUpon>adminUsers.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\adminUsers.master.designer.cs">
+      <DependentUpon>adminUsers.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\index.aspx.cs">
+      <DependentUpon>index.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\index.aspx.designer.cs">
+      <DependentUpon>index.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\Users.aspx.cs">
+      <DependentUpon>Users.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\Users.aspx.designer.cs">
+      <DependentUpon>Users.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\Perfil.aspx.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\Perfil.aspx.designer.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\Proveedores.aspx.cs">
+      <DependentUpon>Proveedores.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\Proveedores.aspx.designer.cs">
+      <DependentUpon>Proveedores.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\EstatusSol.aspx.cs">
+      <DependentUpon>EstatusSol.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\EstatusSol.aspx.designer.cs">
+      <DependentUpon>EstatusSol.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\EstatusUsers.aspx.cs">
+      <DependentUpon>EstatusUsers.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\EstatusUsers.aspx.designer.cs">
+      <DependentUpon>EstatusUsers.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\EtapasSol.aspx.cs">
+      <DependentUpon>EtapasSol.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\EtapasSol.aspx.designer.cs">
+      <DependentUpon>EtapasSol.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\TipoSol.aspx.cs">
+      <DependentUpon>TipoSol.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\TipoSol.aspx.designer.cs">
+      <DependentUpon>TipoSol.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\TiposUser.aspx.cs">
+      <DependentUpon>TiposUser.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\TiposUser.aspx.designer.cs">
+      <DependentUpon>TiposUser.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\UnidadesAdm.aspx.cs">
+      <DependentUpon>UnidadesAdm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\UnidadesAdm.aspx.designer.cs">
+      <DependentUpon>UnidadesAdm.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\DirAdm.aspx.cs">
+      <DependentUpon>DirAdm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\DirAdm.aspx.designer.cs">
+      <DependentUpon>DirAdm.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\ActualizarContraseña.aspx.cs">
+      <DependentUpon>ActualizarContraseña.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\ActualizarContraseña.aspx.designer.cs">
+      <DependentUpon>ActualizarContraseña.aspx</DependentUpon>
+    </Compile>
+    <!-- viewsGeneral code-behind -->
+    <Compile Include="viewsGeneral\general.Master.cs">
+      <DependentUpon>general.Master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\general.Master.designer.cs">
+      <DependentUpon>general.Master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterAprobador.master.cs">
+      <DependentUpon>NestedMasterAprobador.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterAprobador.master.designer.cs">
+      <DependentUpon>NestedMasterAprobador.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterCotizador.master.cs">
+      <DependentUpon>NestedMasterCotizador.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterCotizador.master.designer.cs">
+      <DependentUpon>NestedMasterCotizador.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterOtrasRecepciones.master.cs">
+      <DependentUpon>NestedMasterOtrasRecepciones.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterOtrasRecepciones.master.designer.cs">
+      <DependentUpon>NestedMasterOtrasRecepciones.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterRecepcionCompras.master.cs">
+      <DependentUpon>NestedMasterRecepcionCompras.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterRecepcionCompras.master.designer.cs">
+      <DependentUpon>NestedMasterRecepcionCompras.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterSolicitantes.master.cs">
+      <DependentUpon>NestedMasterSolicitantes.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\NestedMasterSolicitantes.master.designer.cs">
+      <DependentUpon>NestedMasterSolicitantes.master</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\index.aspx.cs">
+      <DependentUpon>index.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\index.aspx.designer.cs">
+      <DependentUpon>index.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\Perfil.aspx.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\Perfil.aspx.designer.cs">
+      <DependentUpon>Perfil.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\Proveedores.aspx.cs">
+      <DependentUpon>Proveedores.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\Proveedores.aspx.designer.cs">
+      <DependentUpon>Proveedores.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\ActualizarContraseña.aspx.cs">
+      <DependentUpon>ActualizarContraseña.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\ActualizarContraseña.aspx.designer.cs">
+      <DependentUpon>ActualizarContraseña.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\AutorizacionAprobador.aspx.cs">
+      <DependentUpon>AutorizacionAprobador.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\AutorizacionAprobador.aspx.designer.cs">
+      <DependentUpon>AutorizacionAprobador.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\RegistroSolicitud.aspx.cs">
+      <DependentUpon>RegistroSolicitud.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\RegistroSolicitud.aspx.designer.cs">
+      <DependentUpon>RegistroSolicitud.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\porAprobar.aspx.cs">
+      <DependentUpon>porAprobar.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\porAprobar.aspx.designer.cs">
+      <DependentUpon>porAprobar.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\Asignado.aspx.cs">
+      <DependentUpon>Asignado.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\Asignado.aspx.designer.cs">
+      <DependentUpon>Asignado.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\EnProceso.aspx.cs">
+      <DependentUpon>EnProceso.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\EnProceso.aspx.designer.cs">
+      <DependentUpon>EnProceso.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\Enviados.aspx.cs">
+      <DependentUpon>Enviados.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\Enviados.aspx.designer.cs">
+      <DependentUpon>Enviados.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\Entregado.aspx.cs">
+      <DependentUpon>Entregado.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\Entregado.aspx.designer.cs">
+      <DependentUpon>Entregado.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\PorRecibir.aspx.cs">
+      <DependentUpon>PorRecibir.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\PorRecibir.aspx.designer.cs">
+      <DependentUpon>PorRecibir.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsGeneral\busqueda.aspx.cs">
+      <DependentUpon>busqueda.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\busqueda.aspx.designer.cs">
+      <DependentUpon>busqueda.aspx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <!-- Root content -->
+    <Content Include="Default.aspx" />
+    <Content Include="login.aspx" />
+    <Content Include="errores.aspx" />
+    <Content Include="Global.asax" />
+    <Content Include="ViewSwitcher.ascx" />
+    <Content Include="Web.config" />
+    <Content Include="Bundle.config" />
+    <Content Include="favicon.ico" />
+    <Content Include="libman.json" />
+    <!-- viewsAdmin content -->
+    <Content Include="viewsAdmin\admin.Master" />
+    <Content Include="viewsAdmin\superAdmin.master" />
+    <Content Include="viewsAdmin\adminUsers.master" />
+    <Content Include="viewsAdmin\index.aspx" />
+    <Content Include="viewsAdmin\Users.aspx" />
+    <Content Include="viewsAdmin\Perfil.aspx" />
+    <Content Include="viewsAdmin\Proveedores.aspx" />
+    <Content Include="viewsAdmin\EstatusSol.aspx" />
+    <Content Include="viewsAdmin\EstatusUsers.aspx" />
+    <Content Include="viewsAdmin\EtapasSol.aspx" />
+    <Content Include="viewsAdmin\TipoSol.aspx" />
+    <Content Include="viewsAdmin\TiposUser.aspx" />
+    <Content Include="viewsAdmin\UnidadesAdm.aspx" />
+    <Content Include="viewsAdmin\DirAdm.aspx" />
+    <Content Include="viewsAdmin\ActualizarContraseña.aspx" />
+    <!-- viewsGeneral content -->
+    <Content Include="viewsGeneral\general.Master" />
+    <Content Include="viewsGeneral\NestedMasterAprobador.master" />
+    <Content Include="viewsGeneral\NestedMasterCotizador.master" />
+    <Content Include="viewsGeneral\NestedMasterOtrasRecepciones.master" />
+    <Content Include="viewsGeneral\NestedMasterRecepcionCompras.master" />
+    <Content Include="viewsGeneral\NestedMasterSolicitantes.master" />
+    <Content Include="viewsGeneral\index.aspx" />
+    <Content Include="viewsGeneral\Perfil.aspx" />
+    <Content Include="viewsGeneral\Proveedores.aspx" />
+    <Content Include="viewsGeneral\ActualizarContraseña.aspx" />
+    <Content Include="viewsGeneral\AutorizacionAprobador.aspx" />
+    <Content Include="viewsGeneral\RegistroSolicitud.aspx" />
+    <Content Include="viewsGeneral\porAprobar.aspx" />
+    <Content Include="viewsGeneral\Asignado.aspx" />
+    <Content Include="viewsGeneral\EnProceso.aspx" />
+    <Content Include="viewsGeneral\Enviados.aspx" />
+    <Content Include="viewsGeneral\Entregado.aspx" />
+    <Content Include="viewsGeneral\PorRecibir.aspx" />
+    <Content Include="viewsGeneral\busqueda.aspx" />
+  </ItemGroup>
+  <PropertyGroup>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">18.0</VisualStudioVersion>
+    <!-- Ruta directa a VS 2022 Insiders en este sistema -->
+    <VSToolsPath Condition="'$(VSToolsPath)' == '' And Exists('C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Microsoft\VisualStudio\v18.0')">C:\Program Files\Microsoft Visual Studio\18\Insiders\MSBuild\Microsoft\VisualStudio\v18.0</VSToolsPath>
+    <!-- Fallback estándar x86 -->
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets" Condition="Exists('$(VSToolsPath)\WebApplications\Microsoft.WebApplication.targets')" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349C5851-65DF-11DA-9384-00065B846F21}">
+        <WebProjectProperties>
+          <UseIIS>True</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:44385/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>False</UseCustomServer>
+          <CustomServerUrl>
+          </CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
+</Project>

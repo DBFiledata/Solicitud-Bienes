@@ -1,0 +1,153 @@
+﻿<%@ Master Language="C#" MasterPageFile="~/viewsAdmin/admin.Master" AutoEventWireup="true" CodeBehind="adminUsers.master.cs" Inherits="sitemaCompras.viewsAdmin.adminUsers" %>
+
+<asp:Content ID="ContentPlaceHolder1" ContentPlaceHolderID="ContentPlaceHolder" runat="server">
+ <div id="wrapper">
+
+        <!-- Sidebar -->
+        <div class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion" id="accordionSidebar">
+
+            <!-- Sidebar - Brand -->
+            <a class="sidebar-brand d-flex align-items-center justify-content-center my-2" href="index.aspx">
+                <asp:Image ID="Image2" class="imagenPequeña" src="../userscontent/img/logoAsamblea.png" runat="server" />
+                <div class="sidebar-brand-text mx-3">Asamblea Nacional</div>
+            </a>
+
+            <!-- Divider -->
+            <hr class="sidebar-divider">
+
+            <!-- Heading -->
+            <div class="sidebar-heading">
+                Control de Sistema
+            </div>
+
+            <div class="nav-item">
+                <a class="nav-link" href="Users.aspx">
+                    <i class="fa fa-user"></i>
+                    <span>Usuarios</span>
+                </a>
+            </div>
+
+            <%--<div class="nav-item">
+                <a class="nav-link" href="EstatusUsers.aspx">
+                    <i class="fa fa-cog"></i>
+                    <span>Estatus</span>
+                </a>
+            </div>
+
+            <div class="nav-item">
+                <a class="nav-link" href="TiposUser.aspx">
+                    <i class="fa fa-users"></i>
+                    <span>Tipos</span>
+                </a>
+            </div>--%>
+
+            <div class="nav-item">
+                <a class="nav-link" href="UnidadesAdm.aspx">
+                    <i class="fa fa-university"></i>
+                    <span>Unidades</span>
+                </a>
+            </div>
+
+
+            <!-- Divider -->
+            <hr class="sidebar-divider d-none d-md-block">
+
+            <!-- Sidebar Toggler (Sidebar) -->
+            <div class="text-center d-none d-md-inline">
+                <button class="rounded-circle border-0" id="sidebarToggle"></button>
+            </div>
+
+        </div>
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+
+            <!-- Main Content -->
+            <div id="content">
+
+                <!-- Topbar -->
+                <nav class="navbar navbar-expand navbar-light bg-gray-900 topbar static-top shadow">
+
+                    <!-- Sidebar Toggle (Topbar) -->
+                    <button id="sidebarToggleTop" class="btn btn-link d-md-none rounded-circle mr-3">
+                        <i class="fa fa-bars"></i>
+                    </button>
+
+
+                    <div class="navbar-nav ml-auto">
+
+                        <!-- Nav Item - User Information -->
+                        <div class="nav-item dropdown no-arrow">
+                            <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Bienvenido </span>
+                                <img class="img-profile rounded-circle" src="../admincontent/img/iconAdmin.png" />
+                            </a>
+                            <!-- Dropdown - User Information -->
+                            <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby="userDropdown">
+                                <a class="dropdown-item" href="Perfil.aspx">
+                                    <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Perfil
+                                </a>
+
+                                <a class="dropdown-item" href="ActualizarContraseña.aspx">
+                                    <i class="fa fa-key fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Actualizar Contraseña
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#logoutModal">
+                                    <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
+                                    Cerrar Sesion
+                                </a>
+                            </div>
+                        </div>
+
+                    </ul>
+                </nav>
+                <!-- End of Topbar -->
+
+                <form class="form fondo" role="form" autocomplete="off" runat="server">
+                    <!-- contenio de la pagina -->
+                    <asp:ContentPlaceHolder ID="contenido" runat="server">
+                    </asp:ContentPlaceHolder>
+
+
+                    <!--ventana modal para confirmar finalizacion de session-->
+                    <div class="modal fade mt-5" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                        <div class="modal-dialog" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h3 class="modal-title" id="exampleModalLabel">listo para salir?</h3>
+                                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                                        <span aria-hidden="true">×</span>
+                                    </button>
+                                </div>
+
+                                <div class="modal-body text-center">finalizar la sesion?</div>
+                                <div class="modal-footer d-flex align-items-center justify-content-center">
+
+                                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Cancelar ❌</button>
+                                    <asp:Button ID="btnRegbtnCerrarsesionistrar" CssClass="btn btn-primary" runat="server" Text="Aceptar ✔" OnClick="btnCerrarsesion_Click" CausesValidation="false" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <!-- End of Main Content -->
+
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto bg-white">
+                    <div class="copyright text-center my-auto">
+                        <small>&copy; <%: DateTime.Now.Year %> - Asamblea nacional De Panamá</small>
+                        <asp:Image ID="Image3" class="imagenMini ml-1" src="../userscontent/img/logoAsamblea.png" runat="server" />
+                    </div>
+                </div>
+            </footer>
+            <!-- End of Footer -->
+
+        </div>
+        <!-- End of Content Wrapper -->
+    </div>
+</asp:Content>

@@ -1,0 +1,213 @@
+<?xml version="1.0" standalone="yes"?>
+<NewDataSet>
+  <Table2>
+   <idTipo>1</idTipo>
+  </Table2>
+  <Table2>
+    <idTipo>2</idTipo>
+   </Table2>
+  <Table1>
+    <idSolicitudes>28</idSolicitudes>
+    <solicitudBienes>eeij</solicitudBienes>
+    <numResolucion/>
+    <titulo>prueba nnn</titulo>
+    <fechas>2023-11-11T00:00:00-05:00</fechas>
+    <Descripcion>jlasjdjns lkaksdlj</Descripcion>
+    <Unidad>1</Unidad>
+    <idUsuarios>prueba1</idUsuarios>
+    <idDirectores>Jose Geimaldo</idDirectores>
+    <DirAdmin>Winston Welch</DirAdmin>
+  </Table1>
+  <Table>
+    <Renglon>1</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>Servicio de hardening para 5 servidores windows Incluye: Cuentas e inicios de sesión. Actualizaciones y vulnerabilidades Redes·y'_ cortafuegos. Registro de aplicaciones y eventos. Seguridad de acceso remoto.</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>2</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon/>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>3</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>4</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+  <Renglon>5</Renglon>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>6</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>7</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon/>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>8</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>9</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+       <Renglon>10</Renglon>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>11</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>12</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+      <Renglon>13</Renglon>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>14</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>15</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+       <Renglon>16</Renglon>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>1</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>18</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon/>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+<Table>
+    <Renglon>20</Renglon>
+    <Cantidad>1</Cantidad>
+    <Descripcion>nknjjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjj jjjjjjjjjjjjjk</Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon>21</Renglon>
+    <Cantidad>21</Cantidad>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad>Unidad</Unidad>
+    <Punitario>1</Punitario>
+    <Ptotal>11</Ptotal>
+  </Table>
+  <Table>
+    <Renglon/>
+    <Cantidad/>
+    <Descripcion>nknk jajsdnjadfb jaskdajk kjasdjjh </Descripcion>
+    <Unidad/>
+    <Punitario/>
+    <Ptotal/>
+  </Table>
+</NewDataSet>

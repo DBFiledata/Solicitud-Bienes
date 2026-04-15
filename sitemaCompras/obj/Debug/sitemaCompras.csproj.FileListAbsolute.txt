@@ -1,0 +1,17 @@
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\sitemaCompras.dll.config
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\sitemaCompras.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\sitemaCompras.pdb
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\WebMatrix.WebData.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\System.Numerics.Vectors.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\EnvDTE.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\WebMatrix.Data.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\stdole.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\Antlr3.Runtime.pdb
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\Google.Protobuf.pdb
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\es\Microsoft.AspNet.FriendlyUrls.resources.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\bin\es\System.Web.Optimization.resources.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\obj\Debug\sitemaCompras.csproj.AssemblyReference.cache
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\obj\Debug\sitemaCompras.csproj.CoreCompileInputs.cache
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\obj\Debug\sitemaCo.7AB61306.Up2Date
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\obj\Debug\sitemaCompras.dll
+C:\Users\derek\Documents\S.B\Solicitud-Bienes\sitemaCompras\obj\Debug\sitemaCompras.pdb
