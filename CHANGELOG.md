@@ -10,8 +10,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Creado `viewsAdmin/busquedaDocumentos.aspx` y `busquedaDocumentos.aspx.cs`: módulo de búsqueda y gestión de solicitudes exclusivo para el panel de administración (tipos de usuario 1 y 7). Replica la funcionalidad de `viewsGeneral/busqueda.aspx` pero usa `superAdmin.master` como master page fija, elimina el `Page_PreInit` dinámico que causaba conflictos de layout, y permite acceso irrestricto a todas las solicitudes sin filtros por unidad o usuario.
 
+### Changed
+- Mejorado el manejo de excepciones en `Controlers/BaseDatos.cs` (método `gestionarUsuarios`) y `viewsAdmin/Users.aspx.cs` (`btnRegistrar_Click`) para propagar y mostrar el mensaje de error real de la base de datos en los alertas de diagnóstico, reemplazando el error silencioso ("Error al ingresar al proceso").
+
 ### Fixed
 - Corregido error HTTP 404 en el menú lateral del panel de administración (`superAdmin.master`): el enlace "Solicitudes" ahora apunta a la página `busquedaDocumentos.aspx` que existe en `viewsAdmin/`. El intento anterior de redirigir a `viewsGeneral/busqueda.aspx` causaba pérdida de sesión (redirect a login) por el chequeo de tipos de usuario (2–6) y corrupción del layout por conflicto de master pages.
+
+- Resuelto error al crear usuarios donde la capa de datos fallaba por el error *`The user specified as a definer ('root'@'%') does not exist`*. Se corrigieron masivamente todos los Stored Procedures en el archivo de base de datos (`compras.sql`) para que usen `DEFINER='root'@'localhost'`, parcheando la base de datos activa local a través de `fix_procedimientos.sql`.
 
 ## [1.0.0] - 2026-04-01
 

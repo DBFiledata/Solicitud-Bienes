@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.Controlers
+namespace sitemaCompras.Controlers
 {
     using System;
     using System.Configuration;
@@ -1338,9 +1338,11 @@
     			Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
-    			return false;
+    			if (Cmd.Connection.State == System.Data.ConnectionState.Open)
+    				Cmd.Connection.Close();
+    			throw new Exception("gestionarUsuarios: " + ex.Message, ex);
     		}
     	}
 

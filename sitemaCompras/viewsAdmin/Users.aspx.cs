@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsAdmin
+namespace sitemaCompras.viewsAdmin
 {
     using System;
     using System.Data;
@@ -232,9 +232,9 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos &#10;');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error BD: " + ex.Message.Replace("'", ".").Replace("\r", "").Replace("\n", " ") + "');", addScriptTags: true);
     		}
     	}
 
