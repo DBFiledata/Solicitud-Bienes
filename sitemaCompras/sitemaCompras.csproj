@@ -57,6 +57,8 @@
     <Reference Include="System.Web.Services" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="WindowsBase" />
+    <Reference Include="PresentationCore" />
     <!-- Third-party DLLs from bin -->
     <Reference Include="AjaxControlToolkit">
       <HintPath>bin\AjaxControlToolkit.dll</HintPath>
@@ -183,6 +185,7 @@
     <Compile Include="Controlers\BaseDatos.cs" />
     <Compile Include="Controlers\Mailer.cs" />
     <Compile Include="Controlers\ReporteCompras.cs" />
+    <Compile Include="Controlers\ReporteComprasDocx.cs" />
     <!-- Root code-behind -->
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
@@ -321,6 +324,13 @@
     <Compile Include="viewsAdmin\busquedaDocumentos.aspx.cs">
       <DependentUpon>busquedaDocumentos.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\PlantillaSolicitud.aspx.cs">
+      <DependentUpon>PlantillaSolicitud.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\PlantillaSolicitud.aspx.designer.cs">
+      <DependentUpon>PlantillaSolicitud.aspx</DependentUpon>
     </Compile>
     <!-- viewsGeneral code-behind -->
     <Compile Include="viewsGeneral\general.Master.cs">
@@ -479,6 +489,7 @@
     <Content Include="viewsAdmin\DirAdm.aspx" />
     <Content Include="viewsAdmin\ActualizarContraseña.aspx" />
     <Content Include="viewsAdmin\busquedaDocumentos.aspx" />
+    <Content Include="viewsAdmin\PlantillaSolicitud.aspx" />
     <!-- viewsGeneral content -->
     <Content Include="viewsGeneral\general.Master" />
     <Content Include="viewsGeneral\NestedMasterAprobador.master" />

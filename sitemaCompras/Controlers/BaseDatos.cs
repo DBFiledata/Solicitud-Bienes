@@ -1694,6 +1694,82 @@ namespace sitemaCompras.Controlers
     		}
     		return ds;
     	}
+
+    	// ===== MÉTODOS PARA GESTIÓN DE PLANTILLAS DE SOLICITUD (.docx) =====
+
+    	/// <summary>
+    	/// Guarda una nueva plantilla .docx como la plantilla activa.
+    	/// Desactiva automáticamente las plantillas anteriores.
+    	/// </summary>
+    	public bool guardarPlantillaSolicitud(string nombreArchivo, string rutaArchivo, string usuario)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "gestionarPlantillaSolicitud";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_id", null));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_nombreArchivo", nombreArchivo));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_rutaArchivo", rutaArchivo));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_subidoPor", usuario));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_proceso", 1));
+    			Cmd.Connection.Open();
+    			int d = Cmd.ExecuteNonQuery();
+    			bool ejecucion = d > 0;
+    			Cmd.Connection.Close();
+    			return ejecucion;
+    		}
+    		catch (Exception)
+    		{
+    			return false;
+    		}
+    	}
+
+    	/// <summary>
+    	/// Obtiene la ruta relativa de la plantilla .docx activa.
+    	/// Retorna null si no hay plantilla activa.
+    	/// </summary>
+    	public string obtenerPlantillaActiva()
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "obtenerPlantillaActiva";
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    			if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+    			{
+    				return Convert.ToString(ds.Tables[0].Rows[0]["rutaArchivo"]);
+    			}
+    			return null;
+    		}
+    		catch (Exception)
+    		{
+    			return null;
+    		}
+    	}
+
+    	/// <summary>
+    	/// Retorna el historial completo de plantillas subidas.
+    	/// </summary>
+    	public DataSet listaPlantillasSolicitud()
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "listaPlantillasSolicitud";
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception)
+    		{
+    		}
+    		return ds;
+    	}
     }
 
 }

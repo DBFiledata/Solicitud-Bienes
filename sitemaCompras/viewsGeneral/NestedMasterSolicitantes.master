@@ -1,4 +1,4 @@
-﻿<%@ Master Language="C#" MasterPageFile="~/viewsGeneral/general.Master" AutoEventWireup="true" CodeBehind="NestedMasterSolicitantes.master.cs" Inherits="sitemaCompras.viewsGeneral.NestedMasterSolicitantes" %>
+<%@ Master Language="C#" MasterPageFile="~/viewsGeneral/general.Master" AutoEventWireup="true" CodeBehind="NestedMasterSolicitantes.master.cs" Inherits="sitemaCompras.viewsGeneral.NestedMasterSolicitantes" %>
 
 <asp:Content ID="Content1" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
     <div id="wrapper">
@@ -6,11 +6,7 @@
         <!-- Sidebar -->
         <div class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion" id="accordionSidebar">
 
-            <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center my-2" href="index.aspx">
-                <asp:Image ID="Image2" class="imagenPequeña" src="../userscontent/img/logoAsamblea.png" runat="server" />
-                <div class="sidebar-brand-text mx-3">Asamblea Nacional</div>
-            </a>
+            <!-- Sidebar - Brand removed -->
 
             <!-- Divider -->
             <hr class="sidebar-divider">

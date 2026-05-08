@@ -1,4 +1,4 @@
-﻿<%@ Master Language="C#" MasterPageFile="~/viewsAdmin/admin.Master" AutoEventWireup="true" CodeBehind="superAdmin.master.cs" Inherits="sitemaCompras.viewsAdmin.superAdmin" %>
+<%@ Master Language="C#" MasterPageFile="~/viewsAdmin/admin.Master" AutoEventWireup="true" CodeBehind="superAdmin.master.cs" Inherits="sitemaCompras.viewsAdmin.superAdmin" %>
 
 <asp:Content ID="ContentPlaceHolder1" ContentPlaceHolderID="ContentPlaceHolder" runat="server">
     <div id="wrapper">
@@ -6,11 +6,7 @@
         <!-- Sidebar -->
         <div class="navbar-nav bg-gradient-dark sidebar sidebar-dark accordion" id="accordionSidebar">
 
-            <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center my-2" href="index.aspx">
-                <asp:Image ID="Image2" class="imagenPequeña" src="../userscontent/img/logoAsamblea.png" runat="server" />
-                <div class="sidebar-brand-text mx-3">Asamblea Nacional</div>
-            </a>
+            <!-- Sidebar - Brand removed -->
 
             <!-- Divider -->
             <hr class="sidebar-divider">
@@ -69,6 +65,13 @@
                         <a class="collapse-item" href="EstatusSol.aspx">Estatus</a>
                     </div>
                 </div>
+            </div>
+
+            <div class="nav-item">
+                <a class="nav-link" href="PlantillaSolicitud.aspx">
+                    <i class="fa fa-file"></i>
+                    <span>Plantilla Solicitud</span>
+                </a>
             </div>
 
             <!-- Divider -->
@@ -179,7 +182,7 @@
                 <div class="container my-auto bg-white">
                     <div class="copyright text-center my-auto">
                         <small>&copy; <%: DateTime.Now.Year %> - Asamblea nacional De Panamá</small>
-                        <asp:Image ID="Image3" class="imagenMini ml-1" src="../userscontent/img/logoAsamblea.png" runat="server" />
+                        <asp:Image ID="Image3" CssClass="imagenMini ml-1" src="../userscontent/img/logoAsamblea.png" runat="server" />
                     </div>
                 </div>
             </footer>
