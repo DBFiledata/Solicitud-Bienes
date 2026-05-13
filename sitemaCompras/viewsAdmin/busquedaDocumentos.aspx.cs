@@ -373,7 +373,14 @@ namespace sitemaCompras.viewsAdmin
 			{
 				DataSet ds = new DataSet();
 				ds = filtros(null, "", "", "", null, null, "", null, null, null, null, null, null);
-				GridView1.DataSource = ds;
+				if (ds != null && ds.Tables.Count > 0)
+				{
+					GridView1.DataSource = ds;
+				}
+				else
+				{
+					GridView1.DataSource = new DataTable();
+				}
 				GridView1.DataBind();
 				MultiView1.ActiveViewIndex = 0;
 

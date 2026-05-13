@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Resuelto error crítico de timeout (pantalla en blanco o "Fatal error encountered attempting to read the resultset") en la vista de Administrador (`viewsAdmin/busquedaDocumentos.aspx`). Se optimizó el Stored Procedure `filtroSolicitudes` eliminando la variable temporal `@ids` en la subconsulta para evitar N+1 queries y permitir el uso de índices por el optimizador de MySQL.
+- Se incrementó preventivamente el tiempo de espera (`Cmd.CommandTimeout = 300;`) en el constructor de `Controlers/BaseDatos.cs` para evitar bloqueos en consultas pesadas sin filtros.
+
 ## [1.0.2] - 2026-05-07
 
 ### Added

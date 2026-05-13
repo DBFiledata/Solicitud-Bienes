@@ -221,18 +221,21 @@
     <!-- viewsAdmin code-behind -->
     <Compile Include="viewsAdmin\admin.Master.cs">
       <DependentUpon>admin.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsAdmin\admin.Master.designer.cs">
       <DependentUpon>admin.Master</DependentUpon>
     </Compile>
     <Compile Include="viewsAdmin\superAdmin.master.cs">
       <DependentUpon>superAdmin.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsAdmin\superAdmin.master.designer.cs">
       <DependentUpon>superAdmin.master</DependentUpon>
     </Compile>
     <Compile Include="viewsAdmin\adminUsers.master.cs">
       <DependentUpon>adminUsers.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsAdmin\adminUsers.master.designer.cs">
       <DependentUpon>adminUsers.master</DependentUpon>
@@ -335,36 +338,42 @@
     <!-- viewsGeneral code-behind -->
     <Compile Include="viewsGeneral\general.Master.cs">
       <DependentUpon>general.Master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\general.Master.designer.cs">
       <DependentUpon>general.Master</DependentUpon>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterAprobador.master.cs">
       <DependentUpon>NestedMasterAprobador.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterAprobador.master.designer.cs">
       <DependentUpon>NestedMasterAprobador.master</DependentUpon>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterCotizador.master.cs">
       <DependentUpon>NestedMasterCotizador.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterCotizador.master.designer.cs">
       <DependentUpon>NestedMasterCotizador.master</DependentUpon>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterOtrasRecepciones.master.cs">
       <DependentUpon>NestedMasterOtrasRecepciones.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterOtrasRecepciones.master.designer.cs">
       <DependentUpon>NestedMasterOtrasRecepciones.master</DependentUpon>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterRecepcionCompras.master.cs">
       <DependentUpon>NestedMasterRecepcionCompras.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterRecepcionCompras.master.designer.cs">
       <DependentUpon>NestedMasterRecepcionCompras.master</DependentUpon>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterSolicitantes.master.cs">
       <DependentUpon>NestedMasterSolicitantes.master</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
     </Compile>
     <Compile Include="viewsGeneral\NestedMasterSolicitantes.master.designer.cs">
       <DependentUpon>NestedMasterSolicitantes.master</DependentUpon>

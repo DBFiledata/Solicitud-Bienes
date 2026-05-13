@@ -21,6 +21,7 @@ namespace sitemaCompras.Controlers
     		Cn.ConnectionString = ConfigurationManager.ConnectionStrings["compras_ConnectionString"].ConnectionString;
     		Cmd = new MySqlCommand();
     		Cmd.Connection = Cn;
+    		Cmd.CommandTimeout = 300;
     	}
 
     	public bool actualizarPassword(string idsusario, string passnueva)
