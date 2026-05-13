@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Resuelto error crítico de timeout (pantalla en blanco o "Fatal error encountered attempting to read the resultset") en la vista de Administrador (`viewsAdmin/busquedaDocumentos.aspx`). Se optimizó el Stored Procedure `filtroSolicitudes` eliminando la variable temporal `@ids` en la subconsulta para evitar N+1 queries y permitir el uso de índices por el optimizador de MySQL.
 - Se incrementó preventivamente el tiempo de espera (`Cmd.CommandTimeout = 300;`) en el constructor de `Controlers/BaseDatos.cs` para evitar bloqueos en consultas pesadas sin filtros.
+- Corregido bug de responsividad en la tabla de solicitudes de `viewsAdmin/busquedaDocumentos.aspx`: la tabla desbordaba el ancho de la vista y la columna "Titulo" no hacía salto de línea. Causas: (1) el wrapper externo del `ViewTabla` usaba `container-fluid p-0` en lugar de `table-responsive` (clase Bootstrap que aplica `overflow-x: auto` para scroll horizontal), y (2) la regla CSS `.word-break-cell` tenía `min-width: 120px` que forzaba ancho mínimo en la columna Titulo empeorando el desbordamiento. Se alineó la estructura con la vista de referencia `viewsGeneral/busqueda.aspx` que ya maneja responsividad correctamente.
 
 ## [1.0.2] - 2026-05-07
 

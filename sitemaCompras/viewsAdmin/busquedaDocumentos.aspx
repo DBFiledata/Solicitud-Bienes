@@ -3,6 +3,16 @@
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
     <link href="../Content/modalStyle.css" rel="stylesheet" />
+    <style>
+        .table-responsive .table th,
+        .table-responsive .table td {
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        .table-responsive .table td.word-break-cell {
+            word-break: break-word;
+        }
+    </style>
     <asp:UpdatePanel runat="server">
         <ContentTemplate>
             <asp:HiddenField ID="HiddenField1" runat="server" />
@@ -795,7 +805,7 @@
                                         <Columns>
                                             <asp:BoundField DataField="#" ItemStyle-Width="5%" HeaderText="Id" />
                                             <asp:BoundField DataField="SB" ItemStyle-Width="5%" HeaderText="SB" />
-                                            <asp:BoundField DataField="Titulo" ItemStyle-Width="25%" HeaderText="Titulo" />
+                                            <asp:BoundField DataField="Titulo" ItemStyle-Width="25%" HeaderText="Titulo" ItemStyle-CssClass="word-break-cell" />
                                             <asp:BoundField DataField="F-Sol" ItemStyle-Width="8%" HeaderText="F-Sol" />
                                             <asp:BoundField DataField="etapa" ItemStyle-Width="8%" HeaderText="Etapa" />
                                             <asp:BoundField DataField="F-Etapa" ItemStyle-Width="8%" HeaderText="F-Etapa" />
