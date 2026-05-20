@@ -87,6 +87,7 @@ namespace sitemaCompras.viewsAdmin
             }
             catch (Exception ex)
             {
+                ErrorHandler.LogError(ex, "PlantillaSolicitud.btnSubirPlantilla_Click", "subir plantilla docx");
                 ScriptManager.RegisterStartupScript(this, GetType(), "Pop",
                     "alert('Error al subir la plantilla: " + ex.Message.Replace("'", "") + "');", true);
             }
@@ -129,6 +130,7 @@ namespace sitemaCompras.viewsAdmin
             }
             catch (Exception ex)
             {
+                ErrorHandler.LogError(ex, "PlantillaSolicitud.btnGenerarDefault_Click", "generar plantilla default");
                 ScriptManager.RegisterStartupScript(this, GetType(), "Pop",
                     "alert('Error al generar la plantilla: " + ex.Message.Replace("'", "") + "');", true);
             }
@@ -167,8 +169,9 @@ namespace sitemaCompras.viewsAdmin
                 lblPlantillaActiva.Text = "⚠️ No hay plantilla activa. Se usará la plantilla por defecto del sistema.";
                 lblFechaPlantilla.Text = "Presione 'Generar Default' para crear una plantilla base.";
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ErrorHandler.LogError(ex, "PlantillaSolicitud.CargarPlantillaActiva", "cargar plantilla activa");
                 lblPlantillaActiva.Text = "⚠️ Error al cargar la plantilla activa.";
             }
         }
@@ -188,8 +191,9 @@ namespace sitemaCompras.viewsAdmin
                     gridPlantillas.DataBind();
                 }
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                ErrorHandler.LogError(ex, "PlantillaSolicitud.CargarHistorial", "cargar historial plantillas");
             }
         }
     }

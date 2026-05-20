@@ -4,6 +4,7 @@ namespace sitemaCompras.Controlers
     using System.Configuration;
     using System.Data;
     using MySql.Data.MySqlClient;
+    using System.Diagnostics;
 
     public partial class BaseDatos
     {
@@ -13,18 +14,54 @@ namespace sitemaCompras.Controlers
 
     	private MySqlDataAdapter Adap;
 
-    	private DataSet ds;
+	private DataSet ds;
 
-    	public BaseDatos()
+	private MySqlTransaction _currentTransaction = null;
+
+	public BaseDatos()
     	{
     		Cn = new MySqlConnection();
     		Cn.ConnectionString = ConfigurationManager.ConnectionStrings["compras_ConnectionString"].ConnectionString;
     		Cmd = new MySqlCommand();
     		Cmd.Connection = Cn;
-    		Cmd.CommandTimeout = 300;
-    	}
+		Cmd.CommandTimeout = 300;
+	}
 
-    	public bool actualizarPassword(string idsusario, string passnueva)
+	public void BeginTransaction()
+	{
+		if (Cn.State != ConnectionState.Open)
+			Cn.Open();
+		_currentTransaction = Cn.BeginTransaction();
+		Cmd.Transaction = _currentTransaction;
+	}
+
+	public void Commit()
+	{
+		if (_currentTransaction != null)
+		{
+			_currentTransaction.Commit();
+			_currentTransaction.Dispose();
+			_currentTransaction = null;
+		}
+		Cmd.Transaction = null;
+		if (Cn.State == ConnectionState.Open)
+			Cn.Close();
+	}
+
+	public void Rollback()
+	{
+		if (_currentTransaction != null)
+		{
+			_currentTransaction.Rollback();
+			_currentTransaction.Dispose();
+			_currentTransaction = null;
+		}
+		Cmd.Transaction = null;
+		if (Cn.State == ConnectionState.Open)
+			Cn.Close();
+	}
+
+	public bool actualizarPassword(string idsusario, string passnueva)
     	{
     		try
     		{
@@ -33,14 +70,17 @@ namespace sitemaCompras.Controlers
     			Cmd.CommandText = "actualizarPassword";
     			Cmd.Parameters.Add(new MySqlParameter("@id", idsusario));
     			Cmd.Parameters.Add(new MySqlParameter("@passw", passnueva));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "actualizarPassword", "DB operation failed");
     			return false;
     		}
     	}
@@ -68,11 +108,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosArchivosSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -106,11 +148,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosComentariuosSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -143,11 +187,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosDetallesSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -175,11 +221,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosDirectoresAdministrativos", "DB operation failed");
     			return null;
     		}
     	}
@@ -205,11 +253,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosEstatusSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -235,11 +285,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosEstatusUsuarios", "DB operation failed");
     			return null;
     		}
     	}
@@ -267,11 +319,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosProveedores", "DB operation failed");
     			return null;
     		}
     	}
@@ -310,11 +364,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -340,11 +396,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosTipoSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -370,11 +428,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosTipoUsuario", "DB operation failed");
     			return null;
     		}
     	}
@@ -400,11 +460,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosUnidadesSolicitantes", "DB operation failed");
     			return null;
     		}
     	}
@@ -438,11 +500,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "datosUsuarios", "DB operation failed");
     			return null;
     		}
     	}
@@ -463,11 +527,13 @@ namespace sitemaCompras.Controlers
     				return resultado;
     			}
     			resultado = null;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return resultado;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dirAdmActual", "DB operation failed");
     			return null;
     		}
     	}
@@ -483,8 +549,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dLiataProveedores", "DB operation failed");
     		}
     		return ds;
     	}
@@ -501,8 +568,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "reporteBody", "DB operation failed");
     		}
     		return ds;
     	}
@@ -518,8 +586,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaEstatusSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -536,8 +605,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaReporteFecha", "DB operation failed");
     		}
     		return ds;
     	}
@@ -553,8 +623,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaEstatusUsuarios", "DB operation failed");
     		}
     		return ds;
     	}
@@ -570,8 +641,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaCotizadores", "DB operation failed");
     		}
     		return ds;
     	}
@@ -587,8 +659,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaEtapaSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -604,8 +677,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dlistaSolicitudesTipoSolucitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -621,8 +695,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaTipoSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -638,8 +713,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaTipoUsuario", "DB operation failed");
     		}
     		return ds;
     	}
@@ -655,8 +731,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaUnidadesSolicitantes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -672,8 +749,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaDirAdm", "DB operation failed");
     		}
     		return ds;
     	}
@@ -689,8 +767,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaProveedores", "DB operation failed");
     		}
     		return ds;
     	}
@@ -710,8 +789,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroDirectoresAdministrativos", "DB operation failed");
     		}
     		return ds;
     	}
@@ -740,8 +820,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -770,8 +851,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroSolicitudesCotizadorEnproceso", "DB operation failed");
     		}
     		return ds;
     	}
@@ -800,8 +882,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroSolicitudesEnviados", "DB operation failed");
     		}
     		return ds;
     	}
@@ -828,8 +911,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroSolicitudesUnidadEnProceso", "DB operation failed");
     		}
     		return ds;
     	}
@@ -851,8 +935,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "filtroUsuarios", "DB operation failed");
     		}
     		return ds;
     	}
@@ -870,14 +955,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@solicitud", solicitud));
     			Cmd.Parameters.Add(new MySqlParameter("@usuario", usuario));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarArchivosSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -891,14 +979,17 @@ namespace sitemaCompras.Controlers
     			Cmd.CommandText = "gestionarAutorizacionUser";
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@tipo", tipo));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarAutorizacionUser", "DB operation failed");
     			return false;
     		}
     	}
@@ -918,14 +1009,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@usuaruio", usuaruio));
     			Cmd.Parameters.Add(new MySqlParameter("@tipo", tipo));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarComentariuosSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -947,14 +1041,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@totales", totales));
     			Cmd.Parameters.Add(new MySqlParameter("@solicitud", solicitud));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarDetallesSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -971,14 +1068,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@apellido", apellido));
     			Cmd.Parameters.Add(new MySqlParameter("@estatus", estatus));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarDirectoresAdministrativos", "DB operation failed");
     			return false;
     		}
     	}
@@ -992,14 +1092,17 @@ namespace sitemaCompras.Controlers
     			Cmd.CommandText = "gestionarEstatusActualSolicitudes";
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@estatus", estatus));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarEstatusActualSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1014,14 +1117,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarEstatusSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1036,14 +1142,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarEstatusUsuarios", "DB operation failed");
     			return false;
     		}
     	}
@@ -1057,14 +1166,17 @@ namespace sitemaCompras.Controlers
     			Cmd.CommandText = "gestionarEtapaActualSolicitudes";
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@etapa", etapa));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarEtapaActualSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1079,14 +1191,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarEtapasSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1103,14 +1218,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@correo", correo));
     			Cmd.Parameters.Add(new MySqlParameter("@telefono", telefono));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarProveedores", "DB operation failed");
     			return false;
     		}
     	}
@@ -1127,14 +1245,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@precio", precio));
     			Cmd.Parameters.Add(new MySqlParameter("@resolucion", resolucion));
     			Cmd.Parameters.Add(new MySqlParameter("@ordenCompra", ordenCompra));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarProveedorSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1159,14 +1280,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@precio", precio));
     			Cmd.Parameters.Add(new MySqlParameter("@ordenCompra", ordenCompra));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1191,16 +1315,19 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@precio", precio));
     			Cmd.Parameters.Add(new MySqlParameter("@ordenCompra", ordenCompra));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			Adap = new MySqlDataAdapter(Cmd);
     			ds = new DataSet();
     			Adap.Fill(ds);
     			DataSet ejecucion = ((ds == null) ? null : ds);
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "salvarSolicitudes", "DB operation failed");
     			return null;
     		}
     	}
@@ -1215,14 +1342,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@idCotizador", idCotizador));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarCotizadorSolicitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1237,14 +1367,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarTipoSolucitudes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1259,14 +1392,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@tipo", tipo));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarTipoSolucitudesSolicitud", "DB operation failed");
     			return false;
     		}
     	}
@@ -1281,14 +1417,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarTipoUsuario", "DB operation failed");
     			return false;
     		}
     	}
@@ -1303,14 +1442,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@descripcion", descripcion));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "gestionarUnidadesSolicitantes", "DB operation failed");
     			return false;
     		}
     	}
@@ -1333,18 +1475,22 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@unidad", unidad));
     			Cmd.Parameters.Add(new MySqlParameter("@tipo", tipo));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception ex)
-    		{
-    			if (Cmd.Connection.State == System.Data.ConnectionState.Open)
-    				Cmd.Connection.Close();
-    			throw new Exception("gestionarUsuarios: " + ex.Message, ex);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "gestionarUsuarios");
+			if (Cmd.Connection.State == System.Data.ConnectionState.Open)
+				if (_currentTransaction == null)
+					Cmd.Connection.Close();
+			throw new Exception("gestionarUsuarios: " + ex.Message, ex);
+		}
     	}
 
     	public bool asignarEstatus(int id, int etapa, int? estatus, string coment, string userN)
@@ -1359,14 +1505,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@estatus", estatus));
     			Cmd.Parameters.Add(new MySqlParameter("@coment", coment));
     			Cmd.Parameters.Add(new MySqlParameter("@userN", userN));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "asignarEstatus", "DB operation failed");
     			return false;
     		}
     	}
@@ -1383,14 +1532,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@estatus", estatus));
     			Cmd.Parameters.Add(new MySqlParameter("@coment", coment));
     			Cmd.Parameters.Add(new MySqlParameter("@userN", userN));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "siguienteEtapa", "DB operation failed");
     			return false;
     		}
     	}
@@ -1404,14 +1556,17 @@ namespace sitemaCompras.Controlers
     			Cmd.CommandText = "TransferirSB";
     			Cmd.Parameters.Add(new MySqlParameter("@id", id));
     			Cmd.Parameters.Add(new MySqlParameter("@idTransfer", idTransfer));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "TransferirSB", "DB operation failed");
     			return false;
     		}
     	}
@@ -1428,8 +1583,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "infoDirectoresAdministrativos", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1446,8 +1602,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "infoSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1464,8 +1621,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "infoUsuarios", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1482,8 +1640,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaArchivosSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1500,8 +1659,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaComentariosSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1518,8 +1678,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaDetallesSolicitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1536,8 +1697,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaSolicitudesTipoSolucitudes", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1569,11 +1731,13 @@ namespace sitemaCompras.Controlers
     			}
     			resultado = null;
     			condicion = false;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return (condicion, resultado);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaSolicitudesTipoSolucitudes", "DB operation failed");
     			return (false, null);
     		}
     	}
@@ -1596,8 +1760,9 @@ namespace sitemaCompras.Controlers
     			}
     			return num;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "ultimoRenglon", "DB operation failed");
     			return 0;
     		}
     	}
@@ -1621,8 +1786,9 @@ namespace sitemaCompras.Controlers
     			}
     			return nomb;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "verificarNombreArchivo", "DB operation failed");
     			return null;
     		}
     	}
@@ -1646,8 +1812,9 @@ namespace sitemaCompras.Controlers
     			}
     			return cantidad;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "cantidadReplicas", "DB operation failed");
     			return null;
     		}
     	}
@@ -1672,8 +1839,9 @@ namespace sitemaCompras.Controlers
     			}
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "crearReplicaSolicitud", "DB operation failed");
     			return null;
     		}
     	}
@@ -1690,8 +1858,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "dListaReplicasSB", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1714,14 +1883,17 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@p_rutaArchivo", rutaArchivo));
     			Cmd.Parameters.Add(new MySqlParameter("@p_subidoPor", usuario));
     			Cmd.Parameters.Add(new MySqlParameter("@p_proceso", 1));
-    			Cmd.Connection.Open();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
-    			Cmd.Connection.Close();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
     			return ejecucion;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "guardarPlantillaSolicitud", "DB operation failed");
     			return false;
     		}
     	}
@@ -1746,8 +1918,9 @@ namespace sitemaCompras.Controlers
     			}
     			return null;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "obtenerPlantillaActiva", "DB operation failed");
     			return null;
     		}
     	}
@@ -1766,8 +1939,9 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "listaPlantillasSolicitud", "DB operation failed");
     		}
     		return ds;
     	}

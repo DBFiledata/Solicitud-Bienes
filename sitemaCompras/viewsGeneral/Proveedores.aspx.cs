@@ -135,8 +135,9 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Proveedores.btnRegistrar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
     		}
     	}
@@ -176,8 +177,9 @@
     				mpeEliminarRegistro.Show();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Proveedores.GridView1_RowCommand", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -213,8 +215,9 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Proveedores.btnEditar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
     		}
     	}
@@ -243,10 +246,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar proveedor');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar proveedor');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Proveedores.btnEliminar_Click", "eliminar proveedor");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar proveedor');", addScriptTags: true);
+		}
     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)

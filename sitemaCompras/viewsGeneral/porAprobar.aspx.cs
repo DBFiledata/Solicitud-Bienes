@@ -402,8 +402,9 @@ namespace sitemaCompras.viewsGeneral
     			GridView1.DataBind();
     			MultiView1.ActiveViewIndex = 0;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnFiltrar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo aplicar filtro');", addScriptTags: true);
     		}
     	}
@@ -422,8 +423,9 @@ namespace sitemaCompras.viewsGeneral
     			}
     			return "";
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.VerificarDListText", "grid/button handler");
     			return "";
     		}
     	}
@@ -460,48 +462,52 @@ namespace sitemaCompras.viewsGeneral
     	{
     	}
 
-    	protected void btnRegistrarArchivo_Click(object sender, EventArgs e)
-    	{
-    		try
-    		{
-    			odbusuario = new BaseDatos();
-    			int id = 0;
-    			string[] datos = new string[8];
-    			string saveDir = "Documents\\";
-    			string appPath = Request.PhysicalApplicationPath;
-    			if (FileUpload1.HasFile)
-    			{
-    				id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
-    				odbusuario = new BaseDatos();
-    				string nombre = odbusuario.verificarNombreArchivo(id, txtNombreArchivo.Text);
-    				if (string.IsNullOrEmpty(nombre))
-    				{
-    					string savePath = appPath + saveDir + txtNombreArchivo.Text + Convert.ToString(id) + ".pdf";
-    					odbusuario = new BaseDatos();
-    					odbusuario.gestionarArchivosSolicitudes(null, txtNombreArchivo.Text, txtNombreArchivo.Text + Convert.ToString(id) + ".pdf", id, Convert.ToString(Session["id"]), 1);
-    					FileUpload1.SaveAs(savePath);
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Documento adjuntado correctamente');", addScriptTags: true);
-    					odbusuario = new BaseDatos();
-    					DataSet ds = odbusuario.listaArchivosSolicitudes(id);
-    					gridArchivo.DataSource = ds.Tables[0];
-    					gridArchivo.DataBind();
-    					div3.Visible = true;
-    				}
-    				else
-    				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('nombre del documento ya existe');", addScriptTags: true);
-    				}
-    			}
-    			else
-    			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo adjuntar documento');", addScriptTags: true);
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
-    		}
-    	}
+     	protected void btnRegistrarArchivo_Click(object sender, EventArgs e)
+     	{
+     		try
+     		{
+     			odbusuario = new BaseDatos();
+     			int id = 0;
+     			string[] datos = new string[8];
+     			string saveDir = "Documents\\";
+     			string appPath = Request.PhysicalApplicationPath;
+     			if (FileUpload1.HasFile)
+     			{
+     				id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
+     				odbusuario = new BaseDatos();
+     				string nombre = odbusuario.verificarNombreArchivo(id, txtNombreArchivo.Text);
+     				if (string.IsNullOrEmpty(nombre))
+     				{
+     					string savePath = appPath + saveDir + txtNombreArchivo.Text + Convert.ToString(id) + ".pdf";
+     					odbusuario = new BaseDatos();
+     					odbusuario.BeginTransaction();
+     						odbusuario.gestionarArchivosSolicitudes(null, txtNombreArchivo.Text, txtNombreArchivo.Text + Convert.ToString(id) + ".pdf", id, Convert.ToString(Session["id"]), 1);
+     						FileUpload1.SaveAs(savePath);
+     						odbusuario.Commit();
+     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Documento adjuntado correctamente');", addScriptTags: true);
+     					odbusuario = new BaseDatos();
+     					DataSet ds = odbusuario.listaArchivosSolicitudes(id);
+     					gridArchivo.DataSource = ds.Tables[0];
+     					gridArchivo.DataBind();
+     					div3.Visible = true;
+     				}
+     				else
+     				{
+     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('nombre del documento ya existe');", addScriptTags: true);
+     				}
+     			}
+     			else
+     			{
+     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo adjuntar documento');", addScriptTags: true);
+     			}
+     		}
+     		catch (Exception ex)
+     		{
+     			odbusuario.Rollback();
+     			ErrorHandler.LogError(ex, "btnRegistrarArchivo_Click");
+     			ErrorHandler.ShowUserError(this, "Error al registrar archivo. Contacte al administrador.");
+     		}
+     	}
 
     	protected void btnEliminarArchivo_Click(object sender, EventArgs e)
     	{
@@ -531,8 +537,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnEliminarArchivo_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
     		}
     	}
@@ -559,82 +566,87 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo eliminar la solicitud');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnEliminarSolicitud_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar la solicitud');", addScriptTags: true);
     		}
     	}
 
-    	protected void btnConfirmarPorceso_Click(object sender, EventArgs e)
-    	{
-    		try
-    		{
-    			int proceso = 0;
-    			int etapa = 0;
-    			int estatus = 0;
-    			proceso = Convert.ToInt32(Session["prosesoDocs"]);
-    			int id = Convert.ToInt32(Session["idDoc"]);
-    			odbusuario = new BaseDatos();
-    			DataSet ds1 = new DataSet();
-    			ds1 = odbusuario.listaDetallesSolicitudes(id);
-    			if (ds1.Tables[0].Rows.Count > 0)
-    			{
-    				switch (proceso)
-    				{
-    				case 1:
-    					etapa = Convert.ToInt32(Session["etapaDocs"]);
-    					odbusuario = new BaseDatos();
-    					if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapa, 4, txtComentario.Text, Convert.ToString(Session["id"])))
-    					{
-    						odbusuario = new BaseDatos();
-    						DataSet ds3 = new DataSet();
-    						ds3 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
-    						GridView1.DataSource = ds3;
-    						GridView1.DataBind();
-    						MultiView1.ActiveViewIndex = 0;
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Etapa asignada');", addScriptTags: true);
-    					}
-    					else
-    					{
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
-    					}
-    					break;
-    				case 2:
-    				{
-    					estatus = Convert.ToInt32(Session["estatusDocs"]);
-    					int etapaA = Convert.ToInt32(Session["etapaActual"]);
-    					odbusuario = new BaseDatos();
-    					if (odbusuario.asignarEstatus(Convert.ToInt32(Session["idDoc"]), etapaA, estatus, txtComentario.Text, Convert.ToString(Session["id"])))
-    					{
-    						odbusuario = new BaseDatos();
-    						DataSet ds2 = new DataSet();
-    						ds2 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
-    						GridView1.DataSource = ds2;
-    						GridView1.DataBind();
-    						MultiView1.ActiveViewIndex = 0;
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Estatus asignado');", addScriptTags: true);
-    					}
-    					else
-    					{
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
-    					}
-    					break;
-    				}
-    				default:
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
-    					break;
-    				}
-    			}
-    			else
-    			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe contar con información en sección de contenido y renglones');", addScriptTags: true);
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo realizar proceso');", addScriptTags: true);
-    		}
-    	}
+     	protected void btnConfirmarPorceso_Click(object sender, EventArgs e)
+     	{
+     		try
+     		{
+     			int proceso = 0;
+     			int etapa = 0;
+     			int estatus = 0;
+     			proceso = Convert.ToInt32(Session["prosesoDocs"]);
+     			int id = Convert.ToInt32(Session["idDoc"]);
+     			odbusuario = new BaseDatos();
+     			DataSet ds1 = new DataSet();
+     			ds1 = odbusuario.listaDetallesSolicitudes(id);
+     			if (ds1.Tables[0].Rows.Count > 0)
+     			{
+     				odbusuario = new BaseDatos();
+     				odbusuario.BeginTransaction();
+     					switch (proceso)
+     					{
+     					case 1:
+     						etapa = Convert.ToInt32(Session["etapaDocs"]);
+     						if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapa, 4, txtComentario.Text, Convert.ToString(Session["id"])))
+     						{
+     							odbusuario.Commit();
+     							odbusuario = new BaseDatos();
+     							DataSet ds3 = new DataSet();
+     							ds3 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							GridView1.DataSource = ds3;
+     							GridView1.DataBind();
+     							MultiView1.ActiveViewIndex = 0;
+     							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Etapa asignada');", addScriptTags: true);
+     						}
+     						else
+     						{
+     							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
+     						}
+     						break;
+     					case 2:
+     					{
+     						estatus = Convert.ToInt32(Session["estatusDocs"]);
+     						int etapaA = Convert.ToInt32(Session["etapaActual"]);
+     						if (odbusuario.asignarEstatus(Convert.ToInt32(Session["idDoc"]), etapaA, estatus, txtComentario.Text, Convert.ToString(Session["id"])))
+     						{
+     							odbusuario.Commit();
+     							odbusuario = new BaseDatos();
+     							DataSet ds2 = new DataSet();
+     							ds2 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							GridView1.DataSource = ds2;
+     							GridView1.DataBind();
+     							MultiView1.ActiveViewIndex = 0;
+     							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Estatus asignado');", addScriptTags: true);
+     						}
+     						else
+     						{
+     							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
+     						}
+     						break;
+     					}
+     					default:
+     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
+     						break;
+      					}
+      			}
+      			else
+     			{
+     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe contar con información en sección de contenido y renglones');", addScriptTags: true);
+     			}
+     		}
+     		catch (Exception ex)
+     		{
+     			odbusuario.Rollback();
+     			ErrorHandler.LogError(ex, "btnConfirmarPorceso_Click");
+     			ErrorHandler.ShowUserError(this, "Error al confirmar proceso. Contacte al administrador.");
+     		}
+     	}
 
     	protected void GridView1_RowCommand(object sender, GridViewCommandEventArgs e)
     	{
@@ -776,8 +788,9 @@ namespace sitemaCompras.viewsGeneral
     				btnCloseContent.CommandArgument = "1";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.GridView1_RowCommand", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -823,8 +836,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos de el area de generales');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnActualizar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo actualizar registro');", addScriptTags: true);
     		}
     	}
@@ -922,8 +936,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no esta autorizado para realizar este proseso');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnAprobar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se generar lista');", addScriptTags: true);
     		}
     	}
@@ -976,8 +991,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnAddRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo agregar renglon');", addScriptTags: true);
     		}
     	}
@@ -1005,8 +1021,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo salvar la el renglon');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnEliminarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
     		}
     	}
@@ -1056,8 +1073,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnActualizarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar renglon');", addScriptTags: true);
     		}
     	}
@@ -1080,25 +1098,27 @@ namespace sitemaCompras.viewsGeneral
     				txtCantidadEdit.Text = (string.IsNullOrWhiteSpace(txtCantidadEdit.Text) ? "" : txtCantidadEdit.Text);
     				mpeEditRenglon.Show();
     			}
-    			catch (Exception)
-    			{
-    			}
-    		}
-    		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
-    		{
-    			try
-    			{
-    				GridViewRow gvr2 = (GridViewRow)((Button)e.CommandSource).NamingContainer;
-    				string eleccion2 = gvr2.Cells[0].Text.ToString().Trim();
-    				lblRenglon.Text = gvr2.Cells[1].Text.ToString().Trim();
-    				Session["idRenglon"] = eleccion2;
-    				mpeEliminarRenglon.Show();
-    			}
-    			catch (Exception)
-    			{
-    			}
-    		}
-    	}
+     			catch (Exception ex)
+     			{
+     				ErrorHandler.LogError(ex, "porAprobar.gridContenido_RowCommand", "grid/button handler");
+     			}
+     		}
+     		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
+     		{
+     			try
+     			{
+     				GridViewRow gvr2 = (GridViewRow)((Button)e.CommandSource).NamingContainer;
+     				string eleccion2 = gvr2.Cells[0].Text.ToString().Trim();
+     				lblRenglon.Text = gvr2.Cells[1].Text.ToString().Trim();
+     				Session["idRenglon"] = eleccion2;
+     				mpeEliminarRenglon.Show();
+     			}
+     			catch (Exception ex)
+     			{
+     				ErrorHandler.LogError(ex, "porAprobar.gridContenido_RowCommand", "grid/button handler");
+     			}
+     		}
+     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)
     	{
@@ -1106,8 +1126,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mppeRegistrarArchivo.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnAddREg_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1153,8 +1174,9 @@ namespace sitemaCompras.viewsGeneral
     				btnCloseContent.CommandArgument = "2";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.gridArchivo_RowCommand", "grid/button handler");
     		}
     	}
 
@@ -1186,8 +1208,9 @@ namespace sitemaCompras.viewsGeneral
     				txtMsj.Text = "";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnPanelMensajes_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo desplegar correctamente los comentarios');", addScriptTags: true);
     		}
     	}
@@ -1300,8 +1323,9 @@ namespace sitemaCompras.viewsGeneral
     				uPanelChat.Update();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "porAprobar.linkBMsj_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo registrar comentario');", addScriptTags: true);
     		}
     	}
@@ -1382,7 +1406,5 @@ namespace sitemaCompras.viewsGeneral
     		txtDecsContent.Text = string.Empty;
     		txtUnidadContent.Text = string.Empty;
     	}
-    }
-
+	}
 }
-

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [released]
+
+## [1.0.4] - 2026-05-20
+
+### Refactor
+- Refactorizadas 375 excepciones silenciadas (`catch(Exception){}`) distribuidas en 30 archivos del sistema. Se implementó logging centralizado mediante la nueva clase estática `Controlers/ErrorHandler.cs` usando `System.Diagnostics.Trace`, protección de transacciones con `BeginTransaction()`/`Commit()`/`Rollback()` en operaciones multi-paso de BaseDatos (6 métodos en 3 vistas), diferenciación entre "sin resultados" y "error de consulta" en métodos `lista*`/`datos*`, y mensajes de error descriptivos al usuario en español. El único catch preservado sin modificar es el de `Mailer.cs` por diseño.
+
+## [1.0.3] - 2026-05-13
+
 ### Fixed
 - Resuelto error crítico de timeout (pantalla en blanco o "Fatal error encountered attempting to read the resultset") en la vista de Administrador (`viewsAdmin/busquedaDocumentos.aspx`). Se optimizó el Stored Procedure `filtroSolicitudes` eliminando la variable temporal `@ids` en la subconsulta para evitar N+1 queries y permitir el uso de índices por el optimizador de MySQL.
 - Se incrementó preventivamente el tiempo de espera (`Cmd.CommandTimeout = 300;`) en el constructor de `Controlers/BaseDatos.cs` para evitar bloqueos en consultas pesadas sin filtros.
@@ -74,7 +83,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Soporte para adjuntar archivos PDF a las solicitudes.
 - Documentacion tecnica: diagnostico de flujo de trabajo (`diagnostico_flujo_solicitudes.md`) y flujo propuesto (`Flujo de Trabajo de Solicitud.md`).
 
-[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/Drek003/S.Bienes-Compras/releases/tag/v1.0.0

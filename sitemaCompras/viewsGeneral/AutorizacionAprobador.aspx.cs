@@ -125,8 +125,9 @@
     				mpeEditarRegistro.Show();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "AutorizacionAprobador.GridView1_RowCommand", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -189,8 +190,9 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "AutorizacionAprobador.btnEditar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -202,8 +204,9 @@
     			odbusuario = new BaseDatos();
     			string id = Convert.ToString(Session["idDoc"]);
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "AutorizacionAprobador.btnEliminar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}

@@ -892,10 +892,11 @@ namespace sitemaCompras.viewsGeneral
     			GridView1.DataBind();
     			MultiView1.ActiveViewIndex = 0;
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo aplicar filtro');", addScriptTags: true);
-    		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnFiltrar_Click");
+     			ErrorHandler.ShowUserError(this, "Error al filtrar. Contacte al administrador.");
+     		}
     	}
 
     	protected string VerificarNulidadFecha(string txt)
@@ -948,10 +949,11 @@ namespace sitemaCompras.viewsGeneral
     			}
     			return null;
     		}
-    		catch (Exception)
-    		{
-    			return 0;
-    		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "VerificarDList");
+     			return 0;
+     		}
     	}
 
     	protected string VerificarDListText(DropDownList list)
@@ -968,10 +970,11 @@ namespace sitemaCompras.viewsGeneral
     			}
     			return "";
     		}
-    		catch (Exception)
-    		{
-    			return "";
-    		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "VerificarDListText");
+     			return "";
+     		}
     	}
 
     	protected void GridView1_RowCommand(object sender, GridViewCommandEventArgs e)
@@ -1128,8 +1131,9 @@ namespace sitemaCompras.viewsGeneral
     			}
     			mpeReporteFecha.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.GridView1_RowCommand", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -1169,10 +1173,11 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo eliminar la solicitud');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar la solicitud');", addScriptTags: true);
-    		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnEliminarSolicitud_Click");
+     			ErrorHandler.ShowUserError(this, "Error al eliminar solicitud. Contacte al administrador.");
+     		}
     	}
 
     	protected DataSet filtros(int? id, string solicitudBien, string resolucion, string descripciones, int? estatus, int? etapa, string usuaruio, string cotizador, int? unidad, int? director, int? proveedor, DateTime? desde, DateTime? hasta)
@@ -1216,29 +1221,24 @@ namespace sitemaCompras.viewsGeneral
     			{
     				if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
     				{
-    					id = Convert.ToInt32(Session["idDoc"]);
-    					odbusuario = new BaseDatos();
-    					if (odbusuario.gestionarSolicitudes(id, Convert.ToString(Session["resolucionActual"]), txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), proveedorActual, txtSB.Text, precioActual, Convert.ToString(Session["oCompraActual"]), 2))
-    					{
-    						btnActualizar.Visible = e != null;
-    						odbusuario = new BaseDatos();
-    						foreach (ListItem lista in checkTipoSol.Items)
-    						{
-    							if (lista.Selected)
-    							{
-    								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
-    							}
-    							else
-    							{
-    								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 3);
-    							}
-    						}
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
-    					}
-    					else
-    					{
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo actualizar la el registro');", addScriptTags: true);
-    					}
+     					id = Convert.ToInt32(Session["idDoc"]);
+     					odbusuario = new BaseDatos();
+     					odbusuario.BeginTransaction();
+     						odbusuario.gestionarSolicitudes(id, Convert.ToString(Session["resolucionActual"]), txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), proveedorActual, txtSB.Text, precioActual, Convert.ToString(Session["oCompraActual"]), 2);
+     						btnActualizar.Visible = e != null;
+     						foreach (ListItem lista in checkTipoSol.Items)
+     						{
+     							if (lista.Selected)
+     							{
+     								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
+     							}
+     							else
+     							{
+     								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 3);
+     							}
+     						}
+     						odbusuario.Commit();
+     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
     				}
     				else
     				{
@@ -1249,29 +1249,24 @@ namespace sitemaCompras.viewsGeneral
     			{
     				if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
     				{
-    					id = Convert.ToInt32(Session["idDoc"]);
-    					odbusuario = new BaseDatos();
-    					if (odbusuario.gestionarSolicitudes(id, Convert.ToString(Session["resolucionActual"]), txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), proveedorActual, txtSB.Text, precioActual, Convert.ToString(Session["oCompraActual"]), 2))
-    					{
-    						btnActualizar.Visible = e != null;
-    						odbusuario = new BaseDatos();
-    						foreach (ListItem lista2 in checkTipoSol.Items)
-    						{
-    							if (lista2.Selected)
-    							{
-    								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista2.Value), 1);
-    							}
-    							else
-    							{
-    								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista2.Value), 3);
-    							}
-    						}
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
-    					}
-    					else
-    					{
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo actualizar la el registro');", addScriptTags: true);
-    					}
+     				id = Convert.ToInt32(Session["idDoc"]);
+     					odbusuario = new BaseDatos();
+     					odbusuario.BeginTransaction();
+     						odbusuario.gestionarSolicitudes(id, Convert.ToString(Session["resolucionActual"]), txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), proveedorActual, txtSB.Text, precioActual, Convert.ToString(Session["oCompraActual"]), 2);
+     						btnActualizar.Visible = e != null;
+     						foreach (ListItem lista2 in checkTipoSol.Items)
+     						{
+     							if (lista2.Selected)
+     							{
+     								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista2.Value), 1);
+     							}
+     							else
+     							{
+     								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista2.Value), 3);
+     							}
+     						}
+     						odbusuario.Commit();
+     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
     				}
     				else
     				{
@@ -1283,13 +1278,15 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Usuario no autorizado para actualizar informacion del registro');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo actualizar registro');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			odbusuario.Rollback();
+     			ErrorHandler.LogError(ex, "btnActualizar_Click");
+     			ErrorHandler.ShowUserError(this, "Error al actualizar. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void gridContenido_RowCommand(object sender, GridViewCommandEventArgs e)
+     	protected void gridContenido_RowCommand(object sender, GridViewCommandEventArgs e)
     	{
     		if (e.CommandName.Equals("editarRenglon", StringComparison.CurrentCultureIgnoreCase))
     		{
@@ -1307,11 +1304,12 @@ namespace sitemaCompras.viewsGeneral
     				txtCantidadEdit.Text = (string.IsNullOrWhiteSpace(txtCantidadEdit.Text) ? "" : txtCantidadEdit.Text);
     				mpeEditRenglon.Show();
     			}
-    			catch (Exception)
+    			catch (Exception ex)
     			{
-    			}
-    		}
-    		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
+     				ErrorHandler.LogError(ex, "busqueda.gridContenido_RowCommand", "grid/button handler");
+     			}
+     		}
+   		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
     		{
     			try
     			{
@@ -1321,11 +1319,12 @@ namespace sitemaCompras.viewsGeneral
     				Session["idRenglon"] = eleccion2;
     				mpeEliminarRenglon.Show();
     			}
-    			catch (Exception)
-    			{
-    			}
-    		}
-    	}
+			catch (Exception ex)
+			{
+				ErrorHandler.LogError(ex, "busqueda.gridContenido_RowCommand", "grid/button handler");
+			}
+		}
+	}
 
     	protected void btnAddRenglon_Click(object sender, EventArgs e)
     	{
@@ -1374,8 +1373,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnAddRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo agregar renglon');", addScriptTags: true);
     		}
     	}
@@ -1403,8 +1403,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo salvar la el renglon');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnEliminarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
     		}
     	}
@@ -1454,8 +1455,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnActualizarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
     		}
     	}
@@ -1489,10 +1491,11 @@ namespace sitemaCompras.viewsGeneral
     				btnCloseContent.CommandArgument = "2";
     			}
     		}
-    		catch (Exception)
-    		{
-    		}
-    	}
+			catch (Exception ex)
+			{
+				ErrorHandler.LogError(ex, "busqueda.gridArchivo_RowCommand", "grid/button handler");
+			}
+		}
 
     	protected void btnCloseContent_Command(object sender, CommandEventArgs e)
     	{
@@ -1528,8 +1531,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mppeRegistrarArchivo.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnAddREg_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1571,8 +1575,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo adjuntar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnRegistrarArchivo_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
     		}
     	}
@@ -1605,8 +1610,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnEliminarArchivo_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
     		}
     	}
@@ -1617,8 +1623,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeEtapas.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnSiguienteEtapa_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1640,8 +1647,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.Etapa_Command", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar Etapa');", addScriptTags: true);
     		}
     	}
@@ -1663,60 +1671,66 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.Estatus_Command", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar estatus');", addScriptTags: true);
     		}
     	}
 
-    	protected void btnConfirmarPorceso_Click(object sender, EventArgs e)
-    	{
-    		try
-    		{
-    			int proceso = 0;
-    			int etapa = 0;
-    			int estatus = 0;
-    			switch (Convert.ToInt32(Session["prosesoDocs"]))
-    			{
-    			case 1:
-    				etapa = Convert.ToInt32(Session["etapaDocs"]);
-    				odbusuario = new BaseDatos();
-    				if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapa, 4, txtComentario.Text, Convert.ToString(Session["id"])))
-    				{
-    					btnFiltrar_Click(null, null);
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Etapa asignada');", addScriptTags: true);
-    				}
-    				else
-    				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
-    				}
-    				break;
-    			case 2:
-    			{
-    				estatus = Convert.ToInt32(Session["estatusDocs"]);
-    				int etapaA = Convert.ToInt32(Session["etapaActual"]);
-    				odbusuario = new BaseDatos();
-    				if (odbusuario.asignarEstatus(Convert.ToInt32(Session["idDoc"]), etapaA, estatus, txtComentario.Text, Convert.ToString(Session["id"])))
-    				{
-    					btnFiltrar_Click(null, null);
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Estatus asignado');", addScriptTags: true);
-    				}
-    				else
-    				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
-    				}
-    				break;
-    			}
-    			default:
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
-    				break;
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo realizar proceso');", addScriptTags: true);
-    		}
-    	}
+     	protected void btnConfirmarPorceso_Click(object sender, EventArgs e)
+     	{
+     		try
+     		{
+     			int proceso = 0;
+     			int etapa = 0;
+     			int estatus = 0;
+     			proceso = Convert.ToInt32(Session["prosesoDocs"]);
+     			odbusuario = new BaseDatos();
+     			odbusuario.BeginTransaction();
+     				switch (proceso)
+     				{
+     				case 1:
+     					etapa = Convert.ToInt32(Session["etapaDocs"]);
+     					if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapa, 4, txtComentario.Text, Convert.ToString(Session["id"])))
+     					{
+     						odbusuario.Commit();
+     						btnFiltrar_Click(null, null);
+     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Etapa asignada');", addScriptTags: true);
+     					}
+     					else
+     					{
+     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
+     					}
+     					break;
+     				case 2:
+     				{
+     					estatus = Convert.ToInt32(Session["estatusDocs"]);
+     					int etapaA = Convert.ToInt32(Session["etapaActual"]);
+     					if (odbusuario.asignarEstatus(Convert.ToInt32(Session["idDoc"]), etapaA, estatus, txtComentario.Text, Convert.ToString(Session["id"])))
+     					{
+     						odbusuario.Commit();
+     						btnFiltrar_Click(null, null);
+     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Estatus asignado');", addScriptTags: true);
+     					}
+     					else
+     					{
+     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
+     					}
+     					break;
+     				}
+     				default:
+     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
+     					break;
+      				}
+      		}
+      		catch (Exception ex)
+      		{
+      			odbusuario.Rollback();
+     			ErrorHandler.LogError(ex, "btnConfirmarPorceso_Click");
+     			ErrorHandler.ShowUserError(this, "Error al confirmar proceso. Contacte al administrador.");
+      		}
+     	}
 
     	protected void btnEstatusEspeciales_Click(object sender, EventArgs e)
     	{
@@ -1724,8 +1738,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeEstatusEspeciales.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnEstatusEspeciales_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1822,8 +1837,9 @@ namespace sitemaCompras.viewsGeneral
     			btn.CommandArgument = value;
     			btn.CommandName = "Etapa_Command";
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.crearBtnEstatusEspeciales", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se generar lista');", addScriptTags: true);
     		}
     	}
@@ -1871,8 +1887,9 @@ namespace sitemaCompras.viewsGeneral
     				}
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnEnviar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo enviar');", addScriptTags: true);
     		}
     	}
@@ -1892,8 +1909,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no esta autorizado para realizar este proseso');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnAprobar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se generar lista');", addScriptTags: true);
     		}
     	}
@@ -2004,8 +2022,9 @@ namespace sitemaCompras.viewsGeneral
     				txtMsj.Text = "";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnPanelMensajes_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo desplegar correctamente los comentarios');", addScriptTags: true);
     		}
     	}
@@ -2126,8 +2145,9 @@ namespace sitemaCompras.viewsGeneral
     				uPanelChat.Update();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.linkBMsj_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo registrar comentario');", addScriptTags: true);
     		}
     	}
@@ -2159,8 +2179,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar los datos del proveedor');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.lbActualizarProveedor_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2171,8 +2192,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeCrearProveedor.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.lbCrearProveedor_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2204,8 +2226,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnCrearProveedor_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2221,8 +2244,9 @@ namespace sitemaCompras.viewsGeneral
     			DataSet ds = odbusuario.dListaCotizadores();
     			mpeCotizadores.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnAsignar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2250,8 +2274,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('escoja un cotizador');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnConfirmarCotizador_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2282,8 +2307,9 @@ namespace sitemaCompras.viewsGeneral
     				dlistUsuario.Enabled = false;
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.dlistUnidad_SelectedIndexChanged", "grid/button handler");
     		}
     	}
 
@@ -2299,8 +2325,9 @@ namespace sitemaCompras.viewsGeneral
     			mpeReplicaResolucion.Show();
     			Session["tipoReplica"] = 1;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.LbReplicaResolucion_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2317,8 +2344,9 @@ namespace sitemaCompras.viewsGeneral
     			mpeReplicaResolucion.Show();
     			Session["tipoReplica"] = 2;
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.LbReplicaSB_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2357,8 +2385,9 @@ namespace sitemaCompras.viewsGeneral
     				break;
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnConfirmarReplica_Click1", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo replicar');", addScriptTags: true);
     		}
     	}
@@ -2385,8 +2414,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No cuenta con copias para transferir');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.LbTransferRenglones_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -2408,10 +2438,10 @@ namespace sitemaCompras.viewsGeneral
     				dlistReplicaSB.Items.Insert(0, "↗\ufe0f Seleccionar");
     				mpeConfirmarTransferir.Show();
     			}
-    			catch (Exception)
-    			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    			}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "GridView1_RowCommand");
+     		}
     		}
     	}
 
@@ -2456,12 +2486,11 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Seleccionar a cual transferir');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "busqueda.btnTransferirReplica_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
-    }
-
+	}
 }
-

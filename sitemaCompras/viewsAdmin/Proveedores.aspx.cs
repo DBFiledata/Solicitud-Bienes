@@ -143,14 +143,15 @@
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
-    		}
-    	}
+		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Proveedores.btnRegistrar_Click", "registrar proveedor");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
+		}
+	}
 
-    	protected void btnCancelar_Click(object sender, EventArgs e)
+	protected void btnCancelar_Click(object sender, EventArgs e)
     	{
     		limpiarCampos();
     	}
@@ -183,15 +184,16 @@
     				datos2 = odbusuario.datosProveedores(Convert.ToInt32(eleccion2));
     				lblDeleteNombreProveedor.Text = datos2[1];
     				mpeEliminarRegistro.Show();
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    		}
-    	}
+			}
+		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Proveedores.GridView1_RowCommand", "editar/eliminar proveedor");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+		}
+	}
 
-    	protected void btnEditar_Click(object sender, EventArgs e)
+	protected void btnEditar_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -221,14 +223,15 @@
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
-    		}
-    	}
+		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Proveedores.btnEditar_Click", "editar proveedor");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar proveedor');", addScriptTags: true);
+		}
+	}
 
-    	protected void btnEliminar_Click(object sender, EventArgs e)
+	protected void btnEliminar_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -252,10 +255,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar proveedor');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar proveedor');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Proveedores.btnEliminar_Click", "eliminar proveedor");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar proveedor');", addScriptTags: true);
+		}
     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)

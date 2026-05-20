@@ -279,89 +279,86 @@ namespace sitemaCompras.viewsGeneral
     		}
     	}
 
-    	protected void btnSalvar_Click(object sender, EventArgs e)
-    	{
-    		try
-    		{
-    			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
-    			int id = 0;
-    			if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
-    			{
-    				DataSet ds = new DataSet();
-    				odbusuario = new BaseDatos();
-    				int estatus = 0;
-    				int etapa = 0;
-    				if ((string)Session["type"] == "2")
-    				{
-    					estatus = 2;
-    					etapa = 1;
-    				}
-    				else if ((string)Session["type"] == "3")
-    				{
-    					estatus = 2;
-    					etapa = 1;
-    				}
-    				ds = odbusuario.salvarSolicitudes(0, "", txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), estatus, etapa, Convert.ToString(Session["id"]), 0, txtSB.Text, 0f, "", 1);
-    				if (ds != null)
-    				{
-    					id = Convert.ToInt32(ds.Tables[3].Rows[0][0].ToString());
-    					Session["idDoc"] = id;
-    					Panel1.Enabled = true;
-    					Panel2.Enabled = true;
-    					panelMensajes.Enabled = true;
-    					btnActualizar.Visible = true;
-    					btnSalvar.Visible = false;
-    					if ((string)Session["type"] == "2")
-    					{
-    						odbusuario = new BaseDatos();
-    						string[] datosUser = new string[9];
-    						datosUser = odbusuario.datosUsuarios(Convert.ToString(Session["id"]));
-    						if (datosUser[8] == "1")
-    						{
-    							panelBtnVer.Visible = true;
-    							panelBtnVer.Enabled = true;
-    							panelBtnVer2.Visible = false;
-    							panelBtnVer2.Enabled = false;
-    						}
-    						else if (datosUser[8] == "2")
-    						{
-    							panelBtnVer.Visible = false;
-    							panelBtnVer.Enabled = false;
-    							panelBtnVer2.Visible = true;
-    							panelBtnVer2.Enabled = true;
-    						}
-    					}
-    					else if ((string)Session["type"] == "3")
-    					{
-    						panelBtnVer.Visible = false;
-    						panelBtnVer.Enabled = false;
-    						panelBtnVer2.Visible = true;
-    						panelBtnVer2.Enabled = true;
-    					}
-    					odbusuario = new BaseDatos();
-    					{
-    						foreach (ListItem lista in checkTipoSol.Items)
-    						{
-    							if (lista.Selected)
-    							{
-    								odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
-    							}
-    						}
-    						return;
-    					}
-    				}
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo salvar la el registro');", addScriptTags: true);
-    			}
-    			else
-    			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos de el area de generales');", addScriptTags: true);
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo completar registro');", addScriptTags: true);
-    		}
-    	}
+     	protected void btnSalvar_Click(object sender, EventArgs e)
+     	{
+     		try
+     		{
+     			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
+     			int id = 0;
+     			if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
+     			{
+     				DataSet ds = new DataSet();
+     				odbusuario = new BaseDatos();
+     				int estatus = 0;
+     				int etapa = 0;
+     				if ((string)Session["type"] == "2")
+     				{
+     					estatus = 2;
+     					etapa = 1;
+     				}
+     				else if ((string)Session["type"] == "3")
+     				{
+     					estatus = 2;
+     					etapa = 1;
+     				}
+				odbusuario.BeginTransaction();
+				ds = odbusuario.salvarSolicitudes(0, "", txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), estatus, etapa, Convert.ToString(Session["id"]), 0, txtSB.Text, 0f, "", 1);
+				if (ds == null) throw new InvalidOperationException("salvarSolicitudes returned null");
+     					id = Convert.ToInt32(ds.Tables[3].Rows[0][0].ToString());
+     					Session["idDoc"] = id;
+     					Panel1.Enabled = true;
+     					Panel2.Enabled = true;
+     					panelMensajes.Enabled = true;
+     					btnActualizar.Visible = true;
+     					btnSalvar.Visible = false;
+     					if ((string)Session["type"] == "2")
+     					{
+     						BaseDatos odbRead = new BaseDatos();
+     						string[] datosUser = new string[9];
+     						datosUser = odbRead.datosUsuarios(Convert.ToString(Session["id"]));
+     						if (datosUser[8] == "1")
+     						{
+     							panelBtnVer.Visible = true;
+     							panelBtnVer.Enabled = true;
+     							panelBtnVer2.Visible = false;
+     							panelBtnVer2.Enabled = false;
+     						}
+     						else if (datosUser[8] == "2")
+     						{
+     							panelBtnVer.Visible = false;
+     							panelBtnVer.Enabled = false;
+     							panelBtnVer2.Visible = true;
+     							panelBtnVer2.Enabled = true;
+     						}
+     					}
+     					else if ((string)Session["type"] == "3")
+     					{
+     						panelBtnVer.Visible = false;
+     						panelBtnVer.Enabled = false;
+     						panelBtnVer2.Visible = true;
+     						panelBtnVer2.Enabled = true;
+     					}
+     					foreach (ListItem lista in checkTipoSol.Items)
+     					{
+     						if (lista.Selected)
+     						{
+     							odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
+     						}
+     					}
+				odbusuario.Commit();
+			}
+			else
+     			{
+     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos de el area de generales');", addScriptTags: true);
+     			}
+     		}
+		catch (Exception ex)
+		{
+			odbusuario.Rollback();
+			ErrorHandler.LogError(ex, "btnSalvar_Click");
+			ErrorHandler.ShowUserError(this, "guardar la solicitud", ex.Message);
+		}
+     	}
 
     	protected void btnVerDoc_Click(object sender, EventArgs e)
     	{
@@ -469,80 +466,65 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe contar con información en sección de contenido y renglones');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo realizar proceso');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnAprobar_Click");
+     			ErrorHandler.ShowUserError(this, "Error al aprobar. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void btnActualizar_Click(object sender, EventArgs e)
-    	{
-    		try
-    		{
-    			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
-    			int id = 0;
-    			if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
-    			{
-    				id = Convert.ToInt32(Session["idDoc"]);
-    				odbusuario = new BaseDatos();
-    				string[] datos = new string[14];
-    				datos = odbusuario.datosSolicitudes(Convert.ToInt32(id));
-    				int valorConvertido;
-    				int? etapaActual = ((!string.IsNullOrWhiteSpace(datos[7]) && int.TryParse(Convert.ToString(datos[7]), out valorConvertido)) ? new int?(valorConvertido) : ((int?)null));
-    				int valorConvertido2;
-    				int? estatusActual = ((!string.IsNullOrWhiteSpace(datos[6]) && int.TryParse(Convert.ToString(datos[6]), out valorConvertido2)) ? new int?(valorConvertido2) : ((int?)null));
-    				string UsuarioActual = ((!string.IsNullOrEmpty(datos[8])) ? datos[8] : "");
-    				Session["etapaActual"] = etapaActual;
-    				Session["estatusActual"] = estatusActual;
-    				Session["UsuarioActual"] = UsuarioActual;
-    				odbusuario = new BaseDatos();
-    				int estatus = 0;
-    				int etapa = 0;
-    				if ((string)Session["type"] == "2")
-    				{
-    					estatus = 2;
-    					etapa = 1;
-    				}
-    				else if ((string)Session["type"] == "3")
-    				{
-    					estatus = 2;
-    					etapa = 1;
-    				}
-    				if (odbusuario.gestionarSolicitudes(id, null, txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), 0, txtSB.Text, null, null, 2))
-    				{
-    					btnActualizar.Visible = true;
-    					btnSalvar.Visible = false;
-    					panelBtnVer2.Visible = true;
-    					panelBtnVer2.Enabled = true;
-    					odbusuario = new BaseDatos();
-    					foreach (ListItem lista in checkTipoSol.Items)
-    					{
-    						if (lista.Selected)
-    						{
-    							odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
-    						}
-    						else
-    						{
-    							odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 3);
-    						}
-    					}
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
-    				}
-    				else
-    				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo actualizar la el registro');", addScriptTags: true);
-    				}
-    			}
-    			else
-    			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos de el area de generales');", addScriptTags: true);
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo actualizar registro');", addScriptTags: true);
-    		}
-    	}
+      	protected void btnActualizar_Click(object sender, EventArgs e)
+     	{
+     		try
+     		{
+     			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
+     			int id = 0;
+     			if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
+     			{
+     				id = Convert.ToInt32(Session["idDoc"]);
+     				BaseDatos odbRead = new BaseDatos();
+     				string[] datos = new string[14];
+     				datos = odbRead.datosSolicitudes(Convert.ToInt32(id));
+     				int valorConvertido;
+     				int? etapaActual = ((!string.IsNullOrWhiteSpace(datos[7]) && int.TryParse(Convert.ToString(datos[7]), out valorConvertido)) ? new int?(valorConvertido) : ((int?)null));
+     				int valorConvertido2;
+     				int? estatusActual = ((!string.IsNullOrWhiteSpace(datos[6]) && int.TryParse(Convert.ToString(datos[6]), out valorConvertido2)) ? new int?(valorConvertido2) : ((int?)null));
+     				string UsuarioActual = ((!string.IsNullOrEmpty(datos[8])) ? datos[8] : "");
+     				Session["etapaActual"] = etapaActual;
+     				Session["estatusActual"] = estatusActual;
+     				Session["UsuarioActual"] = UsuarioActual;
+			odbusuario = new BaseDatos();
+				odbusuario.BeginTransaction();
+				odbusuario.gestionarSolicitudes(id, null, txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), 0, txtSB.Text, null, null, 2);
+     					btnActualizar.Visible = true;
+     					btnSalvar.Visible = false;
+     					panelBtnVer2.Visible = true;
+     					panelBtnVer2.Enabled = true;
+     					foreach (ListItem lista in checkTipoSol.Items)
+     					{
+     						if (lista.Selected)
+     						{
+     							odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 1);
+     						}
+     						else
+     						{
+     							odbusuario.gestionarTipoSolucitudesSolicitud(id, Convert.ToInt32(lista.Value), 3);
+     						}
+     					}
+				odbusuario.Commit();
+				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Generales de registro actualizado');", addScriptTags: true);
+     			}
+     			else
+     			{
+     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos de el area de generales');", addScriptTags: true);
+     			}
+     		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnActualizar_Click");
+     			ErrorHandler.ShowUserError(this, "Error al actualizar. Contacte al administrador.");
+     		}
+     	}
 
     	protected void gridContenido_RowCommand(object sender, GridViewCommandEventArgs e)
     	{
@@ -562,11 +544,12 @@ namespace sitemaCompras.viewsGeneral
     				txtCantidadEdit.Text = (string.IsNullOrWhiteSpace(txtCantidadEdit.Text) ? "" : txtCantidadEdit.Text);
     				mpeEditRenglon.Show();
     			}
-    			catch (Exception)
-    			{
-    			}
-    		}
-    		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
+     			catch (Exception ex)
+     			{
+     				ErrorHandler.LogError(ex, "gridContenido_RowCommand_editarRenglon");
+     			}
+     		}
+     		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
     		{
     			try
     			{
@@ -574,13 +557,14 @@ namespace sitemaCompras.viewsGeneral
     				string eleccion2 = gvr2.Cells[0].Text.ToString().Trim();
     				lblRenglon.Text = gvr2.Cells[1].Text.ToString().Trim();
     				Session["idRenglon"] = eleccion2;
-    				mpeEliminarRenglon.Show();
-    			}
-    			catch (Exception)
-    			{
-    			}
-    		}
-    	}
+     				mpeEliminarRenglon.Show();
+     			}
+     			catch (Exception ex)
+     			{
+     				ErrorHandler.LogError(ex, "gridContenido_RowCommand_eliminarRenglon");
+     			}
+     		}
+     	}
 
     	protected void btnAddRenglon_Click(object sender, EventArgs e)
     	{
@@ -630,13 +614,14 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo agregar renglon');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnAddRenglon_Click");
+     			ErrorHandler.ShowUserError(this, "Error al agregar renglón. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void btnEliminarRenglon_Click(object sender, EventArgs e)
+     	protected void btnEliminarRenglon_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -659,13 +644,14 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo salvar la el renglon');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnEliminarRenglon_Click");
+     			ErrorHandler.ShowUserError(this, "Error al eliminar renglón. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void btnActualizarRenglon_Click(object sender, EventArgs e)
+     	protected void btnActualizarRenglon_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -710,13 +696,14 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnActualizarRenglon_Click");
+     			ErrorHandler.ShowUserError(this, "Error al actualizar renglón. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void gridArchivo_RowCommand(object sender, GridViewCommandEventArgs e)
+     	protected void gridArchivo_RowCommand(object sender, GridViewCommandEventArgs e)
     	{
     		try
     		{
@@ -740,15 +727,16 @@ namespace sitemaCompras.viewsGeneral
     				embed += " or download <a target = \"_blank\" href = \"http://get.adobe.com/reader/\">Adobe PDF Reader</a> to view the file.";
     				embed += "</object>";
     				ltEmbed.Text = string.Format(embed, ResolveUrl("~/Documents/" + archivo + "?v=" + Convert.ToString(DateTime.Now.Ticks)));
-    				MultiView1.ActiveViewIndex = 1;
-    			}
-    		}
-    		catch (Exception)
-    		{
-    		}
-    	}
+     			MultiView1.ActiveViewIndex = 1;
+     			}
+     		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "gridArchivo_RowCommand");
+     		}
+     	}
 
-    	protected void btnCloseContent_Click(object sender, EventArgs e)
+     	protected void btnCloseContent_Click(object sender, EventArgs e)
     	{
     		MultiView1.ActiveViewIndex = 0;
     	}
@@ -759,10 +747,10 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mppeRegistrarArchivo.Show();
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
-    		}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnAddREg_Click");
+     		}
     	}
 
     	protected void btnRegistrarArchivo_Click(object sender, EventArgs e)
@@ -802,13 +790,14 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo adjuntar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnRegistrarArchivo_Click");
+     			ErrorHandler.ShowUserError(this, "Error al registrar archivo. Contacte al administrador.");
+     		}
+     	}
 
-    	protected void btnEliminarArchivo_Click(object sender, EventArgs e)
+     	protected void btnEliminarArchivo_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -836,13 +825,13 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnEliminarArchivo_Click");
+     		}
+     	}
 
-    	protected void limpiarModalClick(object sender, EventArgs e)
+     	protected void limpiarModalClick(object sender, EventArgs e)
     	{
     		limpiarCampos();
     		limpiarSessions();
@@ -961,13 +950,13 @@ namespace sitemaCompras.viewsGeneral
     				txtMsj.Text = "";
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo desplegar correctamente los comentarios');", addScriptTags: true);
-    		}
-    	}
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "btnPanelMensajes_Click");
+     		}
+     	}
 
-    	protected void linkBMsj_Click(object sender, EventArgs e)
+     	protected void linkBMsj_Click(object sender, EventArgs e)
     	{
     		try
     		{
@@ -1052,12 +1041,12 @@ namespace sitemaCompras.viewsGeneral
     				uPanelChat.Update();
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo registrar comentario');", addScriptTags: true);
-    		}
-    	}
-    }
+     		catch (Exception ex)
+     		{
+     			ErrorHandler.LogError(ex, "linkBMsj_Click");
+     		}
+     	}
+     }
 
 }
 

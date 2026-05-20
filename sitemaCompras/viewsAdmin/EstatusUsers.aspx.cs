@@ -148,10 +148,11 @@
     				mpeEliminarRegistro.Show();
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "EstatusUsers.GridView1_RowCommand", "editar/eliminar estatus usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+		}
     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)
@@ -205,10 +206,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar estatus');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar estatus');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "EstatusUsers.btnEliminar_Click", "eliminar estatus usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar estatus');", addScriptTags: true);
+		}
     	}
 
     	protected void btnEditar_Click(object sender, EventArgs e)
@@ -242,10 +244,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar estatus');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "EstatusUsers.btnEditar_Click", "editar estatus usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar estatus');", addScriptTags: true);
+		}
     	}
     }
 

@@ -147,10 +147,11 @@
     				mpeEliminarRegistro.Show();
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "TiposUser.GridView1_RowCommand", "editar/eliminar tipo usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+		}
     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)
@@ -204,10 +205,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar Tipo');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar Tipo');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "TiposUser.btnEliminar_Click", "eliminar tipo usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar Tipo');", addScriptTags: true);
+		}
     	}
 
     	protected void btnEditar_Click(object sender, EventArgs e)
@@ -241,10 +243,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar Tipo');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "TiposUser.btnEditar_Click", "editar tipo usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar Tipo');", addScriptTags: true);
+		}
     	}
     }
 

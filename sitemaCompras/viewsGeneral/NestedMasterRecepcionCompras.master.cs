@@ -1,5 +1,6 @@
 ﻿namespace sitemaCompras.viewsGeneral
 {
+    using sitemaCompras.Controlers;
     using System;
     using System.Web.Security;
     using System.Web.UI;
@@ -38,9 +39,10 @@
     				}
     			}
     		}
-    		catch (Exception)
-    		{
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "NestedMasterRecepcionCompras.Page_Load");
+		}
     	}
 
     	protected void btnCerrarsesion_Click(object sender, EventArgs e)

@@ -150,11 +150,12 @@
     				lblerror.Visible = true;
     			}
     		}
-    		catch (Exception)
-    		{
-    			lblerror.Text = " Error No se pudo editar su informacion<br />-verifique si la informacion esta ingresada correctamente <br />-verifique que al id que intenta utilizar no este creado";
-    			lblerror.Visible = true;
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Perfil.btnRegistrar_Click", "editar perfil usuario");
+			lblerror.Text = " Error No se pudo editar su informacion<br />-verifique si la informacion esta ingresada correctamente <br />-verifique que al id que intenta utilizar no este creado";
+			lblerror.Visible = true;
+		}
     	}
 
     	protected void btnCancelar_Click(object sender, EventArgs e)

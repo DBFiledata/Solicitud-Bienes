@@ -155,10 +155,11 @@
     				mpeEliminarRegistro.Show();
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "UnidadesAdm.GridView1_RowCommand", "editar/eliminar unidad administrativa");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+		}
     	}
 
     	protected void btnAddREg_Click(object sender, EventArgs e)
@@ -212,10 +213,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar unidad administrativa');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar unidad administrativa');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "UnidadesAdm.btnEliminar_Click", "eliminar unidad administrativa");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar unidad administrativa');", addScriptTags: true);
+		}
     	}
 
     	protected void btnEditar_Click(object sender, EventArgs e)
@@ -249,10 +251,11 @@
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar unidad administrativa');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "UnidadesAdm.btnEditar_Click", "editar unidad administrativa");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo editar unidad administrativa');", addScriptTags: true);
+		}
     	}
     }
 

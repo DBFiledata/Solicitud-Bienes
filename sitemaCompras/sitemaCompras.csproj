@@ -186,6 +186,7 @@
     <Compile Include="Controlers\Mailer.cs" />
     <Compile Include="Controlers\ReporteCompras.cs" />
     <Compile Include="Controlers\ReporteComprasDocx.cs" />
+    <Compile Include="Controlers\ErrorHandler.cs" />
     <!-- Root code-behind -->
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

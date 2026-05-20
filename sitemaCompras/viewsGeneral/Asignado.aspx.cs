@@ -631,8 +631,9 @@ namespace sitemaCompras.viewsGeneral
     				btnCloseContent.CommandArgument = "1";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.GridView1_RowCommand", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -681,8 +682,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo eliminar la solicitud');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnEliminarSolicitud_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar la solicitud');", addScriptTags: true);
     		}
     	}
@@ -782,8 +784,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Usuario no autorizado para actualizar informacion del registro');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnActualizar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo actualizar registro');", addScriptTags: true);
     		}
     	}
@@ -806,11 +809,12 @@ namespace sitemaCompras.viewsGeneral
     				txtCantidadEdit.Text = (string.IsNullOrWhiteSpace(txtCantidadEdit.Text) ? "" : txtCantidadEdit.Text);
     				mpeEditRenglon.Show();
     			}
-    			catch (Exception)
+    			catch (Exception ex)
     			{
-    			}
-    		}
-    		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
+     				ErrorHandler.LogError(ex, "Asignado.gridContenido_RowCommand", "grid/button handler");
+     				}
+     			}
+     		if (e.CommandName.Equals("eliminarRenglon", StringComparison.CurrentCultureIgnoreCase))
     		{
     			try
     			{
@@ -820,8 +824,9 @@ namespace sitemaCompras.viewsGeneral
     				Session["idRenglon"] = eleccion2;
     				mpeEliminarRenglon.Show();
     			}
-    			catch (Exception)
+    			catch (Exception ex)
     			{
+    				ErrorHandler.LogError(ex, "Asignado.gridContenido_RowCommand", "grid/button handler");
     			}
     		}
     	}
@@ -849,8 +854,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo salvar la el renglon');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnEliminarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
     		}
     	}
@@ -900,8 +906,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnActualizarRenglon_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo eliminar renglon');", addScriptTags: true);
     		}
     	}
@@ -935,8 +942,9 @@ namespace sitemaCompras.viewsGeneral
     				btnCloseContent.CommandArgument = "2";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.gridArchivo_RowCommand", "grid/button handler");
     		}
     	}
 
@@ -962,8 +970,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mppeRegistrarArchivo.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnAddREg_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1005,8 +1014,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo adjuntar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnRegistrarArchivo_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
     		}
     	}
@@ -1039,8 +1049,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo eliminar documento');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnEliminarArchivo_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo adjuntar el documento');", addScriptTags: true);
     		}
     	}
@@ -1051,8 +1062,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeEtapas.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnSiguienteEtapa_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1074,8 +1086,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.Etapa_Command", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar Etapa');", addScriptTags: true);
     		}
     	}
@@ -1097,8 +1110,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.Estatus_Command", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar estatus');", addScriptTags: true);
     		}
     	}
@@ -1156,8 +1170,9 @@ namespace sitemaCompras.viewsGeneral
     				break;
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnConfirmarPorceso_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo realizar proceso');", addScriptTags: true);
     		}
     	}
@@ -1168,8 +1183,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeEstatusEspeciales.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnEstatusEspeciales_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar a proceso');", addScriptTags: true);
     		}
     	}
@@ -1261,8 +1277,9 @@ namespace sitemaCompras.viewsGeneral
     			btn.CommandArgument = value;
     			btn.CommandName = "Etapa_Command";
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.crearBtnEstatusEspeciales", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se generar lista');", addScriptTags: true);
     		}
     	}
@@ -1310,8 +1327,9 @@ namespace sitemaCompras.viewsGeneral
     				}
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnEnviar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo enviar');", addScriptTags: true);
     		}
     	}
@@ -1331,8 +1349,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no esta autorizado para realizar este proseso');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnAprobar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se generar lista');", addScriptTags: true);
     		}
     	}
@@ -1443,8 +1462,9 @@ namespace sitemaCompras.viewsGeneral
     				txtMsj.Text = "";
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnPanelMensajes_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo desplegar correctamente los comentarios');", addScriptTags: true);
     		}
     	}
@@ -1565,8 +1585,9 @@ namespace sitemaCompras.viewsGeneral
     				uPanelChat.Update();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.linkBMsj_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo registrar comentario');", addScriptTags: true);
     		}
     	}
@@ -1577,8 +1598,9 @@ namespace sitemaCompras.viewsGeneral
     		{
     			mpeCrearProveedor.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.lbCrearProveedor_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -1594,8 +1616,9 @@ namespace sitemaCompras.viewsGeneral
     			DataSet ds = odbusuario.dListaCotizadores();
     			mpeCotizadores.Show();
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnAsignar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -1623,8 +1646,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('escoja un cotizador');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnConfirmarCotizador_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -1650,8 +1674,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnConfirmar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar');", addScriptTags: true);
     		}
     	}
@@ -1677,8 +1702,9 @@ namespace sitemaCompras.viewsGeneral
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+    			ErrorHandler.LogError(ex, "Asignado.btnRechazar_Click", "grid/button handler");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar');", addScriptTags: true);
     		}
     	}
@@ -1694,7 +1720,5 @@ namespace sitemaCompras.viewsGeneral
     			MultiView1.ActiveViewIndex = 1;
     		}
     	}
-    }
-
+	}
 }
-

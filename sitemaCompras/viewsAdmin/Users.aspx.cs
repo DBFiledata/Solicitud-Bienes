@@ -232,10 +232,11 @@ namespace sitemaCompras.viewsAdmin
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos &#10;');", addScriptTags: true);
     			}
     		}
-    		catch (Exception ex)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error BD: " + ex.Message.Replace("'", ".").Replace("\r", "").Replace("\n", " ") + "');", addScriptTags: true);
-    		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Users.btnRegistrar_Click", "registrar usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error BD: " + ex.Message.Replace("'", ".").Replace("\r", "").Replace("\n", " ") + "');", addScriptTags: true);
+		}
     	}
 
     	protected void btnCancelar_Click(object sender, EventArgs e)
@@ -284,8 +285,9 @@ namespace sitemaCompras.viewsAdmin
     				mpeEliminarRegistro.Show();
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+			ErrorHandler.LogError(ex, "Users.GridView1_RowCommand", "editar/eliminar usuario");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -353,8 +355,9 @@ namespace sitemaCompras.viewsAdmin
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar todos los campos &#10;');", addScriptTags: true);
     			}
     		}
-    		catch (Exception)
+    		catch (Exception ex)
     		{
+			ErrorHandler.LogError(ex, "Users.btnEditar_Click", "editar usuario");
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
@@ -380,13 +383,14 @@ namespace sitemaCompras.viewsAdmin
     			}
     			else
     			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo eliminar el usuario &#10; <br />');", addScriptTags: true);
-    			}
-    		}
-    		catch (Exception)
-    		{
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
-    		}
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo eliminar el usuario &#10; <br />');", addScriptTags: true);
+			}
+		}
+		catch (Exception ex)
+		{
+			ErrorHandler.LogError(ex, "Users.btnEliminar_Click", "eliminar usuario");
+			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
+		}
     	}
     }
 
