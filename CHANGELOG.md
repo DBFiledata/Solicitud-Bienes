@@ -7,14 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.6] - 2026-05-20
+
+Esta versión introduce el desacoplamiento de las solicitudes del usuario creador y del aprobador, vinculándolas directamente a su departamento/unidad de origen.
+
+### Orden de ejecución de scripts para la migración:
+1. `SQL/pre_migracion_desacoplamiento.sql` (Ejecutar **antes** de la migración de base de datos)
+2. `SQL/migrar_dirc_dep.sql` (Migración de catálogo y estructura de departamentos)
+3. `SQL/post_migracion_reasignacion.sql` (Reasignación de unidades a usuarios y solicitudes viejas tras el truncate)
+4. `SQL/update_sps_desacoplamiento.sql` (Actualización de los 12 stored procedures modificados)
+
+### Added
+- Columna `idUnidades` agregada directamente a la tabla `solicitudes` (`SQL/pre_migracion_desacoplamiento.sql`) para desacoplar históricamente las solicitudes del departamento al que pertenece su creador.
+- Tablas temporales de backup `temp_usuaruios_unidades_backup` y `temp_solicitudes_unidades_backup` para facilitar la migración de datos.
+
+### Changed
+- Actualizados 12 stored procedures (`SQL/update_sps_desacoplamiento.sql`) para apuntar a la unidad de la solicitud (`solicitudes.idUnidades`) en lugar de resolver la unidad transitivamente a través del usuario (evitando discrepancias históricas si los usuarios cambian de departamento):
+  - Filtros y búsquedas modificados: `filtroSolicitudes`, `filtroSolicitudesConfirmadas`, `filtroSolicitudesCotizadorEnproceso`, `filtroSolicitudesEnviados`, `filtroSolicitudesEscaneadasRSalida`, `filtroSolicitudesUnidadEnProceso` y `listaAsignaciones`.
+  - Reportes y visualizaciones modificados: `infoSolicitudes` y `reporteBody`.
+  - Inserciones y réplicas modificados: `gestionarSolicitudes`, `crearReplicaSolicitud` y `crearResolucionClon`.
+
+### Fixed
+- Corregido error de diseño donde el nombre de la unidad emisora en los filtros (`filtroSolicitudes`, `filtroSolicitudesConfirmadas`, etc.) se resolvía mediante el `Aprobador` de la solicitud en lugar del creador original, mostrando departamentos erróneos si el aprobador pertenecía a otra área.
+
+## [1.0.5] - 2026-05-20
+
 ### Added
 - Nueva tabla `rolesF` en la base de datos (`SQL/crear_tabla_rolesF.sql`): catálogo de 12 roles de flujo (UNIDAD, DIR. ADM, PRESUPUESTO, LEGAL, SAP, CONTROL FISCAL, PRESIDENCIA, COTIZADOR, COMPRAS, VICE PRESIDENCIA, SECRETARIA GENERAL, CONTRATACIONES). Replica la estructura de `etapas_solicitudes` para modelar el flujo de aprobación por rol funcional.
 - Columna `idRolesF` agregada a la tabla `usuaruios` (`SQL/agregar_rolesF_a_usuarios.sql`): FK nullable hacia `rolesF` con `ON DELETE SET NULL` / `ON UPDATE CASCADE`. Permite asignar un rol de flujo a cada usuario sin romper registros existentes.
 
 ### Security
 - Corregida falla de control de acceso en el Stored Procedure `login`: usuarios con `idEstatus = 2` (Inactivo) podían autenticarse correctamente porque el WHERE del SP solo validaba credenciales (`idUsuaruios` + `passwd`) sin filtrar por estatus. Se agrega la condición `AND idEstatus = 1` al SP. Script de corrección: `SQL/fix_login_idEstatus.sql`.
-
-## [released]
 
 ## [1.0.4] - 2026-05-20
 
@@ -90,7 +113,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Soporte para adjuntar archivos PDF a las solicitudes.
 - Documentacion tecnica: diagnostico de flujo de trabajo (`diagnostico_flujo_solicitudes.md`) y flujo propuesto (`Flujo de Trabajo de Solicitud.md`).
 
-[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.4...HEAD
+[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.6...HEAD
+[1.0.6]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.5...v1.0.6
+[1.0.5]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.1...v1.0.2
