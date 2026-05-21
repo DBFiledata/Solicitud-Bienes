@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Nueva tabla `rolesF` en la base de datos (`SQL/crear_tabla_rolesF.sql`): catálogo de 12 roles de flujo (UNIDAD, DIR. ADM, PRESUPUESTO, LEGAL, SAP, CONTROL FISCAL, PRESIDENCIA, COTIZADOR, COMPRAS, VICE PRESIDENCIA, SECRETARIA GENERAL, CONTRATACIONES). Replica la estructura de `etapas_solicitudes` para modelar el flujo de aprobación por rol funcional.
+- Columna `idRolesF` agregada a la tabla `usuaruios` (`SQL/agregar_rolesF_a_usuarios.sql`): FK nullable hacia `rolesF` con `ON DELETE SET NULL` / `ON UPDATE CASCADE`. Permite asignar un rol de flujo a cada usuario sin romper registros existentes.
+
+### Security
+- Corregida falla de control de acceso en el Stored Procedure `login`: usuarios con `idEstatus = 2` (Inactivo) podían autenticarse correctamente porque el WHERE del SP solo validaba credenciales (`idUsuaruios` + `passwd`) sin filtrar por estatus. Se agrega la condición `AND idEstatus = 1` al SP. Script de corrección: `SQL/fix_login_idEstatus.sql`.
+
 ## [released]
 
 ## [1.0.4] - 2026-05-20
@@ -83,7 +90,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Soporte para adjuntar archivos PDF a las solicitudes.
 - Documentacion tecnica: diagnostico de flujo de trabajo (`diagnostico_flujo_solicitudes.md`) y flujo propuesto (`Flujo de Trabajo de Solicitud.md`).
 
-[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.0...v1.0.1
