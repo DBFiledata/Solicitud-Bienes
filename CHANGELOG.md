@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Corregido bug en `porAprobar.aspx.cs` que impedía que una solicitud aprobada por la Dirección Administrativa (`test_DGAF`, `rolesF = 2`) avanzara a la etapa del Jefe de Compras (`rolesF = 9`). Ahora el campo `Session["etapaDocs"]` (etapa destino) se calcula dinámicamente según el rol funcional (`rolesF`) de la sesión.
+- Corregida la recarga de grillas en `porAprobar.aspx.cs` (`btnConfirmarPorceso_Click` y `btnEliminarSolicitud_Click`) para que refresquen la bandeja usando los filtros correspondientes al rol funcional actual del usuario de sesión, en lugar de forzar siempre la bandeja de la unidad (`etapa = 1`, `estatus = 2`).
+- Configurado que al aprobar una solicitud como Jefe de Compras (`rolesF = 9`), se asigne la etapa 9 (Compras) con el estatus `15` (Recibido). Esto hace que desaparezca de la bandeja de "Por Aprobar" del Jefe de Compras y habilite directamente el botón de "Asignar Cotizador" en `PorRecibir.aspx` para la Recepción de Compras.
+- Corregido bug en `Asignado.aspx.cs` que impedía al Supervisor de Cotizadores (`test_Sup_Cotiz`, `idTipo = 5, rolesF = 8`) ver las solicitudes de la etapa 8 en su bandeja de `Asignado.aspx` al no tener un cotizador asignado aún. Ahora los usuarios con rol funcional de cotizador (`rolesF == 8`) pueden ver tanto las solicitudes asignadas a ellos individualmente como aquellas que están pendientes de asignación (sin cotizador registrado).
+- Habilitada la visibilidad condicional del botón de asignación (`Button3`) en `Asignado.aspx.cs` para el rol de cotizador (`rolesF == 8`) cuando la solicitud está en estado no asignada, y agregada la recarga automática del grid tras confirmar la asignación del cotizador.
+
 ## [1.0.6] - 2026-05-20
 
 Esta versión introduce el desacoplamiento de las solicitudes del usuario creador y del aprobador, vinculándolas directamente a su departamento/unidad de origen.

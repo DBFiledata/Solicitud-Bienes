@@ -946,14 +946,8 @@ namespace sitemaCompras.viewsGeneral
     	{
     		DataSet ds = new DataSet();
     		odbusuario = new BaseDatos();
-    		if (Convert.ToInt32(Session["type"]) == 4)
-    		{
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, 9, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
-    		}
-    		if (Convert.ToInt32(Session["type"]) == 6)
-    		{
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, Convert.ToInt32(Session["unidadEtapa"]), usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
-    		}
+    		int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    		ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, userRoleF, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
     		return ds;
     	}
 

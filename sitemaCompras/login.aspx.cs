@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras
+namespace sitemaCompras
 {
     using System;
     using System.Web.Security;
@@ -31,7 +31,7 @@
     		}
     		odbusuario = new BaseDatos();
     		bool loged = false;
-    		string[] datos = new string[4];
+    		string[] datos = new string[5];
     		(loged, datos) = odbusuario.login(Login.UserName, Login.Password);
     		if (loged)
     		{
@@ -39,6 +39,7 @@
     			Session["username"] = datos[0] + " " + datos[1];
     			Session["type"] = datos[2];
     			Session["unidad"] = datos[3];
+    			Session["rolesF"] = datos[4];
     			FormsAuthentication.SetAuthCookie(Login.UserName, Login.RememberMeSet);
     			FormsAuthentication.RedirectFromLoginPage(Login.UserName, Login.RememberMeSet);
     			string nombre = User.Identity.Name;

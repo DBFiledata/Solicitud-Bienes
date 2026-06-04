@@ -1717,12 +1717,13 @@ namespace sitemaCompras.Controlers
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
     			bool condicion = false;
-    			string[] resultado = new string[4]
+    			string[] resultado = new string[5]
     			{
     				Convert.ToString(ds.Tables[0].Rows[0]["nombres"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["apellidos"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["idTipo"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["idUnidades"])
+    				Convert.ToString(ds.Tables[0].Rows[0]["idUnidades"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["idRolesF"])
     			};
     			if (resultado != null)
     			{

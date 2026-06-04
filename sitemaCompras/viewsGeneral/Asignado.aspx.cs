@@ -645,11 +645,30 @@ namespace sitemaCompras.viewsGeneral
     			Button btnReasignar = (Button)e.Row.FindControl("Button3");
     			Button btnConfirmar = (Button)e.Row.FindControl("Button4");
     			Button btnRechazar = (Button)e.Row.FindControl("Button5");
+    			
+    			DataRowView drv = (DataRowView)e.Row.DataItem;
+    			string cotVal = drv != null ? Convert.ToString(drv["Cotizador"]).Trim() : "";
+    			
     			if (Convert.ToString(Session["type"]) == "4")
     			{
     				btnReasignar.Visible = true;
     				btnConfirmar.Visible = false;
     				btnRechazar.Visible = false;
+    			}
+    			else if (Convert.ToInt32(Session["rolesF"]) == 8)
+    			{
+    				if (string.IsNullOrEmpty(cotVal))
+    				{
+    					btnReasignar.Visible = true;
+    					btnConfirmar.Visible = false;
+    					btnRechazar.Visible = false;
+    				}
+    				else
+    				{
+    					btnReasignar.Visible = false;
+    					btnConfirmar.Visible = true;
+    					btnRechazar.Visible = true;
+    				}
     			}
     			else
     			{
@@ -692,12 +711,34 @@ namespace sitemaCompras.viewsGeneral
     	protected DataSet filtros(int? id, string solicitudBien, string resolucion, string descripciones, int? estatus, int? etapa, string usuaruio, string cotizador, int? unidad, int? director, int? proveedor, DateTime? desde, DateTime? hasta)
     	{
     		DataSet ds = new DataSet();
-    		if (Convert.ToInt32(Session["type"]) == 5)
+    		int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    		if (userRoleF == 8) // Cotizador / Supervisor de Cotizadores
     		{
     			odbusuario = new BaseDatos();
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, etapa, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
+    			// Pasamos null como cotizador para obtener todas las solicitudes de la etapa en base de datos
+    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, etapa, usuaruio, null, unidad, director, proveedor, desde, hasta);
+    			
+    			if (ds.Tables.Count > 0)
+    			{
+    				DataTable dt = ds.Tables[0];
+    				DataTable dtFiltrado = dt.Clone();
+    				string myName = Convert.ToString(Session["username"]).Trim();
+    				
+    				foreach (DataRow row in dt.Rows)
+    				{
+    					string cotVal = Convert.ToString(row["Cotizador"]).Trim();
+    					// Visible si no tiene cotizador asignado (para que lo vea el supervisor) o si está asignada a mí
+    					if (string.IsNullOrEmpty(cotVal) || cotVal.Equals(myName, StringComparison.OrdinalIgnoreCase))
+    					{
+    						dtFiltrado.ImportRow(row);
+    					}
+    				}
+    				
+    				ds.Tables.Clear();
+    				ds.Tables.Add(dtFiltrado);
+    			}
     		}
-    		if (Convert.ToInt32(Session["type"]) == 4)
+    		else // Otros roles
     		{
     			odbusuario = new BaseDatos();
     			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, etapa, "", null, unidad, director, proveedor, desde, hasta);
@@ -1629,12 +1670,15 @@ namespace sitemaCompras.viewsGeneral
     		{
     			odbusuario = new BaseDatos();
     			string id = "";
-    			string text = "";
     			if (dlistCotizadores.SelectedIndex > 0)
     			{
     				if (odbusuario.gestionarCotizadorSolicitudes(Convert.ToInt32(Session["idDoc"]), dlistCotizadores.SelectedValue, 1))
     				{
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Cotizador asignado');", addScriptTags: true);
+    					DataSet ds = new DataSet();
+    					ds = filtros(null, "", "", "", 4, 8, "", Convert.ToString(Session["id"]), null, 1, null, null, null);
+    					GridView1.DataSource = ds;
+    					GridView1.DataBind();
     				}
     				else
     				{

@@ -333,6 +333,7 @@ namespace sitemaCompras.viewsGeneral
     			FormsAuthentication.SignOut();
     			Response.Redirect("~/login.aspx");
     		}
+    		odbusuario = new BaseDatos();
     		if (Convert.ToInt32(Session["type"]) == 2)
     		{
     			odbusuario = new BaseDatos();
@@ -359,7 +360,15 @@ namespace sitemaCompras.viewsGeneral
     		}
     		txtSB.Enabled = false;
     		DataSet ds = new DataSet();
-    		ds = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    		int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    		if (userRoleF == 1) // UNIDAD: etapa 1, estatus 2 (En espera de Aprobación), filtro por unidad
+    		{
+    			ds = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    		}
+    		else // DIR. ADM y otros: etapa = rolesF, estatus 4 (Enviado), sin filtro de unidad
+    		{
+    			ds = filtros(null, "", "", "", 4, userRoleF, "", null, 1, null, null, null);
+    		}
     		GridView1.DataSource = ds;
     		GridView1.DataBind();
     		dlistUsuario.Items.Clear();
@@ -374,14 +383,16 @@ namespace sitemaCompras.viewsGeneral
     	protected DataSet filtros(int? id, string solicitudBien, string resolucion, string descripciones, int? estatus, int? etapa, string usuaruio, int? unidad, int? director, int? proveedor, DateTime? desde, DateTime? hasta)
     	{
     		DataSet ds = new DataSet();
-    		if (Convert.ToInt32(Session["type"]) == 2)
+    		odbusuario = new BaseDatos();
+    		int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    		if (userRoleF == 1 && Convert.ToInt32(Session["type"]) == 2)
     		{
-    			odbusuario = new BaseDatos();
+    			// Solicitante de UNIDAD: solo ve sus propias solicitudes
     			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, etapa, Convert.ToString(Session["id"]), null, unidad, director, proveedor, desde, hasta);
     		}
-    		if (Convert.ToInt32(Session["type"]) == 3)
+    		else
     		{
-    			odbusuario = new BaseDatos();
+    			// Aprobadores (UNIDAD, DIR. ADM, etc.): ven solicitudes de su etapa
     			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, etapa, usuaruio, null, unidad, director, proveedor, desde, hasta);
     		}
     		return ds;
@@ -397,7 +408,16 @@ namespace sitemaCompras.viewsGeneral
     			id = VerificarCampoIntNull(txtId);
     			usuaruio = VerificarDListText(dlistUsuario);
     			titulo = VerificarCampo(txtTituloF);
-    			DataSet ds = filtros(id, "", "", titulo, 2, 1, usuaruio, Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    			int filterRoleF = Convert.ToInt32(Session["rolesF"]);
+    			DataSet ds;
+    			if (filterRoleF == 1)
+    			{
+    				ds = filtros(id, "", "", titulo, 2, 1, usuaruio, Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    			}
+    			else
+    			{
+    				ds = filtros(id, "", "", titulo, 4, filterRoleF, usuaruio, null, 1, null, null, null);
+    			}
     			GridView1.DataSource = ds;
     			GridView1.DataBind();
     			MultiView1.ActiveViewIndex = 0;
@@ -555,7 +575,15 @@ namespace sitemaCompras.viewsGeneral
     			{
     				odbusuario = new BaseDatos();
     				DataSet ds = new DataSet();
-    				ds = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    				int filterRoleF = Convert.ToInt32(Session["rolesF"]);
+    				if (filterRoleF == 1)
+    				{
+    					ds = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    				}
+    				else
+    				{
+    					ds = filtros(null, "", "", "", 4, filterRoleF, "", null, 1, null, null, null);
+    				}
     				GridView1.DataSource = ds;
     				GridView1.DataBind();
     				MultiView1.ActiveViewIndex = 0;
@@ -598,7 +626,15 @@ namespace sitemaCompras.viewsGeneral
      							odbusuario.Commit();
      							odbusuario = new BaseDatos();
      							DataSet ds3 = new DataSet();
-     							ds3 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							int filterRoleF = Convert.ToInt32(Session["rolesF"]);
+     							if (filterRoleF == 1)
+     							{
+     								ds3 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							}
+     							else
+     							{
+     								ds3 = filtros(null, "", "", "", 4, filterRoleF, "", null, 1, null, null, null);
+     							}
      							GridView1.DataSource = ds3;
      							GridView1.DataBind();
      							MultiView1.ActiveViewIndex = 0;
@@ -618,7 +654,15 @@ namespace sitemaCompras.viewsGeneral
      							odbusuario.Commit();
      							odbusuario = new BaseDatos();
      							DataSet ds2 = new DataSet();
-     							ds2 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							int filterRoleF2 = Convert.ToInt32(Session["rolesF"]);
+     							if (filterRoleF2 == 1)
+     							{
+     								ds2 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+     							}
+     							else
+     							{
+     								ds2 = filtros(null, "", "", "", 4, filterRoleF2, "", null, 1, null, null, null);
+     							}
      							GridView1.DataSource = ds2;
      							GridView1.DataBind();
      							MultiView1.ActiveViewIndex = 0;
@@ -909,9 +953,20 @@ namespace sitemaCompras.viewsGeneral
     	{
     		try
     		{
+    			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    			int siguienteEtapa = 2;
+    			if (userRoleF == 2)
+    			{
+    				siguienteEtapa = 9;
+    			}
+    			else if (userRoleF == 9)
+    			{
+    				siguienteEtapa = 8; // Jefe de Compras (9) aprueba y envía al Supervisor de Cotizadores (8)
+    			}
+
     			if ((string)Session["type"] == "3")
     			{
-    				Session["etapaDocs"] = 2;
+    				Session["etapaDocs"] = siguienteEtapa;
     				Session["prosesoDocs"] = 1;
     				mpeComfirmarProceso.Show();
     			}
@@ -922,7 +977,7 @@ namespace sitemaCompras.viewsGeneral
     				datosUser = odbusuario.datosUsuarios(Convert.ToString(Session["id"]));
     				if (datosUser[8] == "2")
     				{
-    					Session["etapaDocs"] = 2;
+    					Session["etapaDocs"] = siguienteEtapa;
     					Session["prosesoDocs"] = 1;
     					mpeComfirmarProceso.Show();
     				}
