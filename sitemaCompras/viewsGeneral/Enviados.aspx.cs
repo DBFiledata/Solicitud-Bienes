@@ -1035,6 +1035,44 @@ namespace sitemaCompras.viewsGeneral
     		{
     			odbusuario = new BaseDatos();
     			ds = odbusuario.filtroSolicitudesEnviados(id, solicitudBien, resolucion, descripciones, estatus, etapa, usuaruio, unidad, director, proveedor, cotizador, desde, hasta);
+
+    			if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0 && Session["rolesF"] != null)
+    			{
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				string stageName = "";
+    				switch (userRoleF)
+    				{
+    					case 1: stageName = "Unidad"; break;
+    					case 2: stageName = "Dir. ADM"; break;
+    					case 3: stageName = "Presupuesto"; break;
+    					case 4: stageName = "Legal"; break;
+    					case 5: stageName = "SAP"; break;
+    					case 6: stageName = "Control Fiscal"; break;
+    					case 7: stageName = "Presidencia"; break;
+    					case 8: stageName = "Cotizador"; break;
+    					case 9: stageName = "Compras"; break;
+    					case 10: stageName = "Vice presidencia"; break;
+    					case 11: stageName = "Secretaria general"; break;
+    					case 12: stageName = "Contrataciones"; break;
+    				}
+    				if (!string.IsNullOrEmpty(stageName))
+    				{
+    					DataTable dt = ds.Tables[0];
+    					for (int i = dt.Rows.Count - 1; i >= 0; i--)
+    					{
+    						DataRow row = dt.Rows[i];
+    						string rowEtapa = Convert.ToString(row["etapa"]);
+    						string rowEstatus = Convert.ToString(row["estatus"]);
+    						if (rowEtapa.Equals(stageName, StringComparison.OrdinalIgnoreCase) && 
+    						    (rowEstatus.Equals("Recibido", StringComparison.OrdinalIgnoreCase) || 
+    						     rowEstatus.Equals("En Proceso", StringComparison.OrdinalIgnoreCase) ||
+    						     rowEstatus.Equals("En atención", StringComparison.OrdinalIgnoreCase)))
+    						{
+    							dt.Rows.RemoveAt(i);
+    						}
+    					}
+    				}
+    			}
     		}
     		return ds;
     	}

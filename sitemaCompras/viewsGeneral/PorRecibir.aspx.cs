@@ -947,7 +947,29 @@ namespace sitemaCompras.viewsGeneral
     		DataSet ds = new DataSet();
     		odbusuario = new BaseDatos();
     		int userRoleF = Convert.ToInt32(Session["rolesF"]);
-    		ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, userRoleF, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
+    		int filterEstatus = estatus ?? 4; // Por defecto sólo mostrar pendientes ("Enviado")
+    		ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, userRoleF, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
+
+    		if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+    		{
+    			string currentUserId = Convert.ToString(Session["id"]);
+    			DataTable dt = ds.Tables[0];
+    			for (int i = dt.Rows.Count - 1; i >= 0; i--)
+    			{
+    				DataRow row = dt.Rows[i];
+    				int solId = Convert.ToInt32(row["#"]);
+    				BaseDatos dbComents = new BaseDatos();
+    				DataSet dsComents = dbComents.listaComentariosSolicitudes(solId);
+    				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+    				{
+    					string lastUserComment = Convert.ToString(dsComents.Tables[0].Rows[0]["idUsuaruios"]);
+    					if (lastUserComment.Equals(currentUserId, StringComparison.OrdinalIgnoreCase))
+    					{
+    						dt.Rows.RemoveAt(i);
+    					}
+    				}
+    			}
+    		}
     		return ds;
     	}
 
@@ -1985,13 +2007,11 @@ namespace sitemaCompras.viewsGeneral
     			odbusuario = new BaseDatos();
     			if ((string)Session["type"] == "4")
     			{
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
     				odbusuario = new BaseDatos();
-    				string[] datos = new string[14];
-    				datos = odbusuario.datosSolicitudes(Convert.ToInt32(id));
-    				if (!string.IsNullOrEmpty(datos[13]))
+    				if (userRoleF == 9) // Analista de Compras: acepta en etapa 9, pasa a En Proceso
     				{
-    					odbusuario = new BaseDatos();
-    					if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), 8, 4, "Enviado a cotizador ", Convert.ToString(Session["id"])))
+    					if (odbusuario.asignarEstatus(id, 9, 15, "Recibido por Compras — " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
     					{
     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Confirmado');", addScriptTags: true);
     						DataSet ds = new DataSet();
@@ -2002,21 +2022,43 @@ namespace sitemaCompras.viewsGeneral
     					}
     					else
     					{
-    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
     					}
     				}
-    				else if (odbusuario.asignarEstatus(id, Convert.ToInt32(Session["idDocEtapa"]), 15, "Recibido por recepción " + Convert.ToString(Session["Recepcion"]) + " " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
+    				else // Otros tipo 4: lógica original
     				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Confirmado');", addScriptTags: true);
-    					DataSet ds2 = new DataSet();
-    					ds2 = filtros(null, "", "", "", null, 9, "", null, null, 1, null, null, null);
-    					GridView1.DataSource = ds2;
-    					GridView1.DataBind();
-    					MultiView1.ActiveViewIndex = 0;
-    				}
-    				else
-    				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
+    					string[] datos = new string[14];
+    					datos = odbusuario.datosSolicitudes(Convert.ToInt32(id));
+    					if (!string.IsNullOrEmpty(datos[13]))
+    					{
+    						odbusuario = new BaseDatos();
+    						if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), 8, 4, "Enviado a cotizador ", Convert.ToString(Session["id"])))
+    						{
+    							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Confirmado');", addScriptTags: true);
+    							DataSet ds = new DataSet();
+    							ds = filtros(null, "", "", "", null, 9, "", null, null, 1, null, null, null);
+    							GridView1.DataSource = ds;
+    							GridView1.DataBind();
+    							MultiView1.ActiveViewIndex = 0;
+    						}
+    						else
+    						{
+    							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar etapa');", addScriptTags: true);
+    						}
+    					}
+    					else if (odbusuario.asignarEstatus(id, Convert.ToInt32(Session["idDocEtapa"]), 15, "Recibido por recepción " + Convert.ToString(Session["Recepcion"]) + " " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Confirmado');", addScriptTags: true);
+    						DataSet ds2 = new DataSet();
+    						ds2 = filtros(null, "", "", "", null, 9, "", null, null, 1, null, null, null);
+    						GridView1.DataSource = ds2;
+    						GridView1.DataBind();
+    						MultiView1.ActiveViewIndex = 0;
+    					}
+    					else
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
+    					}
     				}
     			}
     			else if (odbusuario.asignarEstatus(id, Convert.ToInt32(Session["idDocEtapa"]), 15, "Recibido por recepción " + Convert.ToString(Session["Recepcion"]) + " " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))

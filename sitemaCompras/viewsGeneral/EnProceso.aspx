@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" MasterPageFile="~/viewsGeneral/NestedMasterAprobador.master" Title="En proceso" AutoEventWireup="true" CodeBehind="EnProceso.aspx.cs" Inherits="sitemaCompras.viewsGeneral.EnProceso" %>
+<%@ Page Language="C#" MasterPageFile="~/viewsGeneral/NestedMasterAprobador.master" Title="En proceso" AutoEventWireup="true" CodeBehind="EnProceso.aspx.cs" Inherits="sitemaCompras.viewsGeneral.EnProceso" %>
 
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>

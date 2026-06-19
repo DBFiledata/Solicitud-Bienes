@@ -7,7 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.7] - 2026-06-19
+
+### Added
+- Habilitado el panel de botones de envío (`panelBtnsOthers`) y el modal de selección de etapas (`mpeEtapas`) en `EnProceso.aspx.cs` para el rol de Analista de Compras (Paso 5, `idTipo = 4`, `rolesF = 9`), replicando la misma interfaz de transición de etapas del Paso 4 (Supervisor de Cotizadores).
+
 ### Fixed
+- Corregido bug de visualización duplicada en el Paso 5 (Analistas de Compras) donde las solicitudes aparecían al mismo tiempo en `PorRecibir`, `EnProceso` y `Enviados`.
+- Modificado el método `filtros` en `PorRecibir.aspx.cs` para que por defecto filtre por estatus `4` (Enviado) en lugar de retornar todos los estatus (`null`), y se programó la remoción de solicitudes cuyo último comentario pertenezca al usuario de sesión (evitando que una solicitud ya recibida o enviada vuelva a aparecer en su bandeja de entrada).
+- Corregido el filtrado de `EnProceso.aspx.cs` para el rol de Compras (`userRoleF = 9`), apuntando correctamente a la etapa `9` con estatus `15` (Recibido) en lugar de la etapa `8` (Cotizador).
+- Agregado filtro en memoria al DataSet de `Enviados.aspx.cs` para ocultar solicitudes que todavía estén bajo la etapa del usuario actual (`rolesF`) con estatus en curso (`Recibido`, `En Proceso`, `En atención`), asegurando que solo aparezcan una vez hayan sido enviadas a la siguiente etapa.
+- Resuelta excepción crítica `System.Web.HttpException` ("The IListSource does not contain any data sources") al ingresar a `Enviados.aspx` provocada por un error de MySqlException en el stored procedure `filtroSolicitudesEnviados` (el cual tenía el parámetro `proveedors` en lugar de `proveedor`, generando una falla en la vinculación por nombre de parámetros). Se aplicó el script de migración `SQL/update_sps_desacoplamiento.sql` para restaurar y corregir la firma de los stored procedures en la base de datos local.
 - Corregido bug en `porAprobar.aspx.cs` que impedía que una solicitud aprobada por la Dirección Administrativa (`test_DGAF`, `rolesF = 2`) avanzara a la etapa del Jefe de Compras (`rolesF = 9`). Ahora el campo `Session["etapaDocs"]` (etapa destino) se calcula dinámicamente según el rol funcional (`rolesF`) de la sesión.
 - Corregida la recarga de grillas en `porAprobar.aspx.cs` (`btnConfirmarPorceso_Click` y `btnEliminarSolicitud_Click`) para que refresquen la bandeja usando los filtros correspondientes al rol funcional actual del usuario de sesión, en lugar de forzar siempre la bandeja de la unidad (`etapa = 1`, `estatus = 2`).
 - Configurado que al aprobar una solicitud como Jefe de Compras (`rolesF = 9`), se asigne la etapa 9 (Compras) con el estatus `15` (Recibido). Esto hace que desaparezca de la bandeja de "Por Aprobar" del Jefe de Compras y habilite directamente el botón de "Asignar Cotizador" en `PorRecibir.aspx` para la Recepción de Compras.
@@ -120,7 +130,8 @@ Esta versión introduce el desacoplamiento de las solicitudes del usuario creado
 - Soporte para adjuntar archivos PDF a las solicitudes.
 - Documentacion tecnica: diagnostico de flujo de trabajo (`diagnostico_flujo_solicitudes.md`) y flujo propuesto (`Flujo de Trabajo de Solicitud.md`).
 
-[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.6...HEAD
+[Unreleased]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.7...HEAD
+[1.0.7]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.4...v1.0.5
 [1.0.4]: https://github.com/Drek003/S.Bienes-Compras/compare/v1.0.3...v1.0.4

@@ -665,14 +665,25 @@ namespace sitemaCompras.viewsGeneral
     			}
     			if (Convert.ToInt32(Session["type"]) == 4)
     			{
-    				panelBtnsOthers.Enabled = false;
-    				panelBtnsOthers.Visible = false;
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				if (userRoleF == 9) // Analista de Compras
+    				{
+    					panelBtnsOthers.Enabled = true;
+    					panelBtnsOthers.Visible = true;
+    					panelBtnVer.Enabled = false;
+    					panelBtnVer.Visible = false;
+    				}
+    				else
+    				{
+    					panelBtnsOthers.Enabled = false;
+    					panelBtnsOthers.Visible = false;
+    					panelBtnVer.Enabled = true;
+    					panelBtnVer.Visible = true;
+    				}
     				btnActualizar.Visible = true;
     				btnActualizar.Enabled = true;
     				panelAsignarProveedor.Enabled = false;
     				panelAsignarProveedor.Visible = false;
-    				panelBtnVer.Enabled = true;
-    				panelBtnVer.Visible = true;
     				panelBtns.Visible = false;
     				panelBtns.Enabled = false;
     				panelInfoGeneral1.Enabled = false;
@@ -949,7 +960,8 @@ namespace sitemaCompras.viewsGeneral
     		}
     		else if (userRoleF == 9) // Compras
     		{
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, estatus, 8, usuaruio, cotizador, null, director, proveedor, desde, hasta);
+    			int filterEstatus = estatus ?? 15;
+    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, 9, usuaruio, cotizador, null, director, proveedor, desde, hasta);
     		}
     		else if (userRoleF == 8) // Cotizador
     		{
