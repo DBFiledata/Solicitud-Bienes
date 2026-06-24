@@ -957,7 +957,16 @@ namespace sitemaCompras.viewsGeneral
     			int siguienteEtapa = 2;
     			if (userRoleF == 2)
     			{
-    				siguienteEtapa = 9;
+    				BaseDatos dbRead = new BaseDatos();
+    				string[] datos = dbRead.datosSolicitudes(Convert.ToInt32(Session["idDoc"]));
+    				if (datos != null && !string.IsNullOrEmpty(datos[13]))
+    				{
+    					siguienteEtapa = 3; // Segunda vuelta (Paso 7b): DGAF Vo.Bo. -> Presupuesto (Paso 8, etapa 3)
+    				}
+    				else
+    				{
+    					siguienteEtapa = 9; // Primera vuelta (Paso 3): DGAF Vo.Bo. -> Jefe de Compras Firma (Paso 4, etapa 9)
+    				}
     			}
     			else if (userRoleF == 9)
     			{

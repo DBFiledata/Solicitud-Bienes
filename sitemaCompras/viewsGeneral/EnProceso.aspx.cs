@@ -730,6 +730,56 @@ namespace sitemaCompras.viewsGeneral
     					gridContenido.Columns[columnaProcesosIndex2].Visible = false;
     				}
     			}
+    			if (Convert.ToInt32(Session["type"]) == 6)
+    			{
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				if (userRoleF == 3) // Presupuesto
+    				{
+    					panelBtnsOthers.Enabled = true;
+    					panelBtnsOthers.Visible = true;
+    					btnEstatusEspeciales.Enabled = true;
+    					btnEstatusEspeciales.Visible = true;
+    					btnSiguienteEtapa.Enabled = true;
+    					btnSiguienteEtapa.Visible = true;
+    					btnActualizar.Enabled = false;
+    					btnActualizar.Visible = false;
+    					panelAsignarProveedor.Enabled = false;
+    					panelAsignarProveedor.Visible = false;
+    					panelInfoGeneral1.Enabled = false;
+    					txtFecha.Enabled = false;
+    					panelInfoGeneral3_1.Enabled = false;
+    					panelInfoGeneral3_2.Enabled = false;
+    					panelAddContenido.Visible = false;
+    					panelAddContenido.Enabled = false;
+    				}
+    				else if (userRoleF == 5) // SAP
+    				{
+    					panelBtnsOthers.Enabled = true;
+    					panelBtnsOthers.Visible = true;
+    					btnEstatusEspeciales.Enabled = false;
+    					btnEstatusEspeciales.Visible = false;
+    					btnSiguienteEtapa.Enabled = true;
+    					btnSiguienteEtapa.Visible = true;
+    					
+    					panelAsignarProveedor.Enabled = true;
+    					panelAsignarProveedor.Visible = true;
+    					dlistProveedor.Enabled = false;
+    					txtPrecioProveedor.ReadOnly = true;
+    					txtResolucion.ReadOnly = true;
+    					txtOrdenCompra.ReadOnly = false;
+    					lbActualizarProveedor.Enabled = true;
+    					lbActualizarProveedor.Visible = true;
+    					
+    					btnActualizar.Enabled = true;
+    					btnActualizar.Visible = true;
+    					panelInfoGeneral1.Enabled = false;
+    					txtFecha.Enabled = false;
+    					panelInfoGeneral3_1.Enabled = false;
+    					panelInfoGeneral3_2.Enabled = false;
+    					panelAddContenido.Visible = false;
+    					panelAddContenido.Enabled = false;
+    				}
+    			}
     		}
     		else
     		{
@@ -969,7 +1019,7 @@ namespace sitemaCompras.viewsGeneral
     		}
     		else // Recepciones intermedias
     		{
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, 15, userRoleF, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
+    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, 15, userRoleF, usuaruio, cotizador, null, director, proveedor, desde, hasta);
     		}
     		return ds;
     	}
@@ -984,7 +1034,7 @@ namespace sitemaCompras.viewsGeneral
     			int? proveedorActual = ((!string.IsNullOrWhiteSpace(Convert.ToString(Session["proveedorActual"])) && int.TryParse(Convert.ToString(Session["proveedorActual"]), out valorConvertido2)) ? new int?(valorConvertido2) : ((int?)null));
     			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
     			int id = 0;
-    			if ((Convert.ToInt32(Session["type"]) == 5) | (Convert.ToInt32(Session["type"]) == 4))
+    			if ((Convert.ToInt32(Session["type"]) == 5) | (Convert.ToInt32(Session["type"]) == 4) | (Convert.ToInt32(Session["type"]) == 6 && Convert.ToInt32(Session["rolesF"]) == 5))
     			{
     				if ((!string.IsNullOrEmpty(txtUnidad.Text) & !string.IsNullOrEmpty(txtTitulo.Text) & !string.IsNullOrEmpty(txtSolicitante.Text) & !string.IsNullOrEmpty(txtFecha.Text) & !string.IsNullOrEmpty(txtDescripcion.Text)) && checkeditemscount > 0)
     				{
@@ -1402,6 +1452,7 @@ namespace sitemaCompras.viewsGeneral
     	{
     		try
     		{
+    			configurarBotonesEtapas();
     			mpeEtapas.Show();
     		}
     		catch (Exception ex)
@@ -1523,6 +1574,7 @@ namespace sitemaCompras.viewsGeneral
     	{
     		try
     		{
+    			configurarBotonesEstatusEspeciales();
     			mpeEstatusEspeciales.Show();
     		}
     		catch (Exception ex)
@@ -1789,6 +1841,7 @@ namespace sitemaCompras.viewsGeneral
     			if (Convert.ToInt32((string)e.CommandArgument) == 1)
     			{
     				chatArea.Enabled = true;
+    				panelChat.Controls.Clear(); // Limpiar mensajes previos para evitar duplicados o basura
     				odbusuario = new BaseDatos();
     				DataSet ds = new DataSet();
     				ds = odbusuario.listaComentariosSolicitudes(Convert.ToInt32(Session["idDoc"]));
@@ -2249,5 +2302,163 @@ namespace sitemaCompras.viewsGeneral
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error al ingresar al proceso');", addScriptTags: true);
     		}
     	}
+
+		private void configurarBotonesEtapas()
+		{
+			btnUnidad.Visible = true;
+			btnDirAdm.Visible = true;
+			btnpresupuesto.Visible = true;
+			btnLegal.Visible = true;
+			btnSap.Visible = true;
+			btnControlF.Visible = true;
+			btnPresidencia.Visible = true;
+			btnVPresidencia.Visible = true;
+			btnSecretaria.Visible = true;
+			btnCompras.Visible = true;
+
+			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+			int etapaActual = Convert.ToInt32(Session["etapaActual"]);
+			int idDoc = Convert.ToInt32(Session["idDoc"]);
+
+			bool tieneReserva = false;
+			BaseDatos db = new BaseDatos();
+			DataSet dsComents = db.listaComentariosSolicitudes(idDoc);
+			if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+			{
+				foreach (DataRow row in dsComents.Tables[0].Rows)
+				{
+					if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+					{
+						tieneReserva = true;
+						break;
+					}
+				}
+			}
+
+			string[] datos = db.datosSolicitudes(idDoc);
+			string ordenCompra = datos[12];
+			bool tieneOrdenCompra = !string.IsNullOrEmpty(ordenCompra);
+
+			if (userRoleF == 3 && etapaActual == 3) // Presupuesto
+			{
+				ocultarTodosBotonesEtapas();
+				if (!tieneReserva)
+				{
+					// Paso 8: Envia a Compras (Etapa 9)
+					btnCompras.Visible = true;
+				}
+				else
+				{
+					// Paso 10: Envia a SAP (Etapa 5)
+					btnSap.Visible = true;
+				}
+			}
+			else if (userRoleF == 5 && etapaActual == 5) // SAP (Paso 11)
+			{
+				ocultarTodosBotonesEtapas();
+				// Envia a Compras (Etapa 9)
+				btnCompras.Visible = true;
+			}
+			else if (userRoleF == 8 && etapaActual == 8) // Cotizador (Paso 5)
+			{
+				ocultarTodosBotonesEtapas();
+				// Envia a Compras (Etapa 9)
+				btnCompras.Visible = true;
+			}
+			else if (userRoleF == 9 && etapaActual == 9) // Analista / Compras
+			{
+				if (tieneReserva)
+				{
+					ocultarTodosBotonesEtapas();
+					if (!tieneOrdenCompra)
+					{
+						// Paso 9: Envia a Presupuesto (Etapa 3)
+						btnpresupuesto.Visible = true;
+					}
+					else
+					{
+						// Paso 12: Envia a Control Fiscal (Etapa 6)
+						btnControlF.Visible = true;
+					}
+				}
+			}
+		}
+
+		private void ocultarTodosBotonesEtapas()
+		{
+			btnUnidad.Visible = false;
+			btnDirAdm.Visible = false;
+			btnpresupuesto.Visible = false;
+			btnLegal.Visible = false;
+			btnSap.Visible = false;
+			btnControlF.Visible = false;
+			btnPresidencia.Visible = false;
+			btnVPresidencia.Visible = false;
+			btnSecretaria.Visible = false;
+			btnCompras.Visible = false;
+		}
+
+		private void configurarBotonesEstatusEspeciales()
+		{
+			btnEDocUnidad.Visible = true;
+			btnEDocProveedor.Visible = true;
+			btnPrecioR.Visible = true;
+			btnCotizacionL.Visible = true;
+			btnBloqueo.Visible = true;
+			btnRechazado.Visible = true;
+			Button5.Visible = true;
+			Button6.Visible = true;
+
+			Button5.Text = "Reserva de partida";
+			btnBloqueo.Text = "Bloqueo";
+
+			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+			int etapaActual = Convert.ToInt32(Session["etapaActual"]);
+			int idDoc = Convert.ToInt32(Session["idDoc"]);
+
+			if (userRoleF == 3 && etapaActual == 3) // Presupuesto
+			{
+				bool tieneReserva = false;
+				BaseDatos db = new BaseDatos();
+				DataSet dsComents = db.listaComentariosSolicitudes(idDoc);
+				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+				{
+					foreach (DataRow row in dsComents.Tables[0].Rows)
+					{
+						if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+						{
+							tieneReserva = true;
+							break;
+						}
+					}
+				}
+
+				ocultarTodosBotonesEstatusEspeciales();
+				if (!tieneReserva)
+				{
+					// Paso 8: Habilitar "Separar Partida" (estatus 17)
+					Button5.Visible = true;
+					Button5.Text = "Separar Partida";
+				}
+				else
+				{
+					// Paso 10: Habilitar "Bloqueo de Partida" (estatus 12)
+					btnBloqueo.Visible = true;
+					btnBloqueo.Text = "Bloqueo de Partida";
+				}
+			}
+		}
+
+		private void ocultarTodosBotonesEstatusEspeciales()
+		{
+			btnEDocUnidad.Visible = false;
+			btnEDocProveedor.Visible = false;
+			btnPrecioR.Visible = false;
+			btnCotizacionL.Visible = false;
+			btnBloqueo.Visible = false;
+			btnRechazado.Visible = false;
+			Button5.Visible = false;
+			Button6.Visible = false;
+		}
 	}
 }
