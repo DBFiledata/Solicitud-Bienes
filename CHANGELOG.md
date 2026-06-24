@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Corregida la redirección en la aprobación del Jefe de Compras (`userRoleF == 9`) en `porAprobar.aspx.cs` para que derive dinámicamente según la fase del flujo de la solicitud: a la etapa `8` (Supervisor de Cotizadores) en la primera vuelta (cuando no hay cotizador asignado) o a la etapa `2` (DGAF Vo. Bo. / Paso 7) en la segunda vuelta.
+- Simplificado el filtro de bandejas de solicitudes en `Enviados.aspx.cs` para ocultar cualquier solicitud que corresponda a la etapa del usuario activo (`rowEtapa == stageName`), previniendo que se muestren en Enviados solicitudes pendientes en su bandeja (como ocurría con DGAF Vo. Bo. en el Paso 7).
+
 ## [1.0.7] - 2026-06-19
 
 ### Added

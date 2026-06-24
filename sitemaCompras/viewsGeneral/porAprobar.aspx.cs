@@ -961,7 +961,16 @@ namespace sitemaCompras.viewsGeneral
     			}
     			else if (userRoleF == 9)
     			{
-    				siguienteEtapa = 8; // Jefe de Compras (9) aprueba y envía al Supervisor de Cotizadores (8)
+    				BaseDatos dbRead = new BaseDatos();
+    				string[] datos = dbRead.datosSolicitudes(Convert.ToInt32(Session["idDoc"]));
+    				if (datos != null && !string.IsNullOrEmpty(datos[13]))
+    				{
+    					siguienteEtapa = 2; // Segunda vuelta: Jefe de Compras (9) Vo.Bo. -> DGAF Vo. Bo. (2)
+    				}
+    				else
+    				{
+    					siguienteEtapa = 8; // Primera vuelta: Jefe de Compras (9) aprueba -> Supervisor de Cotizadores (8)
+    				}
     			}
 
     			if ((string)Session["type"] == "3")

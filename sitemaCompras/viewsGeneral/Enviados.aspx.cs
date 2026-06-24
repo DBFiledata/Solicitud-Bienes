@@ -1062,11 +1062,7 @@ namespace sitemaCompras.viewsGeneral
     					{
     						DataRow row = dt.Rows[i];
     						string rowEtapa = Convert.ToString(row["etapa"]);
-    						string rowEstatus = Convert.ToString(row["estatus"]);
-    						if (rowEtapa.Equals(stageName, StringComparison.OrdinalIgnoreCase) && 
-    						    (rowEstatus.Equals("Recibido", StringComparison.OrdinalIgnoreCase) || 
-    						     rowEstatus.Equals("En Proceso", StringComparison.OrdinalIgnoreCase) ||
-    						     rowEstatus.Equals("En atención", StringComparison.OrdinalIgnoreCase)))
+    						if (rowEtapa.Equals(stageName, StringComparison.OrdinalIgnoreCase))
     						{
     							dt.Rows.RemoveAt(i);
     						}
