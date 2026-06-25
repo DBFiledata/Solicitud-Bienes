@@ -757,6 +757,7 @@ namespace sitemaCompras.viewsGeneral
     			panelBtns.Enabled = false;
     			if (userRoleF == 3) // Presupuesto
     			{
+    				btnSiguienteEtapa.Text = "Enviar ✉️";
     				panelBtnsOthers.Enabled = true;
     				panelBtnsOthers.Visible = true;
     				btnEstatusEspeciales.Enabled = true;
@@ -776,6 +777,7 @@ namespace sitemaCompras.viewsGeneral
     			}
     			else if (userRoleF == 5) // SAP
     			{
+    				btnSiguienteEtapa.Text = "Enviar ✉️";
     				panelBtnsOthers.Enabled = true;
     				panelBtnsOthers.Visible = true;
     				btnEstatusEspeciales.Enabled = false;
@@ -794,6 +796,46 @@ namespace sitemaCompras.viewsGeneral
     				
     				btnActualizar.Enabled = true;
     				btnActualizar.Visible = true;
+    				panelInfoGeneral1.Enabled = false;
+    				txtFecha.Enabled = false;
+    				panelInfoGeneral3_1.Enabled = false;
+    				panelInfoGeneral3_2.Enabled = false;
+    				panelAddContenido.Visible = false;
+    				panelAddContenido.Enabled = false;
+    			}
+    			else if (userRoleF == 4) // Legal
+    			{
+    				btnSiguienteEtapa.Text = "Enviar ✉️";
+    				panelBtnsOthers.Enabled = true;
+    				panelBtnsOthers.Visible = true;
+    				btnEstatusEspeciales.Enabled = true;
+    				btnEstatusEspeciales.Visible = true;
+    				btnSiguienteEtapa.Enabled = true;
+    				btnSiguienteEtapa.Visible = true;
+    				btnActualizar.Enabled = false;
+    				btnActualizar.Visible = false;
+    				panelAsignarProveedor.Enabled = false;
+    				panelAsignarProveedor.Visible = false;
+    				panelInfoGeneral1.Enabled = false;
+    				txtFecha.Enabled = false;
+    				panelInfoGeneral3_1.Enabled = false;
+    				panelInfoGeneral3_2.Enabled = false;
+    				panelAddContenido.Visible = false;
+    				panelAddContenido.Enabled = false;
+    			}
+    			else if (userRoleF == 6) // Control Fiscal
+    			{
+    				btnSiguienteEtapa.Text = "Aprobar ✔️";
+    				panelBtnsOthers.Enabled = true;
+    				panelBtnsOthers.Visible = true;
+    				btnEstatusEspeciales.Enabled = true;
+    				btnEstatusEspeciales.Visible = true;
+    				btnSiguienteEtapa.Enabled = true;
+    				btnSiguienteEtapa.Visible = true;
+    				btnActualizar.Enabled = false;
+    				btnActualizar.Visible = false;
+    				panelAsignarProveedor.Enabled = false;
+    				panelAsignarProveedor.Visible = false;
     				panelInfoGeneral1.Enabled = false;
     				txtFecha.Enabled = false;
     				panelInfoGeneral3_1.Enabled = false;
@@ -1466,8 +1508,18 @@ namespace sitemaCompras.viewsGeneral
     	{
     		try
     		{
-    			configurarBotonesEtapas();
-    			mpeEtapas.Show();
+    			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    			if (userRoleF == 6)
+    			{
+    				Session["estatusDocs"] = 3; // Aprobado
+    				Session["prosesoDocs"] = 2; // Asignar estatus
+    				mpeComfirmarProceso.Show();
+    			}
+    			else
+    			{
+    				configurarBotonesEtapas();
+    				mpeEtapas.Show();
+    			}
     		}
     		catch (Exception ex)
     		{
@@ -2393,10 +2445,72 @@ namespace sitemaCompras.viewsGeneral
 					}
 					else
 					{
-						// Paso 12: Envia a Control Fiscal (Etapa 6)
-						btnControlF.Visible = true;
+						// Difeenciación Paso 12 vs Paso 17
+						bool haPasadoPorPresidencia = false;
+						if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+						{
+							foreach (DataRow row in dsComents.Tables[0].Rows)
+							{
+								if (row["descripciones"] != DBNull.Value && row["descripciones"].ToString() == "Presidencia")
+								{
+									haPasadoPorPresidencia = true;
+									break;
+								}
+							}
+						}
+
+						if (haPasadoPorPresidencia)
+						{
+							// Paso 17: Envia a Legal (Etapa 4, Paso 18)
+							btnLegal.Visible = true;
+						}
+						else
+						{
+							// Paso 12: Envia a Jefe de Compras (Etapa 9, Paso 13)
+							btnCompras.Visible = true;
+						}
 					}
 				}
+			}
+			else if (userRoleF == 4 && etapaActual == 4) // Legal
+			{
+				ocultarTodosBotonesEtapas();
+				bool haPasadoPorPresidencia = false;
+				int indexPresidencia = -1;
+				int indexComprasFase3 = -1;
+
+				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+				{
+					DataTable dt = dsComents.Tables[0];
+					for (int i = 0; i < dt.Rows.Count; i++)
+					{
+						string etapaDesc = dt.Rows[i]["descripciones"].ToString();
+						if (etapaDesc == "Presidencia")
+						{
+							haPasadoPorPresidencia = true;
+							if (indexPresidencia == -1) indexPresidencia = i;
+						}
+						if (etapaDesc == "Compras")
+						{
+							if (indexComprasFase3 == -1) indexComprasFase3 = i;
+						}
+					}
+				}
+
+				if (haPasadoPorPresidencia && indexPresidencia != -1 && indexComprasFase3 != -1 && indexComprasFase3 < indexPresidencia)
+				{
+					// Paso 18: segunda vuelta → enviar a Control Fiscal (Etapa 6, Paso 19)
+					btnControlF.Visible = true;
+				}
+				else
+				{
+					// Paso 16: primera vuelta → enviar a Compras (Etapa 9, Paso 17)
+					btnCompras.Visible = true;
+				}
+			}
+			else if (userRoleF == 6 && etapaActual == 6) // Control Fiscal (Paso 19)
+			{
+				ocultarTodosBotonesEtapas();
 			}
 		}
 

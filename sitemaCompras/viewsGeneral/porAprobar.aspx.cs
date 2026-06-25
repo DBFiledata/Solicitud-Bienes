@@ -959,7 +959,27 @@ namespace sitemaCompras.viewsGeneral
     			{
     				BaseDatos dbRead = new BaseDatos();
     				string[] datos = dbRead.datosSolicitudes(Convert.ToInt32(Session["idDoc"]));
-    				if (datos != null && !string.IsNullOrEmpty(datos[13]))
+    				bool tieneReserva = false;
+    				DataSet dsComents = dbRead.listaComentariosSolicitudes(Convert.ToInt32(Session["idDoc"]));
+    				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+    				{
+    					foreach (DataRow row in dsComents.Tables[0].Rows)
+    					{
+    						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
+    						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+    						{
+    							tieneReserva = true;
+    							break;
+    						}
+    					}
+    				}
+    				bool tieneOrdenCompra = datos != null && !string.IsNullOrEmpty(datos[12]);
+
+    				if (tieneReserva && tieneOrdenCompra)
+    				{
+    					siguienteEtapa = 7; // Paso 14 → Presidencia (Paso 15, etapa 7)
+    				}
+    				else if (datos != null && !string.IsNullOrEmpty(datos[13]))
     				{
     					siguienteEtapa = 3; // Segunda vuelta (Paso 7b): DGAF Vo.Bo. -> Presupuesto (Paso 8, etapa 3)
     				}
@@ -972,7 +992,27 @@ namespace sitemaCompras.viewsGeneral
     			{
     				BaseDatos dbRead = new BaseDatos();
     				string[] datos = dbRead.datosSolicitudes(Convert.ToInt32(Session["idDoc"]));
-    				if (datos != null && !string.IsNullOrEmpty(datos[13]))
+    				bool tieneReserva = false;
+    				DataSet dsComents = dbRead.listaComentariosSolicitudes(Convert.ToInt32(Session["idDoc"]));
+    				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
+    				{
+    					foreach (DataRow row in dsComents.Tables[0].Rows)
+    					{
+    						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
+    						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+    						{
+    							tieneReserva = true;
+    							break;
+    						}
+    					}
+    				}
+    				bool tieneOrdenCompra = datos != null && !string.IsNullOrEmpty(datos[12]);
+
+    				if (tieneReserva && tieneOrdenCompra)
+    				{
+    					siguienteEtapa = 2; // Paso 13 Jefe de Compras aprueba -> DGAF (Paso 14, etapa 2)
+    				}
+    				else if (datos != null && !string.IsNullOrEmpty(datos[13]))
     				{
     					siguienteEtapa = 2; // Segunda vuelta: Jefe de Compras (9) Vo.Bo. -> DGAF Vo. Bo. (2)
     				}
@@ -980,6 +1020,10 @@ namespace sitemaCompras.viewsGeneral
     				{
     					siguienteEtapa = 8; // Primera vuelta: Jefe de Compras (9) aprueba -> Supervisor de Cotizadores (8)
     				}
+    			}
+    			else if (userRoleF == 7) // Presidencia
+    			{
+    				siguienteEtapa = 4; // Paso 15 Presidencia aprueba -> Legal (Paso 16, etapa 4)
     			}
 
     			if ((string)Session["type"] == "3")
