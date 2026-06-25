@@ -623,15 +623,21 @@ namespace sitemaCompras.viewsGeneral
 
     	protected void Page_Load(object sender, EventArgs e)
     	{
-    		if (Page.IsPostBack)
-    		{
-    			return;
-    		}
     		if (!User.Identity.IsAuthenticated)
     		{
     			Response.Redirect("~/Login.aspx");
     		}
     		else if ((Convert.ToInt32(Session["type"]) >= 2) & (Convert.ToInt32(Session["type"]) <= 6))
+    		{
+    			configurarVisibilidadPaneles();
+    		}
+
+    		if (Page.IsPostBack)
+    		{
+    			return;
+    		}
+
+    		if ((Convert.ToInt32(Session["type"]) >= 2) & (Convert.ToInt32(Session["type"]) <= 6))
     		{
     			DataSet ds = new DataSet();
     			ds = filtros(null, "", "", "", null, 1, "", null, Convert.ToInt32(Session["unidad"]), 1, null, null, null);
@@ -650,140 +656,6 @@ namespace sitemaCompras.viewsGeneral
     			dlistCotizadores.DataSource = ds3;
     			dlistCotizadores.DataBind();
     			dlistCotizadores.Items.Insert(0, "\ud83d\udc68\ud83c\udffb\u200d\ud83d\udcbc Seleccionar");
-    			if ((Convert.ToInt32(Session["type"]) == 2) | (Convert.ToInt32(Session["type"]) == 3))
-    			{
-    				panelAsignarProveedor.Enabled = false;
-    				panelAsignarProveedor.Visible = false;
-    				panelBtnsOthers.Enabled = false;
-    				panelBtnsOthers.Visible = false;
-    				panelBtnVer.Visible = false;
-    				if (Convert.ToInt32(Session["type"]) == 2)
-    				{
-    					panelBtns.Visible = false;
-    					panelBtnVer.Visible = true;
-    				}
-    			}
-    			if (Convert.ToInt32(Session["type"]) == 4)
-    			{
-    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
-    				if (userRoleF == 9) // Analista de Compras
-    				{
-    					panelBtnsOthers.Enabled = true;
-    					panelBtnsOthers.Visible = true;
-    					panelBtnVer.Enabled = false;
-    					panelBtnVer.Visible = false;
-    				}
-    				else
-    				{
-    					panelBtnsOthers.Enabled = false;
-    					panelBtnsOthers.Visible = false;
-    					panelBtnVer.Enabled = true;
-    					panelBtnVer.Visible = true;
-    				}
-    				btnActualizar.Visible = true;
-    				btnActualizar.Enabled = true;
-    				panelAsignarProveedor.Enabled = false;
-    				panelAsignarProveedor.Visible = false;
-    				panelBtns.Visible = false;
-    				panelBtns.Enabled = false;
-    				panelInfoGeneral1.Enabled = false;
-    				txtFecha.Enabled = false;
-    				panelInfoGeneral3_1.Enabled = false;
-    				panelInfoGeneral3_2.Enabled = false;
-    				panelAddContenido.Visible = false;
-    				panelAddContenido.Enabled = false;
-    				LbReplicaResolucion1.Visible = true;
-    				LbReplicaSB.Visible = true;
-    				LbTransferRenglones.Visible = true;
-    				int columnaProcesosIndex = GetColumnIndexByName(gridContenido, "Procesos");
-    				if (columnaProcesosIndex != -1)
-    				{
-    					gridContenido.Columns[columnaProcesosIndex].Visible = false;
-    				}
-    			}
-    			if (Convert.ToInt32(Session["type"]) == 5)
-    			{
-    				panelBtnsOthers.Enabled = true;
-    				panelBtnsOthers.Visible = true;
-    				panelAsignarProveedor.Enabled = true;
-    				panelAsignarProveedor.Visible = true;
-    				panelInfoPreveedor.Visible = false;
-    				panelInfoPreveedor.Enabled = false;
-    				panelBtnVer.Enabled = false;
-    				panelBtnVer.Visible = false;
-    				panelBtns.Visible = false;
-    				panelBtns.Enabled = false;
-    				panelAddContenido.Visible = false;
-    				panelAddContenido.Enabled = false;
-    				btnActualizar.Enabled = true;
-    				btnActualizar.Visible = true;
-    				LbReplicaResolucion.Visible = true;
-    				LbReplicaSB.Visible = true;
-    				LbTransferRenglones.Visible = true;
-    				panelInfoGeneral1.Enabled = false;
-    				txtFecha.Enabled = false;
-    				panelInfoGeneral3_1.Enabled = false;
-    				panelInfoGeneral3_2.Enabled = false;
-    				int columnaProcesosIndex2 = GetColumnIndexByName(gridContenido, "Procesos");
-    				if (columnaProcesosIndex2 != -1)
-    				{
-    					gridContenido.Columns[columnaProcesosIndex2].Visible = false;
-    				}
-    			}
-    			if (Convert.ToInt32(Session["type"]) == 6)
-    			{
-    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
-    				panelBtnVer.Visible = false;
-    				panelBtnVer.Enabled = false;
-    				panelBtns.Visible = false;
-    				panelBtns.Enabled = false;
-    				if (userRoleF == 3) // Presupuesto
-    				{
-    					panelBtnsOthers.Enabled = true;
-    					panelBtnsOthers.Visible = true;
-    					btnEstatusEspeciales.Enabled = true;
-    					btnEstatusEspeciales.Visible = true;
-    					btnSiguienteEtapa.Enabled = true;
-    					btnSiguienteEtapa.Visible = true;
-    					btnActualizar.Enabled = false;
-    					btnActualizar.Visible = false;
-    					panelAsignarProveedor.Enabled = false;
-    					panelAsignarProveedor.Visible = false;
-    					panelInfoGeneral1.Enabled = false;
-    					txtFecha.Enabled = false;
-    					panelInfoGeneral3_1.Enabled = false;
-    					panelInfoGeneral3_2.Enabled = false;
-    					panelAddContenido.Visible = false;
-    					panelAddContenido.Enabled = false;
-    				}
-    				else if (userRoleF == 5) // SAP
-    				{
-    					panelBtnsOthers.Enabled = true;
-    					panelBtnsOthers.Visible = true;
-    					btnEstatusEspeciales.Enabled = false;
-    					btnEstatusEspeciales.Visible = false;
-    					btnSiguienteEtapa.Enabled = true;
-    					btnSiguienteEtapa.Visible = true;
-    					
-    					panelAsignarProveedor.Enabled = true;
-    					panelAsignarProveedor.Visible = true;
-    					dlistProveedor.Enabled = false;
-    					txtPrecioProveedor.ReadOnly = true;
-    					txtResolucion.ReadOnly = true;
-    					txtOrdenCompra.ReadOnly = false;
-    					lbActualizarProveedor.Enabled = true;
-    					lbActualizarProveedor.Visible = true;
-    					
-    					btnActualizar.Enabled = true;
-    					btnActualizar.Visible = true;
-    					panelInfoGeneral1.Enabled = false;
-    					txtFecha.Enabled = false;
-    					panelInfoGeneral3_1.Enabled = false;
-    					panelInfoGeneral3_2.Enabled = false;
-    					panelAddContenido.Visible = false;
-    					panelAddContenido.Enabled = false;
-    				}
-    			}
     		}
     		else
     		{
@@ -791,6 +663,144 @@ namespace sitemaCompras.viewsGeneral
     			Session.Clear();
     			FormsAuthentication.SignOut();
     			Response.Redirect("~/login.aspx");
+    		}
+    	}
+
+    	private void configurarVisibilidadPaneles()
+    	{
+    		if ((Convert.ToInt32(Session["type"]) == 2) | (Convert.ToInt32(Session["type"]) == 3))
+    		{
+    			panelAsignarProveedor.Enabled = false;
+    			panelAsignarProveedor.Visible = false;
+    			panelBtnsOthers.Enabled = false;
+    			panelBtnsOthers.Visible = false;
+    			panelBtnVer.Visible = false;
+    			if (Convert.ToInt32(Session["type"]) == 2)
+    			{
+    				panelBtns.Visible = false;
+    				panelBtnVer.Visible = true;
+    			}
+    		}
+    		if (Convert.ToInt32(Session["type"]) == 4)
+    		{
+    			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    			if (userRoleF == 9) // Analista de Compras
+    			{
+    				panelBtnsOthers.Enabled = true;
+    				panelBtnsOthers.Visible = true;
+    				panelBtnVer.Enabled = false;
+    				panelBtnVer.Visible = false;
+    			}
+    			else
+    			{
+    				panelBtnsOthers.Enabled = false;
+    				panelBtnsOthers.Visible = false;
+    				panelBtnVer.Enabled = true;
+    				panelBtnVer.Visible = true;
+    			}
+    			btnActualizar.Visible = true;
+    			btnActualizar.Enabled = true;
+    			panelAsignarProveedor.Enabled = false;
+    			panelAsignarProveedor.Visible = false;
+    			panelBtns.Visible = false;
+    			panelBtns.Enabled = false;
+    			panelInfoGeneral1.Enabled = false;
+    			txtFecha.Enabled = false;
+    			panelInfoGeneral3_1.Enabled = false;
+    			panelInfoGeneral3_2.Enabled = false;
+    			panelAddContenido.Visible = false;
+    			panelAddContenido.Enabled = false;
+    			LbReplicaResolucion1.Visible = true;
+    			LbReplicaSB.Visible = true;
+    			LbTransferRenglones.Visible = true;
+    			int columnaProcesosIndex = GetColumnIndexByName(gridContenido, "Procesos");
+    			if (columnaProcesosIndex != -1)
+    			{
+    				gridContenido.Columns[columnaProcesosIndex].Visible = false;
+    			}
+    		}
+    		if (Convert.ToInt32(Session["type"]) == 5)
+    		{
+    			panelBtnsOthers.Enabled = true;
+    			panelBtnsOthers.Visible = true;
+    			panelAsignarProveedor.Enabled = true;
+    			panelAsignarProveedor.Visible = true;
+    			panelInfoPreveedor.Visible = false;
+    			panelInfoPreveedor.Enabled = false;
+    			panelBtnVer.Enabled = false;
+    			panelBtnVer.Visible = false;
+    			panelBtns.Visible = false;
+    			panelBtns.Enabled = false;
+    			panelAddContenido.Visible = false;
+    			panelAddContenido.Enabled = false;
+    			btnActualizar.Enabled = true;
+    			btnActualizar.Visible = true;
+    			LbReplicaResolucion.Visible = true;
+    			LbReplicaSB.Visible = true;
+    			LbTransferRenglones.Visible = true;
+    			panelInfoGeneral1.Enabled = false;
+    			txtFecha.Enabled = false;
+    			panelInfoGeneral3_1.Enabled = false;
+    			panelInfoGeneral3_2.Enabled = false;
+    			int columnaProcesosIndex2 = GetColumnIndexByName(gridContenido, "Procesos");
+    			if (columnaProcesosIndex2 != -1)
+    			{
+    				gridContenido.Columns[columnaProcesosIndex2].Visible = false;
+    			}
+    		}
+    		if (Convert.ToInt32(Session["type"]) == 6)
+    		{
+    			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    			panelBtnVer.Visible = false;
+    			panelBtnVer.Enabled = false;
+    			panelBtns.Visible = false;
+    			panelBtns.Enabled = false;
+    			if (userRoleF == 3) // Presupuesto
+    			{
+    				panelBtnsOthers.Enabled = true;
+    				panelBtnsOthers.Visible = true;
+    				btnEstatusEspeciales.Enabled = true;
+    				btnEstatusEspeciales.Visible = true;
+    				btnSiguienteEtapa.Enabled = true;
+    				btnSiguienteEtapa.Visible = true;
+    				btnActualizar.Enabled = false;
+    				btnActualizar.Visible = false;
+    				panelAsignarProveedor.Enabled = false;
+    				panelAsignarProveedor.Visible = false;
+    				panelInfoGeneral1.Enabled = false;
+    				txtFecha.Enabled = false;
+    				panelInfoGeneral3_1.Enabled = false;
+    				panelInfoGeneral3_2.Enabled = false;
+    				panelAddContenido.Visible = false;
+    				panelAddContenido.Enabled = false;
+    			}
+    			else if (userRoleF == 5) // SAP
+    			{
+    				panelBtnsOthers.Enabled = true;
+    				panelBtnsOthers.Visible = true;
+    				btnEstatusEspeciales.Enabled = false;
+    				btnEstatusEspeciales.Visible = false;
+    				btnSiguienteEtapa.Enabled = true;
+    				btnSiguienteEtapa.Visible = true;
+    				
+    				panelAsignarProveedor.Enabled = true;
+    				panelAsignarProveedor.Visible = true;
+    				dlistProveedor.Enabled = false;
+    				txtPrecioProveedor.ReadOnly = true;
+    				txtResolucion.ReadOnly = true;
+    				txtOrdenCompra.ReadOnly = false;
+    				lbActualizarProveedor.Enabled = true;
+    				lbActualizarProveedor.Visible = true;
+    				
+    				btnActualizar.Enabled = true;
+    				btnActualizar.Visible = true;
+    				panelInfoGeneral1.Enabled = false;
+    				txtFecha.Enabled = false;
+    				panelInfoGeneral3_1.Enabled = false;
+    				panelInfoGeneral3_2.Enabled = false;
+    				panelAddContenido.Visible = false;
+    				panelAddContenido.Enabled = false;
+    			}
     		}
     	}
 
@@ -2319,6 +2329,7 @@ namespace sitemaCompras.viewsGeneral
 			btnVPresidencia.Visible = true;
 			btnSecretaria.Visible = true;
 			btnCompras.Visible = true;
+			btnContrataciones.Visible = true;
 
 			int userRoleF = Convert.ToInt32(Session["rolesF"]);
 			int etapaActual = Convert.ToInt32(Session["etapaActual"]);
@@ -2331,7 +2342,8 @@ namespace sitemaCompras.viewsGeneral
 			{
 				foreach (DataRow row in dsComents.Tables[0].Rows)
 				{
-					if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+					if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
+					    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
 					{
 						tieneReserva = true;
 						break;
@@ -2400,6 +2412,7 @@ namespace sitemaCompras.viewsGeneral
 			btnVPresidencia.Visible = false;
 			btnSecretaria.Visible = false;
 			btnCompras.Visible = false;
+			btnContrataciones.Visible = false;
 		}
 
 		private void configurarBotonesEstatusEspeciales()
@@ -2429,7 +2442,8 @@ namespace sitemaCompras.viewsGeneral
 				{
 					foreach (DataRow row in dsComents.Tables[0].Rows)
 					{
-						if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
+						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
 						{
 							tieneReserva = true;
 							break;
