@@ -518,6 +518,8 @@ namespace sitemaCompras.viewsGeneral
 
     	protected Button btnEstatusEspeciales;
 
+    	protected Button btnAsignar;
+
     	protected LinkButton LbReplicaSB;
 
     	protected Image Image5;
@@ -690,6 +692,13 @@ namespace sitemaCompras.viewsGeneral
     				panelBtnsOthers.Visible = true;
     				panelBtnVer.Enabled = false;
     				panelBtnVer.Visible = false;
+    				panelAsignarProveedor.Enabled = true;
+    				panelAsignarProveedor.Visible = true;
+    				panelInfoPreveedor.Visible = false;
+    				panelInfoPreveedor.Enabled = false;
+    				btnAsignar.Visible = false;
+    				btnEstatusEspeciales.Visible = false;
+    				btnSiguienteEtapa.Visible = true;
     			}
     			else
     			{
@@ -697,11 +706,12 @@ namespace sitemaCompras.viewsGeneral
     				panelBtnsOthers.Visible = false;
     				panelBtnVer.Enabled = true;
     				panelBtnVer.Visible = true;
+    				panelAsignarProveedor.Enabled = false;
+    				panelAsignarProveedor.Visible = false;
+    				btnAsignar.Visible = false;
     			}
     			btnActualizar.Visible = true;
     			btnActualizar.Enabled = true;
-    			panelAsignarProveedor.Enabled = false;
-    			panelAsignarProveedor.Visible = false;
     			panelBtns.Visible = false;
     			panelBtns.Enabled = false;
     			panelInfoGeneral1.Enabled = false;
@@ -723,10 +733,13 @@ namespace sitemaCompras.viewsGeneral
     		{
     			panelBtnsOthers.Enabled = true;
     			panelBtnsOthers.Visible = true;
-    			panelAsignarProveedor.Enabled = true;
-    			panelAsignarProveedor.Visible = true;
-    			panelInfoPreveedor.Visible = false;
+    			panelAsignarProveedor.Enabled = false;
+    			panelAsignarProveedor.Visible = false;
+    			panelInfoPreveedor.Visible = true;
     			panelInfoPreveedor.Enabled = false;
+    			btnAsignar.Visible = true;
+    			btnEstatusEspeciales.Visible = false;
+    			btnSiguienteEtapa.Visible = false;
     			panelBtnVer.Enabled = false;
     			panelBtnVer.Visible = false;
     			panelBtns.Visible = false;
@@ -1064,14 +1077,14 @@ namespace sitemaCompras.viewsGeneral
     		{
     			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, 1, 1, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
     		}
-    		else if (userRoleF == 9) // Compras
+    		else if (userRoleF == 9) // Compras (Analista de Compras)
     		{
     			int filterEstatus = estatus ?? 15;
-    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, 9, usuaruio, cotizador, null, director, proveedor, desde, hasta);
+    			ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, 9, usuaruio, Convert.ToString(Session["id"]), null, director, proveedor, desde, hasta);
     		}
-    		else if (userRoleF == 8) // Cotizador
+    		else if (userRoleF == 8) // Cotizador (Supervisor de Cotizadores)
     		{
-    			ds = odbusuario.filtroSolicitudesCotizadorEnproceso(id, solicitudBien, resolucion, descripciones, null, 8, usuaruio, Convert.ToString(Session["id"]), null, director, proveedor, desde, hasta);
+    			ds = odbusuario.filtroSolicitudesCotizadorEnproceso(id, solicitudBien, resolucion, descripciones, null, 8, usuaruio, null, null, director, proveedor, desde, hasta);
     		}
     		else // Recepciones intermedias
     		{
@@ -2163,13 +2176,26 @@ namespace sitemaCompras.viewsGeneral
     		try
     		{
     			odbusuario = new BaseDatos();
-    			string id = "";
-    			string text = "";
     			if (dlistCotizadores.SelectedIndex > 0)
     			{
-    				if (odbusuario.gestionarCotizadorSolicitudes(Convert.ToInt32(Session["idDoc"]), dlistCotizadores.SelectedValue, 1))
+    				int idDoc = Convert.ToInt32(Session["idDoc"]);
+    				string cotValue = dlistCotizadores.SelectedValue;
+    				if (odbusuario.gestionarCotizadorSolicitudes(idDoc, cotValue, 1))
     				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Cotizador asignado');", addScriptTags: true);
+    					// Al confirmar la asignación, la solicitud avanza al Paso 6 (Etapa 9, Estatus 4)
+    					odbusuario = new BaseDatos();
+    					if (odbusuario.siguienteEtapa(idDoc, 9, 4, "Asignado a cotizador por supervisor " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Cotizador asignado y solicitud enviada al Paso 6');", addScriptTags: true);
+    					}
+    					else
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Cotizador asignado, pero no se pudo avanzar al Paso 6');", addScriptTags: true);
+    					}
+    					DataSet ds = filtros(null, "", "", "", null, 1, "", null, Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    					GridView1.DataSource = ds;
+    					GridView1.DataBind();
+    					MultiView1.ActiveViewIndex = 0;
     				}
     				else
     				{

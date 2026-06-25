@@ -989,9 +989,9 @@
                                             <div class="form-group col-4">
                                                 <asp:Button ID="btnVerDoc" class="btn btn-info form-control" runat="server" Text="Ver 👁️" OnClick="btnVerDoc_Click" />
                                             </div>
-                                            <%--<div class="form-group col-3">
+                                            <div class="form-group col-4">
                                                 <asp:Button ID="btnAsignar" class="btn btn-success form-control" runat="server" Text="Asignar 📌" OnClick="btnAsignar_Click" />
-                                            </div>--%>
+                                            </div>
                                             <div class="form-group col-4">
                                                 <asp:Button ID="btnEstatusEspeciales" class="btn btn-danger form-control" runat="server" Text="Estatus Especiales 📑" OnClick="btnEstatusEspeciales_Click" />
                                             </div>

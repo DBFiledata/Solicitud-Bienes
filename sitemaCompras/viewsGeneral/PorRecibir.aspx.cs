@@ -948,7 +948,14 @@ namespace sitemaCompras.viewsGeneral
     		odbusuario = new BaseDatos();
     		int userRoleF = Convert.ToInt32(Session["rolesF"]);
     		int filterEstatus = estatus ?? 4; // Por defecto sólo mostrar pendientes ("Enviado")
-    		ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, userRoleF, usuaruio, cotizador, unidad, director, proveedor, desde, hasta);
+    		
+    		string cotizadorFilter = cotizador;
+    		if (userRoleF == 9)
+    		{
+    			cotizadorFilter = Convert.ToString(Session["id"]);
+    		}
+    		
+    		ds = odbusuario.filtroSolicitudes(id, solicitudBien, resolucion, descripciones, filterEstatus, userRoleF, usuaruio, cotizadorFilter, unidad, director, proveedor, desde, hasta);
 
     		if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
     		{

@@ -657,18 +657,9 @@ namespace sitemaCompras.viewsGeneral
     			}
     			else if (Convert.ToInt32(Session["rolesF"]) == 8)
     			{
-    				if (string.IsNullOrEmpty(cotVal))
-    				{
-    					btnReasignar.Visible = true;
-    					btnConfirmar.Visible = false;
-    					btnRechazar.Visible = false;
-    				}
-    				else
-    				{
-    					btnReasignar.Visible = false;
-    					btnConfirmar.Visible = true;
-    					btnRechazar.Visible = true;
-    				}
+    				btnReasignar.Visible = false;
+    				btnConfirmar.Visible = true;
+    				btnRechazar.Visible = true;
     			}
     			else
     			{
@@ -1704,7 +1695,11 @@ namespace sitemaCompras.viewsGeneral
     			int id = 0;
     			id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
     			odbusuario = new BaseDatos();
-    			if (odbusuario.asignarEstatus(id, 9, 14, "Atención Confirmada por cotizador " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
+    			int targetEtapa = Convert.ToInt32(Session["rolesF"]) == 8 ? 8 : 9;
+    			string commentText = Convert.ToInt32(Session["rolesF"]) == 8 
+    				? "Atención Confirmada por supervisor " + Convert.ToString(Session["username"])
+    				: "Atención Confirmada por cotizador " + Convert.ToString(Session["username"]);
+    			if (odbusuario.asignarEstatus(id, targetEtapa, 14, commentText, Convert.ToString(Session["id"])))
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Confirmado');", addScriptTags: true);
     				DataSet ds = new DataSet();
@@ -1732,7 +1727,11 @@ namespace sitemaCompras.viewsGeneral
     			int id = 0;
     			id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
     			odbusuario = new BaseDatos();
-    			if (odbusuario.asignarEstatus(id, 9, 7, "Rechazado por cotizador " + Convert.ToString(Session["username"]), Convert.ToString(Session["id"])))
+    			int targetEtapa = Convert.ToInt32(Session["rolesF"]) == 8 ? 8 : 9;
+    			string commentText = Convert.ToInt32(Session["rolesF"]) == 8 
+    				? "Rechazado por supervisor " + Convert.ToString(Session["username"])
+    				: "Rechazado por cotizador " + Convert.ToString(Session["username"]);
+    			if (odbusuario.asignarEstatus(id, targetEtapa, 7, commentText, Convert.ToString(Session["id"])))
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Rechazado');", addScriptTags: true);
     				DataSet ds = new DataSet();
