@@ -733,6 +733,10 @@ namespace sitemaCompras.viewsGeneral
     			if (Convert.ToInt32(Session["type"]) == 6)
     			{
     				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				panelBtnVer.Visible = false;
+    				panelBtnVer.Enabled = false;
+    				panelBtns.Visible = false;
+    				panelBtns.Enabled = false;
     				if (userRoleF == 3) // Presupuesto
     				{
     					panelBtnsOthers.Enabled = true;
