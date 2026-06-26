@@ -1018,59 +1018,71 @@ namespace sitemaCompras.viewsGeneral
     					lblOrdenCompra.Text = datos[12];
     				}
 
-    				// Configuration of Assignment/Selection Panel in Paso 6 / Paso 9
+    				// Configuration of Assignment/Selection Panel in Paso 6 / Paso 9 / Paso 12
     				int userRoleF = Convert.ToInt32(Session["rolesF"]);
     				int etapaActual = Convert.ToInt32(Session["etapaActual"]);
     				if (userRoleF == 9 && etapaActual == 9) // Analista / Compras
     				{
-    					panelAsignarProveedor.Enabled = true;
-    					panelAsignarProveedor.Visible = true;
-    					panelInfoPreveedor.Visible = false; // Hide read-only view because we are in active editing
-
-    					if (has3Prov)
+    					bool tieneOrdenCompra = !string.IsNullOrEmpty(datos[12]);
+    					if (tieneOrdenCompra)
     					{
-    						// Paso 9: Selección de definitivo
-    						divAsignacion3Prov.Visible = false;
-    						divSeleccionDefinitiva.Visible = true;
-    						divOriginalProveedor.Visible = false;
-    						divOriginalPrecio.Visible = false;
-
-    						rblProveedores.Items.Clear();
-    						BaseDatos dbProv = new BaseDatos();
-    						string[] p1 = dbProv.datosProveedores(Convert.ToInt32(datos[15]));
-    						string name1 = p1 != null ? p1[1] : "Proveedor 1";
-    						
-    						dbProv = new BaseDatos();
-    						string[] p2 = dbProv.datosProveedores(Convert.ToInt32(datos[16]));
-    						string name2 = p2 != null ? p2[1] : "Proveedor 2";
-
-    						dbProv = new BaseDatos();
-    						string[] p3 = dbProv.datosProveedores(Convert.ToInt32(datos[17]));
-    						string name3 = p3 != null ? p3[1] : "Proveedor 3";
-
-    						rblProveedores.Items.Add(new ListItem(name1 + " ($" + datos[18] + ")", datos[15]));
-    						rblProveedores.Items.Add(new ListItem(name2 + " ($" + datos[19] + ")", datos[16]));
-    						rblProveedores.Items.Add(new ListItem(name3 + " ($" + datos[20] + ")", datos[17]));
-
-    						if (datos[10] != "0" && rblProveedores.Items.FindByValue(datos[10]) != null)
-    						{
-    							rblProveedores.SelectedValue = datos[10];
-    						}
+    						// Paso 12 / Paso 17: solo lectura (ya hay un proveedor definitivo y una O/C asignada)
+    						panelAsignarProveedor.Enabled = false;
+    						panelAsignarProveedor.Visible = false;
+    						panelInfoPreveedor.Visible = true;
+    						panelInfoPreveedor.Enabled = true;
     					}
     					else
     					{
-    						// Paso 6: Asignación de 3 proveedores
-    						divAsignacion3Prov.Visible = true;
-    						divSeleccionDefinitiva.Visible = false;
-    						divOriginalProveedor.Visible = false;
-    						divOriginalPrecio.Visible = false;
+    						panelAsignarProveedor.Enabled = true;
+    						panelAsignarProveedor.Visible = true;
+    						panelInfoPreveedor.Visible = false; // Hide read-only view because we are in active editing
 
-    						dlistProveedor1.SelectedValue = !string.IsNullOrEmpty(datos[15]) && datos[15] != "0" ? datos[15] : dlistProveedor1.Items[0].Value;
-    						txtPrecioProveedor1.Text = datos[18];
-    						dlistProveedor2.SelectedValue = !string.IsNullOrEmpty(datos[16]) && datos[16] != "0" ? datos[16] : dlistProveedor2.Items[0].Value;
-    						txtPrecioProveedor2.Text = datos[19];
-    						dlistProveedor3.SelectedValue = !string.IsNullOrEmpty(datos[17]) && datos[17] != "0" ? datos[17] : dlistProveedor3.Items[0].Value;
-    						txtPrecioProveedor3.Text = datos[20];
+    						if (has3Prov)
+    						{
+    							// Paso 9: Selección de definitivo
+    							divAsignacion3Prov.Visible = false;
+    							divSeleccionDefinitiva.Visible = true;
+    							divOriginalProveedor.Visible = false;
+    							divOriginalPrecio.Visible = false;
+
+    							rblProveedores.Items.Clear();
+    							BaseDatos dbProv = new BaseDatos();
+    							string[] p1 = dbProv.datosProveedores(Convert.ToInt32(datos[15]));
+    							string name1 = p1 != null ? p1[1] : "Proveedor 1";
+    							
+    							dbProv = new BaseDatos();
+    							string[] p2 = dbProv.datosProveedores(Convert.ToInt32(datos[16]));
+    							string name2 = p2 != null ? p2[1] : "Proveedor 2";
+
+    							dbProv = new BaseDatos();
+    							string[] p3 = dbProv.datosProveedores(Convert.ToInt32(datos[17]));
+    							string name3 = p3 != null ? p3[1] : "Proveedor 3";
+
+    							rblProveedores.Items.Add(new ListItem(name1 + " ($" + datos[18] + ")", datos[15]));
+    							rblProveedores.Items.Add(new ListItem(name2 + " ($" + datos[19] + ")", datos[16]));
+    							rblProveedores.Items.Add(new ListItem(name3 + " ($" + datos[20] + ")", datos[17]));
+
+    							if (datos[10] != "0" && rblProveedores.Items.FindByValue(datos[10]) != null)
+    							{
+    								rblProveedores.SelectedValue = datos[10];
+    							}
+    						}
+    						else
+    						{
+    							// Paso 6: Asignación de 3 proveedores
+    							divAsignacion3Prov.Visible = true;
+    							divSeleccionDefinitiva.Visible = false;
+    							divOriginalProveedor.Visible = false;
+    							divOriginalPrecio.Visible = false;
+
+    							dlistProveedor1.SelectedValue = !string.IsNullOrEmpty(datos[15]) && datos[15] != "0" ? datos[15] : dlistProveedor1.Items[0].Value;
+    							txtPrecioProveedor1.Text = datos[18];
+    							dlistProveedor2.SelectedValue = !string.IsNullOrEmpty(datos[16]) && datos[16] != "0" ? datos[16] : dlistProveedor2.Items[0].Value;
+    							txtPrecioProveedor2.Text = datos[19];
+    							dlistProveedor3.SelectedValue = !string.IsNullOrEmpty(datos[17]) && datos[17] != "0" ? datos[17] : dlistProveedor3.Items[0].Value;
+    							txtPrecioProveedor3.Text = datos[20];
+    						}
     					}
     				}
     				else

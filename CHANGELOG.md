@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Implementado el Flujo de Presupuesto y Preparación de O/C (Fase 2/4, Pasos 8 al 12) en `EnProceso.aspx.cs` habilitando selectivamente paneles de acciones, filtrando dinámicamente las opciones de etapas y estatus especiales según el paso actual (Paso 8 y 10 para Presupuesto, Paso 9 y 12 para Analista, Paso 11 para SAP), y permitiendo que SAP registre la Orden de Compra en el panel de proveedor sin errores de autorización.
 
 ### Fixed
+- Corregido comportamiento en el Paso 12 y Paso 17 para el Analista de Compras en EnProceso.aspx.cs, asegurando que si la solicitud ya cuenta con un número de Orden de Compra asignado, el panel de asignación de proveedores permanezca deshabilitado y se muestren los datos del proveedor seleccionado únicamente en modo lectura a través de panelInfoPreveedor.
 - Corregido error de compilación CS0102 en `porAprobar.aspx.cs` renombrando el control conflictivo `Label24` a `Label24_Price` para resolver la duplicación de ID en la vista de aprobaciones.
 - Corregido error de compilación CS0136 en `EnProceso.aspx.cs` al evitar la re-declaración de la variable local `datosProveedor` en el mismo ámbito del método.
 - Añadida validación y control de nulos en `PorRecibir.aspx.cs` al recuperar los datos de proveedor para evitar excepciones `NullReferenceException` cuando no se encuentra un proveedor asignado.
