@@ -8,10 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Implementación del flujo de cotización y selección con 3 proveedores desde el Paso 6 al Paso 9, incluyendo la asignación de múltiples proveedores con sus respectivos precios en el Paso 6, visualización de solo lectura en los pasos intermedios (Pasos 7, 7b y 8), y la interfaz para la selección definitiva del proveedor final en el Paso 9.
 - Agregada la vista **En Proceso** (`EnProceso.aspx`) en el menú de navegación lateral para los usuarios de Recepción Final / Otras Recepciones (`NestedMasterOtrasRecepciones.master`), permitiendo que el rol de Presupuesto (Paso 8 y 10) y SAP (Paso 11) accedan a esta vista para realizar sus respectivas acciones del flujo.
 - Implementado el Flujo de Presupuesto y Preparación de O/C (Fase 2/4, Pasos 8 al 12) en `EnProceso.aspx.cs` habilitando selectivamente paneles de acciones, filtrando dinámicamente las opciones de etapas y estatus especiales según el paso actual (Paso 8 y 10 para Presupuesto, Paso 9 y 12 para Analista, Paso 11 para SAP), y permitiendo que SAP registre la Orden de Compra en el panel de proveedor sin errores de autorización.
 
 ### Fixed
+- Corregido error de compilación CS0102 en `porAprobar.aspx.cs` renombrando el control conflictivo `Label24` a `Label24_Price` para resolver la duplicación de ID en la vista de aprobaciones.
+- Corregido error de compilación CS0136 en `EnProceso.aspx.cs` al evitar la re-declaración de la variable local `datosProveedor` en el mismo ámbito del método.
+- Añadida validación y control de nulos en `PorRecibir.aspx.cs` al recuperar los datos de proveedor para evitar excepciones `NullReferenceException` cuando no se encuentra un proveedor asignado.
 - Reestructurado el flujo del Paso 5 (Supervisor de Cotizadores) y Paso 6 (Analista de Compras) resolviendo el orden invertido de las acciones: la confirmación de atención se realiza ahora en Por Recibir (`Asignado.aspx`) del Paso 5 manteniendo la solicitud en etapa 8 (Cotizador) y estatus 14 (En atención), mientras que la asignación de cotizadores se realiza en En Proceso (`EnProceso.aspx`). Al confirmar el cotizador asignado, el registro avanza automáticamente al Paso 6 (etapa 9, estatus 4 "Enviado").
 - Corregido bug en el selector de cotizadores del Paso 5 (`dListaCotizadores`): se modificó la consulta en el Stored Procedure `dListaCotizadores` para que filtre por `idTipo = 4` and `idRolesF = 9` (Analistas de Compras) en lugar de `idTipo = 5` (Supervisores), asegurando que el Supervisor asigne correctamente a los analistas encargados de cotizar en el Paso 6.
 - Ajustado el Paso 6 (Analista de Compras, `idTipo: 4`, `idRolesF: 9`) para recibir la solicitud en su vista `PorRecibir.aspx` y gestionar los proveedores en `EnProceso.aspx` habilitando el panel `panelAsignarProveedor`.

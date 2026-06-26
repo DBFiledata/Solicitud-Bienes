@@ -341,7 +341,7 @@ namespace sitemaCompras.Controlers
     			ds = new DataSet();
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
-    			string[] resultado = new string[15]
+    			string[] resultado = new string[21]
     			{
     				Convert.ToString(ds.Tables[0].Rows[0]["idSolicitudes"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["solicitudBienes"]),
@@ -357,7 +357,13 @@ namespace sitemaCompras.Controlers
     				Convert.ToString(ds.Tables[0].Rows[0]["precios"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["ordenCompras"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["idCotizadores"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["Aprobador"])
+    				Convert.ToString(ds.Tables[0].Rows[0]["Aprobador"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["idProveedor1"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["idProveedor2"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["idProveedor3"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["precio1"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["precio2"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["precio3"])
     			};
     			if (resultado != null)
     			{
@@ -1256,6 +1262,37 @@ namespace sitemaCompras.Controlers
     		catch (Exception ex)
     		{
     			ErrorHandler.LogError(ex, "gestionarProveedorSolicitudes", "DB operation failed");
+    			return false;
+    		}
+    	}
+
+    	public bool gestionarTresProveedoresSolicitud(int id, int prov1, float prec1, int prov2, float prec2, int prov3, float prec3, string resolucion, string ordenCompra)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "gestionarTresProveedoresSolicitud";
+    			Cmd.Parameters.Add(new MySqlParameter("@id", id));
+    			Cmd.Parameters.Add(new MySqlParameter("@prov1", prov1));
+    			Cmd.Parameters.Add(new MySqlParameter("@prec1", prec1));
+    			Cmd.Parameters.Add(new MySqlParameter("@prov2", prov2));
+    			Cmd.Parameters.Add(new MySqlParameter("@prec2", prec2));
+    			Cmd.Parameters.Add(new MySqlParameter("@prov3", prov3));
+    			Cmd.Parameters.Add(new MySqlParameter("@prec3", prec3));
+    			Cmd.Parameters.Add(new MySqlParameter("@resolucion", resolucion));
+    			Cmd.Parameters.Add(new MySqlParameter("@ordenCompra", ordenCompra));
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
+    			int d = Cmd.ExecuteNonQuery();
+    			bool ejecucion = d > 0;
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
+    			return ejecucion;
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "gestionarTresProveedoresSolicitud", "DB operation failed");
     			return false;
     		}
     	}

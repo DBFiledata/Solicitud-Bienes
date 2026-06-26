@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" Title="Por recibir" CodeBehind="PorRecibir.aspx.cs" MasterPageFile="~/viewsGeneral/NestedMasterRecepcionCompras.master" Inherits="sitemaCompras.viewsGeneral.PorRecibir" %>
+<%@ Page Language="C#" AutoEventWireup="true" Title="Por recibir" CodeBehind="PorRecibir.aspx.cs" MasterPageFile="~/viewsGeneral/NestedMasterRecepcionCompras.master" Inherits="sitemaCompras.viewsGeneral.PorRecibir" %>
 
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
@@ -832,27 +832,89 @@
                             </asp:Panel>
 
 
-                            <div class="card-header bg-light d-flex align-items-center justify-content-center">
-                                <asp:Label class="text-center " ID="headNameCotizador" runat="server">Cotizador:</asp:Label>
-                            </div>
-                            <div id="div2" class="form-group d-flex align-items-center justify-content-center mt-1" runat="server" visible="true">
-                                <div class="form-group col-6">
-                                    <asp:Label ID="Label7" runat="server" Text="Proveedor:"></asp:Label>
-                                    <asp:Label ID="lblProveedor" CssClass="form-control" runat="server"></asp:Label>
+                            <asp:Panel ID="panelInfoPreveedor" runat="server">
+                                <div class="card-header bg-light d-flex align-items-center justify-content-center">
+                                    <asp:Label class="text-center " ID="headNameCotizador" runat="server">Cotizador:</asp:Label>
                                 </div>
-                                <div class="form-group col-2">
-                                    <asp:Label ID="Label24" runat="server" Text="Precio:"></asp:Label>
-                                    <asp:Label ID="lblPrecioProveedor" CssClass="form-control" runat="server"></asp:Label>
+                                
+                                <!-- 3 Proveedores (modo lectura) -->
+                                <div id="divProveedores3" runat="server" class="mt-1" visible="false">
+                                    <div class="form-group d-flex align-items-center justify-content-center">
+                                        <div class="form-group col-4">
+                                            <asp:Label ID="LabelProv1" runat="server" Text="Proveedor 1:"></asp:Label>
+                                            <asp:Label ID="lblProv1" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-2">
+                                            <asp:Label ID="LabelPrecio1" runat="server" Text="Precio 1:"></asp:Label>
+                                            <asp:Label ID="lblPrecio1" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelRes1" runat="server" Text="Resolución:"></asp:Label>
+                                            <asp:Label ID="lblRes3_1" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelOC1" runat="server" Text="Ord.Compra:"></asp:Label>
+                                            <asp:Label ID="lblOC3_1" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group d-flex align-items-center justify-content-center">
+                                        <div class="form-group col-4">
+                                            <asp:Label ID="LabelProv2" runat="server" Text="Proveedor 2:"></asp:Label>
+                                            <asp:Label ID="lblProv2" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-2">
+                                            <asp:Label ID="LabelPrecio2" runat="server" Text="Precio 2:"></asp:Label>
+                                            <asp:Label ID="lblPrecio2" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelRes2" runat="server" Text="Resolución:"></asp:Label>
+                                            <asp:Label ID="lblRes3_2" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelOC2" runat="server" Text="Ord.Compra:"></asp:Label>
+                                            <asp:Label ID="lblOC3_2" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                    </div>
+                                    <div class="form-group d-flex align-items-center justify-content-center">
+                                        <div class="form-group col-4">
+                                            <asp:Label ID="LabelProv3" runat="server" Text="Proveedor 3:"></asp:Label>
+                                            <asp:Label ID="lblProv3" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-2">
+                                            <asp:Label ID="LabelPrecio3" runat="server" Text="Precio 3:"></asp:Label>
+                                            <asp:Label ID="lblPrecio3" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelRes3" runat="server" Text="Resolución:"></asp:Label>
+                                            <asp:Label ID="lblRes3_3" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                        <div class="form-group col-3">
+                                            <asp:Label ID="LabelOC3" runat="server" Text="Ord.Compra:"></asp:Label>
+                                            <asp:Label ID="lblOC3_3" CssClass="form-control" runat="server"></asp:Label>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="form-group col-2">
-                                    <asp:Label ID="Label25" runat="server" Text="Resolución:"></asp:Label>
-                                    <asp:Label ID="lblResolucion" CssClass="form-control" runat="server"></asp:Label>
+
+                                <!-- 1 Proveedor (modo lectura original) -->
+                                <div id="div2" class="form-group d-flex align-items-center justify-content-center mt-1" runat="server" visible="true">
+                                    <div class="form-group col-6">
+                                        <asp:Label ID="Label7" runat="server" Text="Proveedor:"></asp:Label>
+                                        <asp:Label ID="lblProveedor" CssClass="form-control" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="form-group col-2">
+                                        <asp:Label ID="Label24" runat="server" Text="Precio:"></asp:Label>
+                                        <asp:Label ID="lblPrecioProveedor" CssClass="form-control" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="form-group col-2">
+                                        <asp:Label ID="Label25" runat="server" Text="Resolución:"></asp:Label>
+                                        <asp:Label ID="lblResolucion" CssClass="form-control" runat="server"></asp:Label>
+                                    </div>
+                                    <div class="form-group col-2">
+                                        <asp:Label ID="Label26" runat="server" Text="Ord.Compra:"></asp:Label>
+                                        <asp:Label ID="lblOrdenCompra" CssClass="form-control" runat="server"></asp:Label>
+                                    </div>
                                 </div>
-                                <div class="form-group col-2">
-                                    <asp:Label ID="Label26" runat="server" Text="Ord.Compra:"></asp:Label>
-                                    <asp:Label ID="lblOrdenCompra" CssClass="form-control" runat="server"></asp:Label>
-                                </div>
-                            </div>
+                            </asp:Panel>
 
 
                             <asp:Panel ID="panelAsignarProveedor" runat="server">

@@ -226,6 +226,31 @@ namespace sitemaCompras.viewsGeneral
 
     	protected Button btnActualizar;
 
+    	protected Panel panelInfoPreveedor;
+    	protected Label headNameCotizador;
+    	protected HtmlGenericControl divProveedores3;
+    	protected Label lblProv1;
+    	protected Label lblPrecio1;
+    	protected Label lblRes3_1;
+    	protected Label lblOC3_1;
+    	protected Label lblProv2;
+    	protected Label lblPrecio2;
+    	protected Label lblRes3_2;
+    	protected Label lblOC3_2;
+    	protected Label lblProv3;
+    	protected Label lblPrecio3;
+    	protected Label lblRes3_3;
+    	protected Label lblOC3_3;
+    	protected HtmlGenericControl div2;
+    	protected Label LabelProvText;
+    	protected Label lblProveedor;
+    	protected Label Label24_Price;
+    	protected Label lblPrecioProveedor;
+    	protected Label Label25;
+    	protected Label lblResolucion;
+    	protected Label Label26;
+    	protected Label lblOrdenCompra;
+
     	protected Panel panelBtns;
 
     	protected Button btnVerDoc;
@@ -730,6 +755,70 @@ namespace sitemaCompras.viewsGeneral
     				Session["precioActual"] = datos[11];
     				Session["oCompraActual"] = datos[12];
     				Session["UsuarioActual"] = datos[8];
+
+    				// Load cotizador details
+    				if (!string.IsNullOrEmpty(datos[13]))
+    				{
+    					odbusuario = new BaseDatos();
+    					DataSet dsCotizador = odbusuario.infoUsuarios(datos[13]);
+    					if (dsCotizador != null && dsCotizador.Tables.Count > 0 && dsCotizador.Tables[0].Rows.Count > 0)
+    					{
+    						headNameCotizador.Text = "Cotizador: " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["nombres"]) + " " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["apellidos"]);
+    						headNameCotizador.ToolTip = "Telefono: " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["telefono"]) + "\nEmail: " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["email"]);
+    					}
+    					else
+    					{
+    						headNameCotizador.Text = "Cotizador: NO ENCONTRADO";
+    						headNameCotizador.ToolTip = "";
+    					}
+    				}
+    				else
+    				{
+    					headNameCotizador.Text = "Cotizador: NO ASIGNADO";
+    					headNameCotizador.ToolTip = "";
+    				}
+
+    				// Load provider details
+    				bool has3Prov = !string.IsNullOrEmpty(datos[15]) && datos[15] != "0";
+    				if (has3Prov)
+    				{
+    					divProveedores3.Visible = true;
+    					div2.Visible = false;
+
+    					BaseDatos dbProv = new BaseDatos();
+    					string[] p1 = dbProv.datosProveedores(Convert.ToInt32(datos[15]));
+    					lblProv1.Text = p1 != null ? p1[1] : "SIN ASIGNAR";
+    					lblPrecio1.Text = datos[18];
+    					lblRes3_1.Text = datos[2];
+    					lblOC3_1.Text = datos[12];
+
+    					dbProv = new BaseDatos();
+    					string[] p2 = dbProv.datosProveedores(Convert.ToInt32(datos[16]));
+    					lblProv2.Text = p2 != null ? p2[1] : "SIN ASIGNAR";
+    					lblPrecio2.Text = datos[19];
+    					lblRes3_2.Text = datos[2];
+    					lblOC3_2.Text = datos[12];
+
+    					dbProv = new BaseDatos();
+    					string[] p3 = dbProv.datosProveedores(Convert.ToInt32(datos[17]));
+    					lblProv3.Text = p3 != null ? p3[1] : "SIN ASIGNAR";
+    					lblPrecio3.Text = datos[20];
+    					lblRes3_3.Text = datos[2];
+    					lblOC3_3.Text = datos[12];
+    				}
+    				else
+    				{
+    					divProveedores3.Visible = false;
+    					div2.Visible = true;
+
+    					BaseDatos dbProv = new BaseDatos();
+    					string[] datosProveedor = dbProv.datosProveedores(Convert.ToInt32(datos[10]));
+    					lblProveedor.Text = datosProveedor != null ? datosProveedor[1] : "SIN ASIGNAR";
+    					lblPrecioProveedor.Text = datos[11];
+    					lblResolucion.Text = datos[2];
+    					lblOrdenCompra.Text = datos[12];
+    				}
+
     				odbusuario = new BaseDatos();
     				DataSet ds = odbusuario.listaSolicitudesTipoSolucitudes(Convert.ToInt32(eleccion));
     				DataTable dt = ds.Tables[0];

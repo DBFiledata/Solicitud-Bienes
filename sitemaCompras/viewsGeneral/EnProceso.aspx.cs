@@ -444,6 +444,31 @@ namespace sitemaCompras.viewsGeneral
 
     	protected Panel panelInfoPreveedor;
 
+    	protected HtmlGenericControl divProveedores3;
+    	protected Label lblProv1;
+    	protected Label lblPrecio1;
+    	protected Label lblRes3_1;
+    	protected Label lblOC3_1;
+    	protected Label lblProv2;
+    	protected Label lblPrecio2;
+    	protected Label lblRes3_2;
+    	protected Label lblOC3_2;
+    	protected Label lblProv3;
+    	protected Label lblPrecio3;
+    	protected Label lblRes3_3;
+    	protected Label lblOC3_3;
+    	protected HtmlGenericControl divAsignacion3Prov;
+    	protected DropDownList dlistProveedor1;
+    	protected TextBox txtPrecioProveedor1;
+    	protected DropDownList dlistProveedor2;
+    	protected TextBox txtPrecioProveedor2;
+    	protected DropDownList dlistProveedor3;
+    	protected TextBox txtPrecioProveedor3;
+    	protected HtmlGenericControl divSeleccionDefinitiva;
+    	protected RadioButtonList rblProveedores;
+    	protected HtmlGenericControl divOriginalProveedor;
+    	protected HtmlGenericControl divOriginalPrecio;
+
     	protected Label headNameCotizador;
 
     	protected HtmlGenericControl div2;
@@ -651,7 +676,22 @@ namespace sitemaCompras.viewsGeneral
     			dlistProveedor.Items.Clear();
     			dlistProveedor.DataSource = ds2;
     			dlistProveedor.DataBind();
-    			dlistProveedor.Items.Insert(0, "\ud83d\udcac Seleccionar");
+    			dlistProveedor.Items.Insert(0, "💬 Seleccionar");
+
+    			dlistProveedor1.Items.Clear();
+    			dlistProveedor1.DataSource = ds2;
+    			dlistProveedor1.DataBind();
+    			dlistProveedor1.Items.Insert(0, "💬 Seleccionar");
+
+    			dlistProveedor2.Items.Clear();
+    			dlistProveedor2.DataSource = ds2;
+    			dlistProveedor2.DataBind();
+    			dlistProveedor2.Items.Insert(0, "💬 Seleccionar");
+
+    			dlistProveedor3.Items.Clear();
+    			dlistProveedor3.DataSource = ds2;
+    			dlistProveedor3.DataBind();
+    			dlistProveedor3.Items.Insert(0, "💬 Seleccionar");
     			odbusuario = new BaseDatos();
     			DataSet ds3 = odbusuario.dListaCotizadores();
     			dlistCotizadores.Items.Clear();
@@ -924,13 +964,6 @@ namespace sitemaCompras.viewsGeneral
     					}
     				}
     				odbusuario = new BaseDatos();
-    				string[] datosProveedor = new string[4];
-    				datosProveedor = odbusuario.datosProveedores(Convert.ToInt32(datos[10]));
-    				lblProveedor.Text = datosProveedor[1];
-    				lblPrecioProveedor.Text = datos[11];
-    				lblResolucion.Text = datos[2];
-    				lblOrdenCompra.Text = datos[12];
-    				odbusuario = new BaseDatos();
     				DataSet ds2 = new DataSet();
     				ds2 = odbusuario.listaDetallesSolicitudes(Convert.ToInt32(eleccion));
     				gridContenido.DataSource = ds2;
@@ -943,10 +976,114 @@ namespace sitemaCompras.viewsGeneral
     					headNameCotizador.ToolTip = "Telefono: " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["telefono"]) + "\nEmail: " + Convert.ToString(dsCotizador.Tables[0].Rows[0]["email"]);
     				}
     				odbusuario = new BaseDatos();
-    				string[] datosProveedor2 = new string[4];
-    				datosProveedor2 = odbusuario.datosProveedores(Convert.ToInt32(datos[10]));
-    				dlistProveedor.SelectedValue = datosProveedor2[0];
-    				txtPrecioProveedor.Text = datos[11];
+    				bool has3Prov = !string.IsNullOrEmpty(datos[15]) && datos[15] != "0";
+    				if (has3Prov)
+    				{
+    					// Load 3 providers
+    					divProveedores3.Visible = true;
+    					div2.Visible = false;
+
+    					BaseDatos dbProv = new BaseDatos();
+    					string[] p1 = dbProv.datosProveedores(Convert.ToInt32(datos[15]));
+    					lblProv1.Text = p1 != null ? p1[1] : "SIN ASIGNAR";
+    					lblPrecio1.Text = datos[18];
+    					lblRes3_1.Text = datos[2];
+    					lblOC3_1.Text = datos[12];
+
+    					dbProv = new BaseDatos();
+    					string[] p2 = dbProv.datosProveedores(Convert.ToInt32(datos[16]));
+    					lblProv2.Text = p2 != null ? p2[1] : "SIN ASIGNAR";
+    					lblPrecio2.Text = datos[19];
+    					lblRes3_2.Text = datos[2];
+    					lblOC3_2.Text = datos[12];
+
+    					dbProv = new BaseDatos();
+    					string[] p3 = dbProv.datosProveedores(Convert.ToInt32(datos[17]));
+    					lblProv3.Text = p3 != null ? p3[1] : "SIN ASIGNAR";
+    					lblPrecio3.Text = datos[20];
+    					lblRes3_3.Text = datos[2];
+    					lblOC3_3.Text = datos[12];
+    				}
+    				else
+    				{
+    					// Load 1 provider
+    					divProveedores3.Visible = false;
+    					div2.Visible = true;
+
+    					BaseDatos dbProv = new BaseDatos();
+    					string[] datosProveedor = dbProv.datosProveedores(Convert.ToInt32(datos[10]));
+    					lblProveedor.Text = datosProveedor != null ? datosProveedor[1] : "SIN ASIGNAR";
+    					lblPrecioProveedor.Text = datos[11];
+    					lblResolucion.Text = datos[2];
+    					lblOrdenCompra.Text = datos[12];
+    				}
+
+    				// Configuration of Assignment/Selection Panel in Paso 6 / Paso 9
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				int etapaActual = Convert.ToInt32(Session["etapaActual"]);
+    				if (userRoleF == 9 && etapaActual == 9) // Analista / Compras
+    				{
+    					panelAsignarProveedor.Enabled = true;
+    					panelAsignarProveedor.Visible = true;
+    					panelInfoPreveedor.Visible = false; // Hide read-only view because we are in active editing
+
+    					if (has3Prov)
+    					{
+    						// Paso 9: Selección de definitivo
+    						divAsignacion3Prov.Visible = false;
+    						divSeleccionDefinitiva.Visible = true;
+    						divOriginalProveedor.Visible = false;
+    						divOriginalPrecio.Visible = false;
+
+    						rblProveedores.Items.Clear();
+    						BaseDatos dbProv = new BaseDatos();
+    						string[] p1 = dbProv.datosProveedores(Convert.ToInt32(datos[15]));
+    						string name1 = p1 != null ? p1[1] : "Proveedor 1";
+    						
+    						dbProv = new BaseDatos();
+    						string[] p2 = dbProv.datosProveedores(Convert.ToInt32(datos[16]));
+    						string name2 = p2 != null ? p2[1] : "Proveedor 2";
+
+    						dbProv = new BaseDatos();
+    						string[] p3 = dbProv.datosProveedores(Convert.ToInt32(datos[17]));
+    						string name3 = p3 != null ? p3[1] : "Proveedor 3";
+
+    						rblProveedores.Items.Add(new ListItem(name1 + " ($" + datos[18] + ")", datos[15]));
+    						rblProveedores.Items.Add(new ListItem(name2 + " ($" + datos[19] + ")", datos[16]));
+    						rblProveedores.Items.Add(new ListItem(name3 + " ($" + datos[20] + ")", datos[17]));
+
+    						if (datos[10] != "0" && rblProveedores.Items.FindByValue(datos[10]) != null)
+    						{
+    							rblProveedores.SelectedValue = datos[10];
+    						}
+    					}
+    					else
+    					{
+    						// Paso 6: Asignación de 3 proveedores
+    						divAsignacion3Prov.Visible = true;
+    						divSeleccionDefinitiva.Visible = false;
+    						divOriginalProveedor.Visible = false;
+    						divOriginalPrecio.Visible = false;
+
+    						dlistProveedor1.SelectedValue = !string.IsNullOrEmpty(datos[15]) && datos[15] != "0" ? datos[15] : dlistProveedor1.Items[0].Value;
+    						txtPrecioProveedor1.Text = datos[18];
+    						dlistProveedor2.SelectedValue = !string.IsNullOrEmpty(datos[16]) && datos[16] != "0" ? datos[16] : dlistProveedor2.Items[0].Value;
+    						txtPrecioProveedor2.Text = datos[19];
+    						dlistProveedor3.SelectedValue = !string.IsNullOrEmpty(datos[17]) && datos[17] != "0" ? datos[17] : dlistProveedor3.Items[0].Value;
+    						txtPrecioProveedor3.Text = datos[20];
+    					}
+    				}
+    				else
+    				{
+    					// Si no es el Analista de Compras en la etapa Compras, usa la vista de lectura panelInfoPreveedor
+    					panelAsignarProveedor.Enabled = false;
+    					panelAsignarProveedor.Visible = false;
+    					panelInfoPreveedor.Visible = true;
+    					panelInfoPreveedor.Enabled = true;
+
+    					dlistProveedor.SelectedValue = datos[10] != "" && datos[10] != "0" ? datos[10] : dlistProveedor.Items[0].Value;
+    					txtPrecioProveedor.Text = datos[11];
+    				}
     				txtResolucion.Text = datos[2];
     				txtOrdenCompra.Text = datos[12];
     				odbusuario = new BaseDatos();
@@ -2077,26 +2214,104 @@ namespace sitemaCompras.viewsGeneral
     		try
     		{
     			int id = Convert.ToInt32(Session["idDoc"]);
-    			if ((Convert.ToInt32(dlistProveedor.SelectedIndex) != 1) & (Convert.ToInt32(dlistProveedor.SelectedIndex) != 0))
+
+    			if (divAsignacion3Prov.Visible)
     			{
-    				float valorConvertido3;
-    				float? precio = ((!string.IsNullOrWhiteSpace(txtPrecioProveedor.Text) && float.TryParse(txtPrecioProveedor.Text, out valorConvertido3)) ? new float?(valorConvertido3) : ((float?)null));
-    				odbusuario = new BaseDatos();
-    				if (odbusuario.gestionarProveedorSolicitudes(id, Convert.ToInt32(dlistProveedor.SelectedValue), precio, txtResolucion.Text, txtOrdenCompra.Text))
+    				if (dlistProveedor1.SelectedIndex > 0 && dlistProveedor2.SelectedIndex > 0 && dlistProveedor3.SelectedIndex > 0)
     				{
-    					Session["proveedorActual"] = Convert.ToInt32(dlistProveedor.SelectedValue);
-    					Session["precioActual"] = precio;
-    					Session["oCompraActual"] = txtOrdenCompra.Text;
-    					btnActualizar_Click(null, null);
+    					int prov1 = Convert.ToInt32(dlistProveedor1.SelectedValue);
+    					int prov2 = Convert.ToInt32(dlistProveedor2.SelectedValue);
+    					int prov3 = Convert.ToInt32(dlistProveedor3.SelectedValue);
+
+    					if (prov1 == prov2 || prov1 == prov3 || prov2 == prov3)
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe seleccionar 3 proveedores distintos');", addScriptTags: true);
+    						return;
+    					}
+
+    					float prec1 = 0, prec2 = 0, prec3 = 0;
+    					if (!float.TryParse(txtPrecioProveedor1.Text, out prec1) ||
+    					    !float.TryParse(txtPrecioProveedor2.Text, out prec2) ||
+    					    !float.TryParse(txtPrecioProveedor3.Text, out prec3))
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe ingresar precios válidos para los 3 proveedores');", addScriptTags: true);
+    						return;
+    					}
+
+    					odbusuario = new BaseDatos();
+    					if (odbusuario.gestionarTresProveedoresSolicitud(id, prov1, prec1, prov2, prec2, prov3, prec3, txtResolucion.Text, txtOrdenCompra.Text))
+    					{
+    						Session["proveedorActual"] = prov1;
+    						Session["precioActual"] = prec1;
+    						Session["oCompraActual"] = txtOrdenCompra.Text;
+    						btnActualizar_Click(null, null);
+    					}
+    					else
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo registrar los 3 proveedores');", addScriptTags: true);
+    					}
     				}
     				else
     				{
-    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo actualizar los datos de proveedor');", addScriptTags: true);
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe seleccionar los 3 proveedores');", addScriptTags: true);
+    				}
+    			}
+    			else if (divSeleccionDefinitiva.Visible)
+    			{
+    				if (rblProveedores.SelectedIndex != -1)
+    				{
+    					int selectedProvId = Convert.ToInt32(rblProveedores.SelectedValue);
+    					BaseDatos dbTemp = new BaseDatos();
+    					string[] datos = dbTemp.datosSolicitudes(id);
+    					float price = 0;
+    					if (Convert.ToInt32(datos[15]) == selectedProvId)
+    						price = float.Parse(datos[18]);
+    					else if (Convert.ToInt32(datos[16]) == selectedProvId)
+    						price = float.Parse(datos[19]);
+    					else if (Convert.ToInt32(datos[17]) == selectedProvId)
+    						price = float.Parse(datos[20]);
+
+    					odbusuario = new BaseDatos();
+    					if (odbusuario.gestionarProveedorSolicitudes(id, selectedProvId, price, txtResolucion.Text, txtOrdenCompra.Text))
+    					{
+    						Session["proveedorActual"] = selectedProvId;
+    						Session["precioActual"] = price;
+    						Session["oCompraActual"] = txtOrdenCompra.Text;
+    						btnActualizar_Click(null, null);
+    					}
+    					else
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo actualizar los datos de proveedor');", addScriptTags: true);
+    					}
+    				}
+    				else
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe seleccionar el proveedor definitivo');", addScriptTags: true);
     				}
     			}
     			else
     			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar los datos del proveedor');", addScriptTags: true);
+    				if ((Convert.ToInt32(dlistProveedor.SelectedIndex) != 1) & (Convert.ToInt32(dlistProveedor.SelectedIndex) != 0))
+    				{
+    					float valorConvertido3;
+    					float? precio = ((!string.IsNullOrWhiteSpace(txtPrecioProveedor.Text) && float.TryParse(txtPrecioProveedor.Text, out valorConvertido3)) ? new float?(valorConvertido3) : ((float?)null));
+    					odbusuario = new BaseDatos();
+    					if (odbusuario.gestionarProveedorSolicitudes(id, Convert.ToInt32(dlistProveedor.SelectedValue), precio, txtResolucion.Text, txtOrdenCompra.Text))
+    					{
+    						Session["proveedorActual"] = Convert.ToInt32(dlistProveedor.SelectedValue);
+    						Session["precioActual"] = precio;
+    						Session["oCompraActual"] = txtOrdenCompra.Text;
+    						btnActualizar_Click(null, null);
+    					}
+    					else
+    					{
+    						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo actualizar los datos de proveedor');", addScriptTags: true);
+    					}
+    				}
+    				else
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe completar los datos del proveedor');", addScriptTags: true);
+    				}
     			}
     		}
     		catch (Exception ex)
@@ -2133,7 +2348,22 @@ namespace sitemaCompras.viewsGeneral
     					dlistProveedor.Items.Clear();
     					dlistProveedor.DataSource = ds;
     					dlistProveedor.DataBind();
-    					dlistProveedor.Items.Insert(0, "\ud83d\udcac Seleccionar");
+    					dlistProveedor.Items.Insert(0, "💬 Seleccionar");
+
+    					dlistProveedor1.Items.Clear();
+    					dlistProveedor1.DataSource = ds;
+    					dlistProveedor1.DataBind();
+    					dlistProveedor1.Items.Insert(0, "💬 Seleccionar");
+
+    					dlistProveedor2.Items.Clear();
+    					dlistProveedor2.DataSource = ds;
+    					dlistProveedor2.DataBind();
+    					dlistProveedor2.Items.Insert(0, "💬 Seleccionar");
+
+    					dlistProveedor3.Items.Clear();
+    					dlistProveedor3.DataSource = ds;
+    					dlistProveedor3.DataBind();
+    					dlistProveedor3.Items.Insert(0, "💬 Seleccionar");
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Proveedor creado satisfactoriamente');", addScriptTags: true);
     				}
     				else

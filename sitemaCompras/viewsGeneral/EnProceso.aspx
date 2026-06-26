@@ -890,6 +890,66 @@
                                     <div class="card-header bg-light d-flex align-items-center justify-content-center">
                                         <asp:Label class="text-center " ID="headNameCotizador" runat="server">Cotizador:</asp:Label>
                                     </div>
+                                    
+                                    <!-- 3 Proveedores (modo lectura) -->
+                                    <div id="divProveedores3" runat="server" class="mt-1" visible="false">
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelProv1" runat="server" Text="Proveedor 1:"></asp:Label>
+                                                <asp:Label ID="lblProv1" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-2">
+                                                <asp:Label ID="LabelPrecio1" runat="server" Text="Precio 1:"></asp:Label>
+                                                <asp:Label ID="lblPrecio1" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelRes1" runat="server" Text="Resolución:"></asp:Label>
+                                                <asp:Label ID="lblRes3_1" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelOC1" runat="server" Text="Ord.Compra:"></asp:Label>
+                                                <asp:Label ID="lblOC3_1" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelProv2" runat="server" Text="Proveedor 2:"></asp:Label>
+                                                <asp:Label ID="lblProv2" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-2">
+                                                <asp:Label ID="LabelPrecio2" runat="server" Text="Precio 2:"></asp:Label>
+                                                <asp:Label ID="lblPrecio2" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelRes2" runat="server" Text="Resolución:"></asp:Label>
+                                                <asp:Label ID="lblRes3_2" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelOC2" runat="server" Text="Ord.Compra:"></asp:Label>
+                                                <asp:Label ID="lblOC3_2" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                        </div>
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelProv3" runat="server" Text="Proveedor 3:"></asp:Label>
+                                                <asp:Label ID="lblProv3" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-2">
+                                                <asp:Label ID="LabelPrecio3" runat="server" Text="Precio 3:"></asp:Label>
+                                                <asp:Label ID="lblPrecio3" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelRes3" runat="server" Text="Resolución:"></asp:Label>
+                                                <asp:Label ID="lblRes3_3" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                            <div class="form-group col-3">
+                                                <asp:Label ID="LabelOC3" runat="server" Text="Ord.Compra:"></asp:Label>
+                                                <asp:Label ID="lblOC3_3" CssClass="form-control" runat="server"></asp:Label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- 1 Proveedor (modo lectura original) -->
                                     <div id="div2" class="form-group d-flex align-items-center justify-content-center mt-1" runat="server" visible="true">
                                         <div class="form-group col-5">
                                             <asp:Label ID="Label7" runat="server" Text="Proveedor:"></asp:Label>
@@ -921,13 +981,57 @@
                                     <div class="card-header bg-light h1 mt-n3">
                                         <h6 class=" text-center">Cotizador</h6>
                                     </div>
+                                    
+                                    <!-- Asignación de 3 Proveedores (Paso 6) -->
+                                    <div id="divAsignacion3Prov" runat="server" class="mt-1" visible="false">
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-8">
+                                                <asp:Label ID="LabelProvAsig1" runat="server" Text="Proveedor 1:"></asp:Label>
+                                                <asp:DropDownList ID="dlistProveedor1" CssClass="form-control" DataValueField="id" DataTextField="nombre" runat="server"></asp:DropDownList>
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelPrecAsig1" runat="server" Text="Precio 1:"></asp:Label>
+                                                <asp:TextBox ID="txtPrecioProveedor1" CssClass="form-control" runat="server"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-8">
+                                                <asp:Label ID="LabelProvAsig2" runat="server" Text="Proveedor 2:"></asp:Label>
+                                                <asp:DropDownList ID="dlistProveedor2" CssClass="form-control" DataValueField="id" DataTextField="nombre" runat="server"></asp:DropDownList>
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelPrecAsig2" runat="server" Text="Precio 2:"></asp:Label>
+                                                <asp:TextBox ID="txtPrecioProveedor2" CssClass="form-control" runat="server"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                        <div class="form-group d-flex align-items-center justify-content-center">
+                                            <div class="form-group col-8">
+                                                <asp:Label ID="LabelProvAsig3" runat="server" Text="Proveedor 3:"></asp:Label>
+                                                <asp:DropDownList ID="dlistProveedor3" CssClass="form-control" DataValueField="id" DataTextField="nombre" runat="server"></asp:DropDownList>
+                                            </div>
+                                            <div class="form-group col-4">
+                                                <asp:Label ID="LabelPrecAsig3" runat="server" Text="Precio 3:"></asp:Label>
+                                                <asp:TextBox ID="txtPrecioProveedor3" CssClass="form-control" runat="server"></asp:TextBox>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Selección de Proveedor Definitivo (Paso 9) -->
+                                    <div id="divSeleccionDefinitiva" runat="server" class="mt-1" visible="false">
+                                        <div class="form-group col-12">
+                                            <asp:Label ID="LabelSelDef" runat="server" Text="Seleccione el Proveedor Definitivo:" Font-Bold="true"></asp:Label>
+                                            <asp:RadioButtonList ID="rblProveedores" runat="server" CssClass="form-control h-auto" CellPadding="5" CellSpacing="5"></asp:RadioButtonList>
+                                        </div>
+                                    </div>
+
+                                    <!-- Campos compartidos y botones -->
                                     <div id="div7" class="form-group d-flex align-items-center justify-content-center mt-1" runat="server" visible="true">
-                                        <div class="form-group col-4">
+                                        <div id="divOriginalProveedor" runat="server" class="form-group col-4">
                                             <asp:Label ID="Label32" runat="server" Text="Proveedor:"></asp:Label>
                                             <asp:DropDownList ID="dlistProveedor" CssClass="form-control" DataValueField="id" DataTextField="nombre" runat="server"></asp:DropDownList>
                                         </div>
 
-                                        <div class="form-group col-2">
+                                        <div id="divOriginalPrecio" runat="server" class="form-group col-2">
                                             <asp:Label ID="Label35" runat="server" Text="Precio:"></asp:Label>
                                             <asp:TextBox ID="txtPrecioProveedor" CssClass="form-control" runat="server"></asp:TextBox>
                                         </div>
