@@ -64,6 +64,8 @@ namespace sitemaCompras.viewsAdmin
 
     	protected DropDownList dListEditEstado;
 
+    	protected DropDownList dListEditRolesF;
+
     	protected Button btnEditar;
 
     	protected Panel Panel2;
@@ -132,6 +134,8 @@ namespace sitemaCompras.viewsAdmin
 
     	protected DropDownList dListEstado;
 
+    	protected DropDownList dListRolesF;
+
     	protected Button btnRegistrar;
 
     	protected Button btnCancelar;
@@ -199,6 +203,16 @@ namespace sitemaCompras.viewsAdmin
     				dListEditEstado.DataSource = ds4;
     				dListEditEstado.DataBind();
     				dListEditEstado.Items.Insert(0, "\ud83d\udea9 Seleccionar");
+    				odbusuario = new BaseDatos();
+    				DataSet ds5 = odbusuario.dListaRolesF();
+    				dListRolesF.Items.Clear();
+    				dListRolesF.DataSource = ds5;
+    				dListRolesF.DataBind();
+    				dListRolesF.Items.Insert(0, "🔄 Seleccionar");
+    				dListEditRolesF.Items.Clear();
+    				dListEditRolesF.DataSource = ds5;
+    				dListEditRolesF.DataBind();
+    				dListEditRolesF.Items.Insert(0, "🔄 Seleccionar");
     			}
     		}
     		else
@@ -217,7 +231,12 @@ namespace sitemaCompras.viewsAdmin
     			odbusuario = new BaseDatos();
     			if (!string.IsNullOrEmpty(txtId.Text) & !string.IsNullOrEmpty(txtRegistroNombre.Text) & !string.IsNullOrEmpty(txtRegistroApellido.Text) & !string.IsNullOrEmpty(txtpass.Text) & (dListEstado.SelectedIndex > 0) & (dListUnidad.SelectedIndex > 0) & (dListTipo.SelectedIndex > 0))
     			{
-    				if (odbusuario.gestionarUsuarios(txtId.Text, "", txtRegistroNombre.Text, txtRegistroApellido.Text, txtpass.Text, txtRegistrarTelefono.Text, txtRegistrarEmail.Text, Convert.ToInt32(dListEstado.SelectedValue), Convert.ToInt32(dListUnidad.SelectedValue), Convert.ToInt32(dListTipo.SelectedValue), 1))
+    				int? rolesF = null;
+    				if (dListRolesF.SelectedIndex > 0)
+    				{
+    					rolesF = Convert.ToInt32(dListRolesF.SelectedValue);
+    				}
+    				if (odbusuario.gestionarUsuarios(txtId.Text, "", txtRegistroNombre.Text, txtRegistroApellido.Text, txtpass.Text, txtRegistrarTelefono.Text, txtRegistrarEmail.Text, Convert.ToInt32(dListEstado.SelectedValue), Convert.ToInt32(dListUnidad.SelectedValue), Convert.ToInt32(dListTipo.SelectedValue), rolesF, 1))
     				{
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Registro de Usuario Completado');", addScriptTags: true);
     					limpiarCampos();
@@ -269,6 +288,11 @@ namespace sitemaCompras.viewsAdmin
     				dListEditTipo.SelectedValue = datos[5];
     				dListEditEstado.ClearSelection();
     				dListEditEstado.SelectedValue = datos[3];
+    				dListEditRolesF.ClearSelection();
+    				if (datos.Length > 10 && !string.IsNullOrEmpty(datos[10]) && dListEditRolesF.Items.FindByValue(datos[10]) != null)
+    				{
+    					dListEditRolesF.SelectedValue = datos[10];
+    				}
     				mpeEditarRegistro.Show();
     			}
     			if (e.CommandName.Equals("eliminar", StringComparison.CurrentCultureIgnoreCase))
@@ -314,6 +338,8 @@ namespace sitemaCompras.viewsAdmin
     		txtEditApellido.Text = string.Empty;
     		txtEditNombre.Text = string.Empty;
     		dListEditEstado.ClearSelection();
+    		dListRolesF.ClearSelection();
+    		dListEditRolesF.ClearSelection();
     		MultiView1.ActiveViewIndex = 0;
     	}
 
@@ -332,7 +358,12 @@ namespace sitemaCompras.viewsAdmin
     			if (!string.IsNullOrEmpty(txtEditId.Text) & !string.IsNullOrEmpty(txtEditPassword.Text) & !string.IsNullOrEmpty(txtEditNombre.Text) & !string.IsNullOrEmpty(txtEditApellido.Text) & (dListEditEstado.SelectedIndex > 0) & (dlistEditUnidad.SelectedIndex > 0) & (dListEditTipo.SelectedIndex > 0))
     			{
     				string id = Convert.ToString(Session["idDoc"]);
-    				if (odbusuario.gestionarUsuarios(id, txtEditId.Text, txtEditNombre.Text, txtEditApellido.Text, txtEditPassword.Text, txtEditTelefono.Text, txtEditEmail.Text, Convert.ToInt32(dListEditEstado.SelectedValue), Convert.ToInt32(dlistEditUnidad.SelectedValue), Convert.ToInt32(dListEditTipo.SelectedValue), 4))
+    				int? editRolesF = null;
+    				if (dListEditRolesF.SelectedIndex > 0)
+    				{
+    					editRolesF = Convert.ToInt32(dListEditRolesF.SelectedValue);
+    				}
+    				if (odbusuario.gestionarUsuarios(id, txtEditId.Text, txtEditNombre.Text, txtEditApellido.Text, txtEditPassword.Text, txtEditTelefono.Text, txtEditEmail.Text, Convert.ToInt32(dListEditEstado.SelectedValue), Convert.ToInt32(dlistEditUnidad.SelectedValue), Convert.ToInt32(dListEditTipo.SelectedValue), editRolesF, 4))
     				{
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Edicion de usuario Completado');", addScriptTags: true);
     					limpiarCampos();
@@ -368,7 +399,7 @@ namespace sitemaCompras.viewsAdmin
     		{
     			odbusuario = new BaseDatos();
     			string id = Convert.ToString(Session["idDoc"]);
-    			if (odbusuario.gestionarUsuarios(id, "", "", "", "", "", "", 0, 0, 0, 3))
+    			if (odbusuario.gestionarUsuarios(id, "", "", "", "", "", "", 0, 0, 0, null, 3))
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Eliminación de usuario Completada');", addScriptTags: true);
     				limpiarCampos();

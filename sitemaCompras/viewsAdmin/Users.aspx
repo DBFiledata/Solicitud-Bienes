@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" MasterPageFile="~/viewsAdmin/adminUsers.Master" CodeBehind="Users.aspx.cs" Inherits="sitemaCompras.viewsAdmin.Users" %>
+<%@ Page Language="C#" AutoEventWireup="true" MasterPageFile="~/viewsAdmin/adminUsers.Master" CodeBehind="Users.aspx.cs" Inherits="sitemaCompras.viewsAdmin.Users" %>
 
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
@@ -56,6 +56,9 @@
                                                 </asp:DropDownList>
                                                 <asp:Label ID="Label17" runat="server" CssClass="mt-2" Text="Label">Estado de usuario:</asp:Label>
                                                 <asp:DropDownList ID="dListEditEstado" DataValueField="id" DataTextField="nombre" CssClass="form-control" ToolTip="🏛️ Escoja el estado de el usuario" runat="server">
+                                                </asp:DropDownList>
+                                                <asp:Label ID="LabelEditRolesF" runat="server" CssClass="mt-2" Text="Label">Rol del flujo:</asp:Label>
+                                                <asp:DropDownList ID="dListEditRolesF" DataValueField="id" DataTextField="nombre" CssClass="form-control" ToolTip="🔄 Escoja el rol del flujo" runat="server">
                                                 </asp:DropDownList>
                                             </div>
                                                 <asp:Button ID="btnEditar" class="btn btn-primary" runat="server" Text="Aceptar ✔" OnClick="btnEditar_Click"/>
@@ -195,6 +198,11 @@
                                                 <div class="form-group pl-3">
                                                     <asp:Label ID="Label14" runat="server" Text="Label">Estado de usuario</asp:Label>
                                                     <asp:DropDownList ID="dListEstado" DataValueField="id" DataTextField="nombre"  CssClass="form-control" ToolTip="👤 Escoja el tipo de usuario" runat="server" Width="98%">
+                                                    </asp:DropDownList>
+                                                </div>
+                                                <div class="form-group pl-3">
+                                                    <asp:Label ID="LabelRolesF" runat="server" Text="Label">Rol del flujo</asp:Label>
+                                                    <asp:DropDownList ID="dListRolesF" DataValueField="id" DataTextField="nombre" CssClass="form-control" ToolTip="🔄 Escoja el rol del flujo" runat="server" Width="98%">
                                                     </asp:DropDownList>
                                                 </div>
                                                 <div class="form-group d-flex align-items-center justify-content-center col-12">

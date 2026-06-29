@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsAdmin
+namespace sitemaCompras.viewsAdmin
 {
     using System;
     using System.Data;
@@ -139,7 +139,7 @@
     		{
     			lblerror.Visible = false;
     			odbusuario = new BaseDatos();
-    			if (odbusuario.gestionarUsuarios((string)Session["id"], txtId.Text, txtNombre.Text, txtApellido.Text, "", txtTelefono.Text, txtEmail.Text, (int)Session["infoUserEstatus"], Convert.ToInt32(txtTelefono.Text), Convert.ToInt32(listTipo.Text), 2))
+    			if (odbusuario.gestionarUsuarios((string)Session["id"], txtId.Text, txtNombre.Text, txtApellido.Text, "", txtTelefono.Text, txtEmail.Text, (int)Session["infoUserEstatus"], Convert.ToInt32(txtTelefono.Text), Convert.ToInt32(listTipo.Text), null, 2))
     			{
     				Session["id"] = txtId.Text;
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Su perfil a sido actualizado satisfactoriamente');", addScriptTags: true);

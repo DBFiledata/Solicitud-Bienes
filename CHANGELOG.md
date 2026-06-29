@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Campo `idRolesF` (Rol del flujo) en el formulario de creación de usuarios de `viewsAdmin/Users.aspx`, permitiendo asignar el rol funcional del flujo de aprobación al registrar un nuevo usuario.
+- Campo `idRolesF` (Rol del flujo) en el formulario de edición de usuarios de `viewsAdmin/Users.aspx`, permitiendo visualizar y modificar el rol funcional de los usuarios existentes.
+- Método `dListaRolesF()` en `BaseDatos.cs` y procedimiento almacenado `dListaRolesF` en la base de datos para obtener el listado completo de roles de la tabla `rolesf`.
+- Columna `idRolesF` en la consulta del procedimiento almacenado `datosUsuarios` y su mapeo correspondiente en C# (`BaseDatos.cs`) para recuperar el rol funcional asignado al consultar los datos del usuario.
 - Nuevo módulo de **Periodo Administrativo** en el panel de administración (`viewsAdmin/PeriodoAdm.aspx`): permite al SuperAdmin crear periodos administrativos con fecha de inicio, fecha final, marcar el periodo vigente actual, y habilitar de forma individual periodos anteriores para usuarios específicos.
 - Nuevo enlace "Periodo Administrativo" agregado al menú de navegación lateral en `superAdmin.master`.
 - Implementación del flujo de cotización y selección con 3 proveedores desde el Paso 6 al Paso 9, incluyendo la asignación de múltiples proveedores con sus respectivos precios en el Paso 6, visualización de solo lectura en los pasos intermedios (Pasos 7, 7b y 8), y la interfaz para la selección definitiva del proveedor final en el Paso 9.
@@ -15,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Integrado el control de visibilidad por periodos en el método `filtros` de todas las vistas operativas de solicitudes en `viewsGeneral/` (`Enviados.aspx.cs`, `Asignado.aspx.cs`, `busqueda.aspx.cs`, `EnProceso.aspx.cs`, `Entregado.aspx.cs`, `porAprobar.aspx.cs`, `PorRecibir.aspx.cs`), limitando automáticamente los rangos de fechas de búsqueda (`desde` / `hasta`) al rango visible del usuario (periodo vigente + periodos anteriores habilitados) mediante la clase utilitaria `PeriodoHelper.ClampFechasBusqueda`.
 - Agregada la vista **En Proceso** (`EnProceso.aspx`) en el menú de navegación lateral para los usuarios de Recepción Final / Otras Recepciones (`NestedMasterOtrasRecepciones.master`), permitiendo que el rol de Presupuesto (Paso 8 y 10) y SAP (Paso 11) accedan a esta vista para realizar sus respectivas acciones del flujo.
 - Implementado el Flujo de Presupuesto y Preparación de O/C (Fase 2/4, Pasos 8 al 12) en `EnProceso.aspx.cs` habilitando selectivamente paneles de acciones, filtrando dinámicamente las opciones de etapas y estatus especiales según el paso actual (Paso 8 y 10 para Presupuesto, Paso 9 y 12 para Analista, Paso 11 para SAP), y permitiendo que SAP registre la Orden de Compra en el panel de proveedor sin errores de autorización.
+
+### Changed
+- Firma del método `gestionarUsuarios` en `BaseDatos.cs` y procedimiento almacenado `gestionarUsuarios` en la base de datos para aceptar y almacenar el parámetro `idRolesF` en la tabla `usuaruios`.
 
 ### Fixed
 - Corregido comportamiento en el Paso 12 y Paso 17 para el Analista de Compras en EnProceso.aspx.cs, asegurando que si la solicitud ya cuenta con un número de Orden de Compra asignado, el panel de asignación de proveedores permanezca deshabilitado y se muestren los datos del proveedor seleccionado únicamente en modo lectura a través de panelInfoPreveedor.

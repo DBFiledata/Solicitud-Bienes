@@ -488,7 +488,7 @@ namespace sitemaCompras.Controlers
     			ds = new DataSet();
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
-    			string[] resultado = new string[10]
+    			string[] resultado = new string[11]
     			{
     				Convert.ToString(ds.Tables[0].Rows[0]["idUsuaruios"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["nombres"]),
@@ -499,7 +499,8 @@ namespace sitemaCompras.Controlers
     				Convert.ToString(ds.Tables[0].Rows[0]["telefonos"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["emails"]),
     				Convert.ToString(ds.Tables[0].Rows[0]["idAutorizaciones"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["campo"])
+    				Convert.ToString(ds.Tables[0].Rows[0]["campo"]),
+    				Convert.ToString(ds.Tables[0].Rows[0]["idRolesF"])
     			};
     			if (resultado != null)
     			{
@@ -558,6 +559,24 @@ namespace sitemaCompras.Controlers
     		catch (Exception ex)
     		{
     			ErrorHandler.LogError(ex, "dLiataProveedores", "DB operation failed");
+    		}
+    		return ds;
+    	}
+
+    	public DataSet dListaRolesF()
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "dListaRolesF";
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "dListaRolesF", "DB operation failed");
     		}
     		return ds;
     	}
@@ -1494,7 +1513,7 @@ namespace sitemaCompras.Controlers
     		}
     	}
 
-    	public bool gestionarUsuarios(string id, string idNew, string nombre, string apellido, string pass, string telefono, string email, int? estatus, int unidad, int tipo, int proceso)
+    	public bool gestionarUsuarios(string id, string idNew, string nombre, string apellido, string pass, string telefono, string email, int? estatus, int unidad, int tipo, int? rolesF, int proceso)
     	{
     		try
     		{
@@ -1511,6 +1530,7 @@ namespace sitemaCompras.Controlers
     			Cmd.Parameters.Add(new MySqlParameter("@estatus", estatus));
     			Cmd.Parameters.Add(new MySqlParameter("@unidad", unidad));
     			Cmd.Parameters.Add(new MySqlParameter("@tipo", tipo));
+    			Cmd.Parameters.Add(new MySqlParameter("@rolesF", rolesF));
     			Cmd.Parameters.Add(new MySqlParameter("@proceso", proceso));
     			if (_currentTransaction == null)
     				Cmd.Connection.Open();
