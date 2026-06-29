@@ -336,6 +336,13 @@
     <Compile Include="viewsAdmin\PlantillaSolicitud.aspx.designer.cs">
       <DependentUpon>PlantillaSolicitud.aspx</DependentUpon>
     </Compile>
+    <Compile Include="viewsAdmin\PeriodoAdm.aspx.cs">
+      <DependentUpon>PeriodoAdm.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\PeriodoAdm.aspx.designer.cs">
+      <DependentUpon>PeriodoAdm.aspx</DependentUpon>
+    </Compile>
     <!-- viewsGeneral code-behind -->
     <Compile Include="viewsGeneral\general.Master.cs">
       <DependentUpon>general.Master</DependentUpon>
@@ -500,6 +507,7 @@
     <Content Include="viewsAdmin\ActualizarContraseña.aspx" />
     <Content Include="viewsAdmin\busquedaDocumentos.aspx" />
     <Content Include="viewsAdmin\PlantillaSolicitud.aspx" />
+    <Content Include="viewsAdmin\PeriodoAdm.aspx" />
     <!-- viewsGeneral content -->
     <Content Include="viewsGeneral\general.Master" />
     <Content Include="viewsGeneral\NestedMasterAprobador.master" />
@@ -520,6 +528,9 @@
     <Content Include="viewsGeneral\Entregado.aspx" />
     <Content Include="viewsGeneral\PorRecibir.aspx" />
     <Content Include="viewsGeneral\busqueda.aspx" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Properties\PublishProfiles\SolicitudBienes.pubxml" />
   </ItemGroup>
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">18.0</VisualStudioVersion>

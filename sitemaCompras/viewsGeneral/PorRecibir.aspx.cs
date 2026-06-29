@@ -1007,6 +1007,11 @@ namespace sitemaCompras.viewsGeneral
 
     	protected DataSet filtros(int? id, string solicitudBien, string resolucion, string descripciones, int? estatus, int? etapa, string usuaruio, string cotizador, int? unidad, int? director, int? proveedor, DateTime? desde, DateTime? hasta)
     	{
+    		if (Session["id"] != null && Session["type"] != null)
+    		{
+    			PeriodoHelper.ClampFechasBusqueda(Session["id"].ToString(), Session["type"].ToString(), ref desde, ref hasta);
+    		}
+
     		DataSet ds = new DataSet();
     		odbusuario = new BaseDatos();
     		int userRoleF = Convert.ToInt32(Session["rolesF"]);

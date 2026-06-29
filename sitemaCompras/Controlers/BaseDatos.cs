@@ -1983,7 +1983,206 @@ namespace sitemaCompras.Controlers
     		}
     		return ds;
     	}
+
+    	// ===== MÉTODOS PARA GESTIÓN DE PERIODOS ADMINISTRATIVOS =====
+
+    	public bool gestionarPeriodosAdministrativos(int idPeriodo, string descripcion, DateTime fechaInicio, DateTime fechaFin, bool vigente, int proceso)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "gestionarPeriodosAdministrativos";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idPeriodo", idPeriodo == 0 ? (object)DBNull.Value : idPeriodo));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_descripcion", descripcion));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_fecha_inicio", fechaInicio));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_fecha_fin", fechaFin));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_vigente", vigente ? 1 : 0));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_proceso", proceso));
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
+    			int d = Cmd.ExecuteNonQuery();
+    			bool ejecucion = d > 0;
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
+    			return ejecucion;
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "gestionarPeriodosAdministrativos", "DB operation failed");
+    			return false;
+    		}
+    	}
+
+    	public DataSet dListaPeriodosAdministrativos()
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "dListaPeriodosAdministrativos";
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "dListaPeriodosAdministrativos", "DB operation failed");
+    		}
+    		return ds;
+    	}
+
+    	public DataSet datosPeriodoAdministrativo(int idPeriodo)
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "datosPeriodoAdministrativo";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idPeriodo", idPeriodo));
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "datosPeriodoAdministrativo", "DB operation failed");
+    		}
+    		return ds;
+    	}
+
+    	public bool gestionarUsuariosPeriodos(string idUsuaruios, int idPeriodo, int proceso)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "gestionarUsuariosPeriodos";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idUsuaruios", idUsuaruios));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idPeriodo", idPeriodo));
+    			Cmd.Parameters.Add(new MySqlParameter("@p_proceso", proceso));
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
+    			int d = Cmd.ExecuteNonQuery();
+    			bool ejecucion = d > 0;
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
+    			return ejecucion;
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "gestionarUsuariosPeriodos", "DB operation failed");
+    			return false;
+    		}
+    	}
+
+    	public DataSet listaUsuariosPeriodos(int idPeriodo)
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "listaUsuariosPeriodos";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idPeriodo", idPeriodo));
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "listaUsuariosPeriodos", "DB operation failed");
+    		}
+    		return ds;
+    	}
+
+    	public DataSet periodosVisiblesUsuario(string idUsuaruios)
+    	{
+    		try
+    		{
+    			ds = new DataSet();
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "periodosVisiblesUsuario";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idUsuaruios", idUsuaruios));
+    			Adap = new MySqlDataAdapter(Cmd);
+    			Adap.Fill(ds);
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "periodosVisiblesUsuario", "DB operation failed");
+    		}
+    		return ds;
+    	}
     }
 
+    public static class PeriodoHelper
+    {
+    	public static (DateTime? desde, DateTime? hasta) ObtenerRangoVisible(string idUsuario, string idTipo)
+    	{
+    		if (idTipo == "1" || idTipo == "7")
+    		{
+    			return (null, null);
+    		}
+
+    		BaseDatos bd = new BaseDatos();
+
+    		DataSet dsTodos = bd.dListaPeriodosAdministrativos();
+    		if (dsTodos == null || dsTodos.Tables.Count == 0 || dsTodos.Tables[0].Rows.Count == 0)
+    		{
+    			return (null, null);
+    		}
+
+    		DataSet dsVisibles = bd.periodosVisiblesUsuario(idUsuario);
+    		if (dsVisibles == null || dsVisibles.Tables.Count == 0 || dsVisibles.Tables[0].Rows.Count == 0)
+    		{
+    			return (DateTime.MaxValue, DateTime.MaxValue);
+    		}
+
+    		DateTime minInicio = DateTime.MaxValue;
+    		DateTime maxFin = DateTime.MinValue;
+
+    		foreach (DataRow row in dsVisibles.Tables[0].Rows)
+    		{
+    			DateTime inicio = Convert.ToDateTime(row["fecha_inicio"]);
+    			DateTime fin = Convert.ToDateTime(row["fecha_fin"]);
+
+    			if (inicio < minInicio) minInicio = inicio;
+    			if (fin > maxFin) maxFin = fin;
+    		}
+
+    		return (minInicio, maxFin);
+    	}
+
+    	public static void ClampFechasBusqueda(string idUsuario, string idTipo, ref DateTime? desde, ref DateTime? hasta)
+    	{
+    		var rango = ObtenerRangoVisible(idUsuario, idTipo);
+    		
+    		if (rango.desde == null || rango.hasta == null)
+    			return;
+
+    		if (rango.desde == DateTime.MaxValue)
+    		{
+    			desde = DateTime.MaxValue;
+    			hasta = DateTime.MaxValue;
+    			return;
+    		}
+
+    		if (desde == null || desde < rango.desde)
+    		{
+    			desde = rango.desde;
+    		}
+
+    		if (hasta == null || hasta > rango.hasta)
+    		{
+    			hasta = rango.hasta;
+    		}
+
+    		if (desde > rango.hasta || hasta < rango.desde)
+    		{
+    			desde = DateTime.MaxValue;
+    			hasta = DateTime.MaxValue;
+    		}
+    	}
+    }
 }
 
