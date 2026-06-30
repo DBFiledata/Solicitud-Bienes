@@ -2203,6 +2203,28 @@ namespace sitemaCompras.Controlers
     			hasta = DateTime.MaxValue;
     		}
     	}
+
+    }
+
+    public static class DecimalHelper
+    {
+    	public static float? ParseFloatRobust(string val)
+    	{
+    		if (string.IsNullOrWhiteSpace(val)) return null;
+    		string clean = val.Replace("\u00a0", "").Replace(",", ".").Trim();
+    		float res;
+    		if (float.TryParse(clean, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out res))
+    		{
+    			return res;
+    		}
+    		return null;
+    	}
+
+    	public static string FormatFloatForDb(float? val)
+    	{
+    		if (!val.HasValue) return null;
+    		return val.Value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+    	}
     }
 }
 

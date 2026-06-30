@@ -1,4 +1,4 @@
-namespace sitemaCompras.viewsGeneral
+﻿namespace sitemaCompras.viewsGeneral
 {
     using System;
     using System.Data;
@@ -1340,20 +1340,18 @@ namespace sitemaCompras.viewsGeneral
     			{
     				odbusuario = new BaseDatos();
     				float? total = null;
-    				float valorConvertido3;
-    				float? costo = ((!string.IsNullOrWhiteSpace(txtCosto.Text) && float.TryParse(txtCosto.Text, out valorConvertido3)) ? new float?(valorConvertido3) : ((float?)null));
+    				float? costo = DecimalHelper.ParseFloatRobust(txtCosto.Text);
     				int valorConvertido4;
     				int? renglon = ((!string.IsNullOrWhiteSpace(txtRenglon.Text) && int.TryParse(txtRenglon.Text, out valorConvertido4)) ? new int?(valorConvertido4) : ((int?)null));
-    				float valorConvertido5;
-    				float? cantidad = ((!string.IsNullOrWhiteSpace(txtCantidad.Text) && float.TryParse(txtCantidad.Text, out valorConvertido5)) ? new float?(valorConvertido5) : ((float?)null));
-    				string cantidad2 = Convert.ToString(cantidad);
-    				string costo2 = Convert.ToString(costo);
+    				float? cantidad = DecimalHelper.ParseFloatRobust(txtCantidad.Text);
+    				string cantidad2 = DecimalHelper.FormatFloatForDb(cantidad);
+    				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
     				id = Convert.ToInt32(Session["idDoc"]);
-    				if (!string.IsNullOrEmpty(txtCosto.Text) & !string.IsNullOrEmpty(txtCantidad.Text))
+    				if (costo.HasValue && cantidad.HasValue)
     				{
-    					total = (float)Math.Round(Convert.ToSingle(txtCantidad.Text) * Convert.ToSingle(txtCosto.Text), 2);
-    					total2 = Convert.ToString(total);
+    					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
+    					total2 = DecimalHelper.FormatFloatForDb(total);
     				}
     				if (odbusuario.gestionarDetallesSolicitudes(0, txtDecsContent.Text, renglon, cantidad2, txtUnidadContent.Text, txtDecsContent.Text, costo2, total2, id, 1))
     				{
@@ -1427,19 +1425,17 @@ namespace sitemaCompras.viewsGeneral
     				id = Convert.ToInt32(Session["idRenglon"]);
     				idDoc = Convert.ToInt32(Session["idDoc"]);
     				float? total = null;
-    				float valorConvertido3;
-    				float? costo = ((!string.IsNullOrWhiteSpace(txtCostoEdit.Text) && float.TryParse(txtCostoEdit.Text, out valorConvertido3)) ? new float?(valorConvertido3) : ((float?)null));
+    				float? costo = DecimalHelper.ParseFloatRobust(txtCostoEdit.Text);
     				int valorConvertido4;
     				int? renglon = ((!string.IsNullOrWhiteSpace(txtRenglonEdit.Text) && int.TryParse(txtRenglonEdit.Text, out valorConvertido4)) ? new int?(valorConvertido4) : ((int?)null));
-    				float valorConvertido5;
-    				float? cantidad = ((!string.IsNullOrWhiteSpace(txtCantidadEdit.Text) && float.TryParse(txtCantidadEdit.Text, out valorConvertido5)) ? new float?(valorConvertido5) : ((float?)null));
-    				string cantidad2 = Convert.ToString(cantidad);
-    				string costo2 = Convert.ToString(costo);
+    				float? cantidad = DecimalHelper.ParseFloatRobust(txtCantidadEdit.Text);
+    				string cantidad2 = DecimalHelper.FormatFloatForDb(cantidad);
+    				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
-    				if (!string.IsNullOrEmpty(txtCostoEdit.Text) & (txtCostoEdit.Text != "\u00a0") & !string.IsNullOrEmpty(txtCantidadEdit.Text) & (txtCantidadEdit.Text != "\u00a0"))
+    				if (costo.HasValue && cantidad.HasValue)
     				{
-    					total = (float)Math.Round(Convert.ToSingle(txtCantidadEdit.Text) * Convert.ToSingle(txtCostoEdit.Text), 2);
-    					total2 = Convert.ToString(total);
+    					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
+    					total2 = DecimalHelper.FormatFloatForDb(total);
     				}
     				if (odbusuario.gestionarDetallesSolicitudes(id, txtDecsContentEdit.Text, renglon, cantidad2, txtUnidadContentEdit.Text, txtDecsContentEdit.Text, costo2, total2, idDoc, 2))
     				{

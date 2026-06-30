@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" Title="Registro" MasterPageFile="~/viewsGeneral/NestedMasterAprobador.master" CodeBehind="RegistroSolicitud.aspx.cs" Inherits="sitemaCompras.viewsGeneral.RegistroSolicitud" %>
+<%@ Page Language="C#" AutoEventWireup="true" Title="Registro" MasterPageFile="~/viewsGeneral/NestedMasterAprobador.master" CodeBehind="RegistroSolicitud.aspx.cs" Inherits="sitemaCompras.viewsGeneral.RegistroSolicitud" %>
 
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
@@ -222,7 +222,7 @@
                                     <div class="form-group col-9">
                                         <asp:Label ID="Label4" runat="server" Text="Descripcion:"></asp:Label>
                                         <asp:TextBox ID="txtDescripcion" ToolTip="Especifique el uso de los bienes o servicios requeridos"
-                                            CssClass="form-control" TextMode="MultiLine" Height="182px" Width="110%" runat="server"></asp:TextBox>
+                                            CssClass="form-control" TextMode="MultiLine" Height="182px" runat="server"></asp:TextBox>
                                     </div>
                                     <div class="form-group col-2">
                                         <asp:Label ID="Label47" runat="server" Text="Solicitud:"></asp:Label>
