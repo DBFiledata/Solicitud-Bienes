@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsGeneral
+namespace sitemaCompras.viewsGeneral
 {
     using System;
     using System.Data;
@@ -343,6 +343,12 @@
 
     	protected void Page_Load(object sender, EventArgs e)
     	{
+    		div4.Visible = false;
+    		if (gridContenido.Columns.Count > 7)
+    		{
+    			gridContenido.Columns[7].Visible = false;
+    		}
+
     		if (Page.IsPostBack)
     		{
     			return;

@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsGeneral
+namespace sitemaCompras.viewsGeneral
 {
     using System;
     using System.Data;
@@ -896,6 +896,15 @@
     				panelAddContenido.Visible = false;
     				panelAddContenido.Enabled = false;
     			}
+    		}
+
+    		// ALWAYS hide adding/editing/deleting renglones in EnProceso
+    		panelAddContenido.Visible = false;
+    		panelAddContenido.Enabled = false;
+    		int processesColIndex = GetColumnIndexByName(gridContenido, "Procesos");
+    		if (processesColIndex != -1)
+    		{
+    			gridContenido.Columns[processesColIndex].Visible = false;
     		}
     	}
 

@@ -277,6 +277,15 @@ namespace sitemaCompras.viewsGeneral
     			txtUnidad.Text = ds.Tables[0].Rows[0][3].ToString();
     			MultiView1.ActiveViewIndex = 0;
     		}
+
+    		if (Session["type"] != null && Session["type"].ToString() != "2")
+    		{
+    			div4.Visible = false;
+    			if (gridContenido.Columns.Count > 7)
+    			{
+    				gridContenido.Columns[7].Visible = false;
+    			}
+    		}
     	}
 
      	protected void btnSalvar_Click(object sender, EventArgs e)

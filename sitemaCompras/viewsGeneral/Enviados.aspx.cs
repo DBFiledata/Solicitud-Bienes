@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsGeneral
+namespace sitemaCompras.viewsGeneral
 {
     using System;
     using System.Data;
@@ -838,6 +838,15 @@
     				panelAddContenido.Visible = false;
     				panelAddContenido.Enabled = false;
     				panelVer.Visible = true;
+    			}
+
+    			// ALWAYS hide adding/editing/deleting renglones in Enviados
+    			panelAddContenido.Visible = false;
+    			panelAddContenido.Enabled = false;
+    			int processesColIndex = GetColumnIndexByName(gridContenido, "Procesos");
+    			if (processesColIndex != -1)
+    			{
+    				gridContenido.Columns[processesColIndex].Visible = false;
     			}
     		}
     		else
