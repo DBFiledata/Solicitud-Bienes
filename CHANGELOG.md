@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Firma del método `gestionarUsuarios` en `BaseDatos.cs` y procedimiento almacenado `gestionarUsuarios` en la base de datos para aceptar y almacenar el parámetro `idRolesF` en la tabla `usuaruios`.
 
 ### Fixed
+- Corregidos problemas generales de codificación de caracteres en todo el sistema. Se agregó `charset=utf8mb4` a las cadenas de conexión en `Web.config` para asegurar que el driver MySQL envíe y reciba datos en UTF-8, corrigiendo la visualización de acentos y emojis en la UI y base de datos.
+- Agregada la configuración `<globalization requestEncoding="utf-8" responseEncoding="utf-8" fileEncoding="utf-8" />` en la sección `<system.web>` de `Web.config` para forzar a ASP.NET a procesar todas las solicitudes y respuestas en UTF-8.
+- Recreados los stored procedures `filtroSolicitudes`, `filtroSolicitudesConfirmadas`, `filtroSolicitudesEnviados` y `filtroSolicitudesEscaneadasRSalida` reemplazando los caracteres corruptos `Ô×í´©Å` por el carácter de flecha `→` estándar en el concatenado de la columna Título.
 - Corregido comportamiento en el Paso 12 y Paso 17 para el Analista de Compras en EnProceso.aspx.cs, asegurando que si la solicitud ya cuenta con un número de Orden de Compra asignado, el panel de asignación de proveedores permanezca deshabilitado y se muestren los datos del proveedor seleccionado únicamente en modo lectura a través de panelInfoPreveedor.
 - Corregido error de compilación CS0102 en `porAprobar.aspx.cs` renombrando el control conflictivo `Label24` a `Label24_Price` para resolver la duplicación de ID en la vista de aprobaciones.
 - Corregido error de compilación CS0136 en `EnProceso.aspx.cs` al evitar la re-declaración de la variable local `datosProveedor` en el mismo ámbito del método.
