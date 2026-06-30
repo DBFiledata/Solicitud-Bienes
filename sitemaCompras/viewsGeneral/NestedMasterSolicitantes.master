@@ -23,12 +23,14 @@
                 </a>
             </div>
 
+            <%--
             <div class="nav-item">
                 <a class="nav-link" href="porAprobar.aspx">
                     <i class="fa fa-check-double"></i>
                     <span>Por Aprobar</span>
                 </a>
             </div>
+            --%>
 
             <%--<div class="nav-item">
                 <a class="nav-link" href="EnProceso.aspx">

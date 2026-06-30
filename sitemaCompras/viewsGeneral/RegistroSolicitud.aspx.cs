@@ -329,6 +329,11 @@ namespace sitemaCompras.viewsGeneral
      							panelBtnVer.Enabled = false;
      							panelBtnVer2.Visible = true;
      							panelBtnVer2.Enabled = true;
+     							// Bug fix: Solicitante (tipo 2) no tiene capacidad de aprobación.
+     							// panelBtnVer2 comparte layout con el Aprobador (tipo 3),
+     							// pero el botón Aprobar jamás debe estar disponible para este rol.
+     							btnAprobar.Visible = false;
+     							btnAprobar.Enabled = false;
      						}
      					}
      					else if ((string)Session["type"] == "3")
@@ -429,6 +434,13 @@ namespace sitemaCompras.viewsGeneral
 
     	protected void btnAprobar_Click(object sender, EventArgs e)
     	{
+    		// Defensa en profundidad: validar rol en el servidor.
+    		// El Solicitante (tipo 2) no tiene capacidad de aprobación bajo ninguna circunstancia.
+    		if ((string)Session["type"] == "2")
+    		{
+    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No tiene permisos para realizar esta acción.');", addScriptTags: true);
+    			return;
+    		}
     		try
     		{
     			int proceso = 0;
@@ -498,8 +510,36 @@ namespace sitemaCompras.viewsGeneral
 				odbusuario.gestionarSolicitudes(id, null, txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), 0, txtSB.Text, null, null, 2);
      					btnActualizar.Visible = true;
      					btnSalvar.Visible = false;
-     					panelBtnVer2.Visible = true;
-     					panelBtnVer2.Enabled = true;
+     					if ((string)Session["type"] == "2")
+     					{
+     						string[] datosUser = new string[9];
+     						datosUser = odbRead.datosUsuarios(Convert.ToString(Session["id"]));
+     						if (datosUser[8] == "1")
+     						{
+     							panelBtnVer.Visible = true;
+     							panelBtnVer.Enabled = true;
+     							panelBtnVer2.Visible = false;
+     							panelBtnVer2.Enabled = false;
+     						}
+     						else if (datosUser[8] == "2")
+     						{
+     							panelBtnVer.Visible = false;
+     							panelBtnVer.Enabled = false;
+     							panelBtnVer2.Visible = true;
+     							panelBtnVer2.Enabled = true;
+     							btnAprobar.Visible = false;
+     							btnAprobar.Enabled = false;
+     						}
+     					}
+     					else if ((string)Session["type"] == "3")
+     					{
+     						panelBtnVer.Visible = false;
+     						panelBtnVer.Enabled = false;
+     						panelBtnVer2.Visible = true;
+     						panelBtnVer2.Enabled = true;
+     						btnAprobar.Visible = true;
+     						btnAprobar.Enabled = true;
+     					}
      					foreach (ListItem lista in checkTipoSol.Items)
      					{
      						if (lista.Selected)

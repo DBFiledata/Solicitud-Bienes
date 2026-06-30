@@ -358,6 +358,12 @@ namespace sitemaCompras.viewsGeneral
     			FormsAuthentication.SignOut();
     			Response.Redirect("~/login.aspx");
     		}
+    		// Bug fix: Solicitante (tipo 2) no tiene capacidad de aprobación.
+    		// Esta vista es exclusiva del flujo de aprobación; redirigir al índice.
+    		else if ((string)Session["type"] == "2")
+    		{
+    			Response.Redirect("~/viewsGeneral/index.aspx");
+    		}
     		odbusuario = new BaseDatos();
     		if (Convert.ToInt32(Session["type"]) == 2)
     		{
