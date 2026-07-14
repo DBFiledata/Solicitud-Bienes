@@ -544,6 +544,7 @@ namespace sitemaCompras.viewsGeneral
     	protected Button btnEstatusEspeciales;
 
     	protected Button btnAsignar;
+    	protected Button btnRechazar;
 
     	protected LinkButton LbReplicaSB;
 
@@ -710,6 +711,7 @@ namespace sitemaCompras.viewsGeneral
 
     	private void configurarVisibilidadPaneles()
     	{
+    		btnRechazar.Visible = false;
     		if ((Convert.ToInt32(Session["type"]) == 2) | (Convert.ToInt32(Session["type"]) == 3))
     		{
     			panelAsignarProveedor.Enabled = false;
@@ -739,6 +741,7 @@ namespace sitemaCompras.viewsGeneral
     				btnAsignar.Visible = false;
     				btnEstatusEspeciales.Visible = false;
     				btnSiguienteEtapa.Visible = true;
+    				btnRechazar.Visible = true;
     			}
     			else
     			{
@@ -780,6 +783,7 @@ namespace sitemaCompras.viewsGeneral
     			btnAsignar.Visible = true;
     			btnEstatusEspeciales.Visible = false;
     			btnSiguienteEtapa.Visible = false;
+    			btnRechazar.Visible = true;
     			panelBtnVer.Enabled = false;
     			panelBtnVer.Visible = false;
     			panelBtns.Visible = false;
@@ -897,6 +901,8 @@ namespace sitemaCompras.viewsGeneral
     				panelAddContenido.Enabled = false;
     			}
     		}
+
+    		btnRechazar.Visible = panelBtnsOthers.Visible;
 
     		// ALWAYS hide adding/editing/deleting renglones in EnProceso
     		panelAddContenido.Visible = false;
@@ -1793,6 +1799,38 @@ namespace sitemaCompras.viewsGeneral
     				else
     				{
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar estatus');", addScriptTags: true);
+    				}
+    				break;
+    			}
+    			case 3:
+    			{
+    				if (string.IsNullOrWhiteSpace(txtComentario.Text))
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('El comentario de rechazo es obligatorio');", addScriptTags: true);
+    					mpeComfirmarProceso.Show();
+    					return;
+    				}
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				int etapaPrevio = 1;
+    				int estatusPrevio = 2;
+    				bool isJefe = false;
+    				
+    				odbusuario = new BaseDatos();
+    				odbusuario.ObtenerPasoPrevio(Convert.ToInt32(Session["idDoc"]), userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
+    				
+    				if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapaPrevio, estatusPrevio, txtComentario.Text, Convert.ToString(Session["id"])))
+    				{
+    					odbusuario = new BaseDatos();
+    					DataSet ds = new DataSet();
+    					ds = filtros(null, "", "", "", null, 1, "", null, Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+    					GridView1.DataSource = ds;
+    					GridView1.DataBind();
+    					MultiView1.ActiveViewIndex = 0;
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud rechazada y devuelta al paso anterior');", addScriptTags: true);
+    				}
+    				else
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo rechazar la solicitud');", addScriptTags: true);
     				}
     				break;
     			}
@@ -2870,5 +2908,19 @@ namespace sitemaCompras.viewsGeneral
 			Button5.Visible = false;
 			Button6.Visible = false;
 		}
+
+    	protected void btnRechazar_Click(object sender, EventArgs e)
+    	{
+    		try
+    		{
+    			Session["prosesoDocs"] = 3; // Rechazar
+    			txtComentario.Text = ""; // Clear comment text
+    			mpeComfirmarProceso.Show();
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "EnProceso.btnRechazar_Click", "button handler");
+    		}
+    	}
 	}
 }

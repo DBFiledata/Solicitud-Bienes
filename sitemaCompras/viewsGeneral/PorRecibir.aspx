@@ -97,6 +97,10 @@
                                                     <asp:Label ID="Label38" runat="server" Text="Label">Rechazar la atencion del siguente registro: </asp:Label>
                                                     <asp:Label ID="lblRechazarAtencionReg" runat="server" Text="Label"></asp:Label>
                                                 </div>
+                                                <div class="form-group">
+                                                    <asp:Label ID="LabelRechazoComent" runat="server" Text="Comentario de Rechazo (Obligatorio):"></asp:Label>
+                                                    <asp:TextBox ID="txtComentarioRechazo" CssClass="form-control ml-3" TextMode="MultiLine" Width="94%" Height="75px" runat="server"></asp:TextBox>
+                                                </div>
                                             </asp:Panel>
                                             <div class="form-group d-flex align-items-center justify-content-center">
                                                 <asp:Button ID="btnRechazarAtencion" OnClick="btnRechazar_Click" class="btn btn-danger form-control" runat="server" Text="Rechazar ✖️" />

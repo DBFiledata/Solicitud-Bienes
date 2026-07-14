@@ -1,4 +1,4 @@
-﻿namespace sitemaCompras.viewsGeneral
+namespace sitemaCompras.viewsGeneral
 {
     using System;
     using System.Data;
@@ -91,6 +91,7 @@
     	protected Label Label35;
 
     	protected Label lblRechazarAtencionReg;
+    	protected TextBox txtComentarioRechazo;
 
     	protected Button btnRechazarAtencion;
 
@@ -593,6 +594,7 @@
     				string eleccion4 = gvr4.Cells[0].Text.ToString().Trim();
     				Session["idDoc"] = eleccion4;
     				lblRechazarAtencionReg.Text = eleccion4;
+    				txtComentarioRechazo.Text = "";
     				mpeRechazarAtencion.Show();
     			}
     			if (e.CommandName.Equals("reasignar", StringComparison.CurrentCultureIgnoreCase))
@@ -1200,6 +1202,38 @@
     				}
     				break;
     			}
+    			case 3:
+    			{
+    				if (string.IsNullOrWhiteSpace(txtComentario.Text))
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('El comentario de rechazo es obligatorio');", addScriptTags: true);
+    					mpeComfirmarProceso.Show();
+    					return;
+    				}
+    				int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    				int etapaPrevio = 1;
+    				int estatusPrevio = 2;
+    				bool isJefe = false;
+    				
+    				odbusuario = new BaseDatos();
+    				odbusuario.ObtenerPasoPrevio(Convert.ToInt32(Session["idDoc"]), userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
+    				
+    				if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapaPrevio, estatusPrevio, txtComentario.Text, Convert.ToString(Session["id"])))
+    				{
+    					odbusuario = new BaseDatos();
+    					DataSet ds = new DataSet();
+    					ds = filtros(null, "", "", "", 4, 8, "", Convert.ToString(Session["id"]), null, 1, null, null, null);
+    					GridView1.DataSource = ds;
+    					GridView1.DataBind();
+    					MultiView1.ActiveViewIndex = 0;
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud rechazada y devuelta al paso anterior');", addScriptTags: true);
+    				}
+    				else
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo rechazar la solicitud');", addScriptTags: true);
+    				}
+    				break;
+    			}
     			default:
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
     				break;
@@ -1727,16 +1761,34 @@
     	{
     		try
     		{
-    			int id = 0;
-    			id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
-    			odbusuario = new BaseDatos();
-    			int targetEtapa = Convert.ToInt32(Session["rolesF"]) == 8 ? 8 : 9;
-    			string commentText = Convert.ToInt32(Session["rolesF"]) == 8 
-    				? "Rechazado por supervisor " + Convert.ToString(Session["username"])
-    				: "Rechazado por cotizador " + Convert.ToString(Session["username"]);
-    			if (odbusuario.asignarEstatus(id, targetEtapa, 7, commentText, Convert.ToString(Session["id"])))
+    			Button btn = sender as Button;
+    			if (btn != null && btn.ID == "btnRechazar")
     			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Rechazado');", addScriptTags: true);
+    				Session["prosesoDocs"] = 3; // Rechazar
+    				txtComentario.Text = ""; // Clear comment text
+    				mpeComfirmarProceso.Show();
+    				return;
+    			}
+
+    			if (string.IsNullOrWhiteSpace(txtComentarioRechazo.Text))
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('El comentario de rechazo es obligatorio');", addScriptTags: true);
+    				mpeRechazarAtencion.Show();
+    				return;
+    			}
+
+    			int id = Convert.ToInt32(Convert.ToString(Session["idDoc"]));
+    			int userRoleF = Convert.ToInt32(Session["rolesF"]);
+    			int etapaPrevio = 1;
+    			int estatusPrevio = 2;
+    			bool isJefe = false;
+    			
+    			odbusuario = new BaseDatos();
+    			odbusuario.ObtenerPasoPrevio(id, userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
+    			
+    			if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, txtComentarioRechazo.Text, Convert.ToString(Session["id"])))
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud rechazada y devuelta al paso anterior');", addScriptTags: true);
     				DataSet ds = new DataSet();
     				ds = filtros(null, "", "", "", 4, 8, "", Convert.ToString(Session["id"]), null, 1, null, null, null);
     				GridView1.DataSource = ds;
@@ -1745,13 +1797,13 @@
     			}
     			else
     			{
-    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar');", addScriptTags: true);
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo rechazar la solicitud');", addScriptTags: true);
     			}
     		}
     		catch (Exception ex)
     		{
     			ErrorHandler.LogError(ex, "Asignado.btnRechazar_Click", "grid/button handler");
-    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo asignar');", addScriptTags: true);
+    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Error no se pudo rechazar');", addScriptTags: true);
     		}
     	}
 

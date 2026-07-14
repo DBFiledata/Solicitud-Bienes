@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" Title="Asignadas" MasterPageFile="~/viewsGeneral/NestedMasterCotizador.master" CodeBehind="Asignado.aspx.cs" Inherits="sitemaCompras.viewsGeneral.Asignado" %>
+<%@ Page Language="C#" AutoEventWireup="true" Title="Asignadas" MasterPageFile="~/viewsGeneral/NestedMasterCotizador.master" CodeBehind="Asignado.aspx.cs" Inherits="sitemaCompras.viewsGeneral.Asignado" %>
 
 <asp:Content ID="BodyContenido" ContentPlaceHolderID="contenido" runat="server">
     <asp:ScriptManager ID="ScriptManager1" runat="server"></asp:ScriptManager>
@@ -94,8 +94,12 @@
                                         <div class="card-body mt-n3">
                                             <asp:Panel ID="panel9" runat="server" Visible="true">
                                                 <div class="form-group">
-                                                    <asp:Label ID="Label35" runat="server" Text="Label">Rechazar la atencion del siguente registro: </asp:Label>
+                                                    <asp:Label ID="Label38" runat="server" Text="Label">Rechazar la atencion del siguente registro: </asp:Label>
                                                     <asp:Label ID="lblRechazarAtencionReg" runat="server" Text="Label"></asp:Label>
+                                                </div>
+                                                <div class="form-group">
+                                                    <asp:Label ID="LabelRechazoComent" runat="server" Text="Comentario de Rechazo (Obligatorio):"></asp:Label>
+                                                    <asp:TextBox ID="txtComentarioRechazo" CssClass="form-control ml-3" TextMode="MultiLine" Width="94%" Height="75px" runat="server"></asp:TextBox>
                                                 </div>
                                             </asp:Panel>
                                             <div class="form-group d-flex align-items-center justify-content-center">

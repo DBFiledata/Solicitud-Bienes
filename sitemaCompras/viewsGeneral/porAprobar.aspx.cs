@@ -256,6 +256,7 @@ namespace sitemaCompras.viewsGeneral
     	protected Button btnVerDoc;
 
     	protected Button btnAprobar;
+    	protected Button btnRechazar;
 
     	protected Panel panelVer;
 
@@ -716,9 +717,50 @@ namespace sitemaCompras.viewsGeneral
      						}
      						break;
      					}
-     					default:
-     						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
-     						break;
+      					case 3:
+      					{
+      						if (string.IsNullOrWhiteSpace(txtComentario.Text))
+      						{
+      							odbusuario.Rollback();
+      							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('El comentario de rechazo es obligatorio');", addScriptTags: true);
+      							mpeComfirmarProceso.Show();
+      							return;
+      						}
+      						int userRoleF = Convert.ToInt32(Session["rolesF"]);
+      						int etapaPrevio = 1;
+      						int estatusPrevio = 2;
+      						bool isJefe = (userRoleF == 9);
+      						
+      						odbusuario.ObtenerPasoPrevio(id, userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
+      						
+      						if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, txtComentario.Text, Convert.ToString(Session["id"])))
+      						{
+      							odbusuario.Commit();
+      							odbusuario = new BaseDatos();
+      							DataSet ds3 = new DataSet();
+      							int filterRoleF = Convert.ToInt32(Session["rolesF"]);
+      							if (filterRoleF == 1)
+      							{
+      								ds3 = filtros(null, "", "", "", 2, 1, "", Convert.ToInt32(Session["unidad"]), 1, null, null, null);
+      							}
+      							else
+      							{
+      								ds3 = filtros(null, "", "", "", 4, filterRoleF, "", null, 1, null, null, null);
+      							}
+      							GridView1.DataSource = ds3;
+      							GridView1.DataBind();
+      							MultiView1.ActiveViewIndex = 0;
+      							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud rechazada y devuelta al paso anterior');", addScriptTags: true);
+      						}
+      						else
+      						{
+      							ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo rechazar la solicitud');", addScriptTags: true);
+      						}
+      						break;
+      					}
+      					default:
+      						ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('no se pudo asignar proceso');", addScriptTags: true);
+      						break;
       					}
       			}
       			else
@@ -1615,6 +1657,20 @@ namespace sitemaCompras.viewsGeneral
     		panelMsjArea.Controls.Add(panelMsjData);
     		panelMsjArea.Controls.Add(labelMsjContent);
     		panelChat.Controls.Add(panelMsjArea);
+    	}
+
+    	protected void btnRechazar_Click(object sender, EventArgs e)
+    	{
+    		try
+    		{
+    			Session["prosesoDocs"] = 3; // Rechazar
+    			txtComentario.Text = ""; // Clear comment text
+    			mpeComfirmarProceso.Show();
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "porAprobar.btnRechazar_Click", "button handler");
+    		}
     	}
 
     	protected void limpiarCamposContenido()

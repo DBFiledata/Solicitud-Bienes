@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Botón "Rechazar" en las vistas operativas de las solicitudes (`viewsGeneral/porAprobar.aspx`, `viewsGeneral/EnProceso.aspx`, `viewsGeneral/PorRecibir.aspx` y `viewsGeneral/Asignado.aspx`) para todos los roles con acción (Aprobador, Recepción Compras, Cotizador y Recepción).
+- Campo de texto obligatorio para comentarios en los modales de rechazo, reutilizando el control `mpeComfirmarProceso` e integrando validaciones del lado del servidor para asegurar que no se envíen rechazos vacíos.
+- Lógica de retroceso automático de pasos en el flujo de aprobación (`ObtenerPasoPrevio` en `BaseDatos.Workflow.cs`), determinando automáticamente la etapa y el estatus previo de la solicitud según sus variables de estado (reserva de partida, cotizador y orden de compra).
 - Campo `idRolesF` (Rol del flujo) en el formulario de creación de usuarios de `viewsAdmin/Users.aspx`, permitiendo asignar el rol funcional del flujo de aprobación al registrar un nuevo usuario.
 - Campo `idRolesF` (Rol del flujo) en el formulario de edición de usuarios de `viewsAdmin/Users.aspx`, permitiendo visualizar y modificar el rol funcional de los usuarios existentes.
 - Método `dListaRolesF()` en `BaseDatos.cs` y procedimiento almacenado `dListaRolesF` en la base de datos para obtener el listado completo de roles de la tabla `rolesf`.
@@ -24,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Firma del método `gestionarUsuarios` en `BaseDatos.cs` y procedimiento almacenado `gestionarUsuarios` en la base de datos para aceptar y almacenar el parámetro `idRolesF` en la tabla `usuaruios`.
 
 ### Fixed
+- Corregido error de pérdida o inaccesibilidad de solicitudes al rechazar en los pasos 7 y 7b del flujo, garantizando que el retroceso pase por los estados intermedios correctos de "Por Recibir" (estatus `Enviado - 4`) antes de "En Proceso" (estatus `Recibido - 15`) para que sean visibles en la bandeja de entrada del actor del paso previo.
 - Corregidos problemas generales de codificación de caracteres en todo el sistema. Se agregó `charset=utf8mb4` a las cadenas de conexión en `Web.config` para asegurar que el driver MySQL envíe y reciba datos en UTF-8, corrigiendo la visualización de acentos y emojis en la UI y base de datos.
 - Agregada la configuración `<globalization requestEncoding="utf-8" responseEncoding="utf-8" fileEncoding="utf-8" />` en la sección `<system.web>` de `Web.config` para forzar a ASP.NET a procesar todas las solicitudes y respuestas en UTF-8.
 - Recreados los stored procedures `filtroSolicitudes`, `filtroSolicitudesConfirmadas`, `filtroSolicitudesEnviados` y `filtroSolicitudesEscaneadasRSalida` reemplazando los caracteres corruptos `Ô×í´©Å` por el carácter de flecha `→` estándar en el concatenado de la columna Título.

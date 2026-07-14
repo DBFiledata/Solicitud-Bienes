@@ -1087,17 +1087,20 @@
 
                                     <div class=" card-body col-12 form-group">
                                         <div class="form-group d-flex align-items-center justify-content-center mt-1">
-                                            <div class="form-group col-4">
+                                            <div class="form-group col-2">
                                                 <asp:Button ID="btnSiguienteEtapa" class="btn btn-primary form-control" runat="server" Text="Enviar ✉️" OnClick="btnSiguienteEtapa_Click" />
                                             </div>
-                                            <div class="form-group col-4">
+                                            <div class="form-group col-2">
                                                 <asp:Button ID="btnVerDoc" class="btn btn-info form-control" runat="server" Text="Ver 👁️" OnClick="btnVerDoc_Click" />
                                             </div>
-                                            <div class="form-group col-4">
+                                            <div class="form-group col-2">
                                                 <asp:Button ID="btnAsignar" class="btn btn-success form-control" runat="server" Text="Asignar 📌" OnClick="btnAsignar_Click" />
                                             </div>
-                                            <div class="form-group col-4">
+                                            <div class="form-group col-2">
                                                 <asp:Button ID="btnEstatusEspeciales" class="btn btn-danger form-control" runat="server" Text="Estatus Especiales 📑" OnClick="btnEstatusEspeciales_Click" />
+                                            </div>
+                                            <div class="form-group col-2">
+                                                <asp:Button ID="btnRechazar" class="btn btn-warning form-control text-white" runat="server" Text="Rechazar ❌" OnClick="btnRechazar_Click" />
                                             </div>
                                         </div>
                                     </div>

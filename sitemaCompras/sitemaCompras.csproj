@@ -183,6 +183,7 @@
     <Compile Include="App_Start\RouteConfig.cs" />
     <!-- Controlers -->
     <Compile Include="Controlers\BaseDatos.cs" />
+    <Compile Include="Controlers\BaseDatos.Workflow.cs" />
     <Compile Include="Controlers\Mailer.cs" />
     <Compile Include="Controlers\ReporteCompras.cs" />
     <Compile Include="Controlers\ReporteComprasDocx.cs" />
@@ -532,6 +533,7 @@
   <ItemGroup>
     <None Include="Properties\PublishProfiles\SolicitudBienes.pubxml" />
   </ItemGroup>
+  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">18.0</VisualStudioVersion>
     <!-- Ruta directa a VS 2022 Insiders en este sistema -->

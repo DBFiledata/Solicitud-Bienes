@@ -509,13 +509,16 @@
                                     <asp:Panel ID="panelBtns" runat="server">
                                         <div class="form-group d-flex align-items-center justify-content-center mt-1">
                                         
-                                        <div class="form-group col-6">
+                                        <div class="form-group col-4">
                                             <asp:Button ID="btnVerDoc" class="btn btn-info form-control" runat="server" Text="Ver 👁️" OnClick="btnVerDoc_Click" />
                                         </div>
 
-                                        <div class="form-group col-6">
-                                            <asp:Button ID="btnAprobar" class="btn btn-primary form-control" runat="server" Text="Aprobar ✔️" OnClick="btnAprobar_Click" />
-                                        </div>
+                                         <div class="form-group col-4">
+                                             <asp:Button ID="btnAprobar" class="btn btn-primary form-control" runat="server" Text="Aprobar ✔️" OnClick="btnAprobar_Click" />
+                                         </div>
+                                         <div class="form-group col-4">
+                                             <asp:Button ID="btnRechazar" class="btn btn-danger form-control" runat="server" Text="Rechazar ❌" OnClick="btnRechazar_Click" />
+                                         </div>
                                     </div>
                                     </asp:Panel>
                                     <asp:Panel ID="panelVer" runat="server">
