@@ -39,9 +39,19 @@ namespace sitemaCompras.Controlers
                         {
                             tieneReserva = true;
                         }
-                        if (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA"))
+                        if (row["comentario"] != DBNull.Value)
                         {
-                            tieneReserva = true;
+                            string commentUpper = row["comentario"].ToString().ToUpper();
+                            if (commentUpper.Contains("SEPARA PARTIDA") || 
+                                commentUpper.Contains("PARTIDA SEPARADA") || 
+                                commentUpper.Contains("RESERVA DE PARTIDA") || 
+                                commentUpper.Contains("RESERVA PARTIDA") || 
+                                commentUpper.Contains("PARTIDA RESERVADA") || 
+                                commentUpper.Contains("SEPARACION DE PARTIDA") || 
+                                commentUpper.Contains("SEPARACIÓN DE PARTIDA"))
+                            {
+                                tieneReserva = true;
+                            }
                         }
 
                         if (row["descripciones"] != DBNull.Value)

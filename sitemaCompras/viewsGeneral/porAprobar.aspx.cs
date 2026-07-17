@@ -733,7 +733,7 @@ namespace sitemaCompras.viewsGeneral
       						
       						odbusuario.ObtenerPasoPrevio(id, userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
       						
-      						if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, txtComentario.Text, Convert.ToString(Session["id"])))
+      						if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, "[RECHAZO] " + txtComentario.Text, Convert.ToString(Session["id"])))
       						{
       							odbusuario.Commit();
       							odbusuario = new BaseDatos();
@@ -1113,11 +1113,25 @@ namespace sitemaCompras.viewsGeneral
     				{
     					foreach (DataRow row in dsComents.Tables[0].Rows)
     					{
-    						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
-    						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+    						if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
     						{
     							tieneReserva = true;
     							break;
+    						}
+    						if (row["comentario"] != DBNull.Value)
+    						{
+    							string commentUpper = row["comentario"].ToString().ToUpper();
+    							if (commentUpper.Contains("SEPARA PARTIDA") || 
+    								commentUpper.Contains("PARTIDA SEPARADA") || 
+    								commentUpper.Contains("RESERVA DE PARTIDA") || 
+    								commentUpper.Contains("RESERVA PARTIDA") || 
+    								commentUpper.Contains("PARTIDA RESERVADA") || 
+    								commentUpper.Contains("SEPARACION DE PARTIDA") || 
+    								commentUpper.Contains("SEPARACIÓN DE PARTIDA"))
+    							{
+    								tieneReserva = true;
+    								break;
+    							}
     						}
     					}
     				}
@@ -1146,11 +1160,25 @@ namespace sitemaCompras.viewsGeneral
     				{
     					foreach (DataRow row in dsComents.Tables[0].Rows)
     					{
-    						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
-    						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+    						if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
     						{
     							tieneReserva = true;
     							break;
+    						}
+    						if (row["comentario"] != DBNull.Value)
+    						{
+    							string commentUpper = row["comentario"].ToString().ToUpper();
+    							if (commentUpper.Contains("SEPARA PARTIDA") || 
+    								commentUpper.Contains("PARTIDA SEPARADA") || 
+    								commentUpper.Contains("RESERVA DE PARTIDA") || 
+    								commentUpper.Contains("RESERVA PARTIDA") || 
+    								commentUpper.Contains("PARTIDA RESERVADA") || 
+    								commentUpper.Contains("SEPARACION DE PARTIDA") || 
+    								commentUpper.Contains("SEPARACIÓN DE PARTIDA"))
+    							{
+    								tieneReserva = true;
+    								break;
+    							}
     						}
     					}
     				}

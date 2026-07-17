@@ -2178,7 +2178,7 @@ namespace sitemaCompras.viewsGeneral
     			odbusuario = new BaseDatos();
     			odbusuario.ObtenerPasoPrevio(id, userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
     			
-    			if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, txtComentarioRechazo.Text, Convert.ToString(Session["id"])))
+    			if (odbusuario.siguienteEtapa(id, etapaPrevio, estatusPrevio, "[RECHAZO] " + txtComentarioRechazo.Text, Convert.ToString(Session["id"])))
     			{
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud rechazada y devuelta al paso anterior');", addScriptTags: true);
     				DataSet ds = new DataSet();

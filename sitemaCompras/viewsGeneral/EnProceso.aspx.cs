@@ -1818,7 +1818,7 @@ namespace sitemaCompras.viewsGeneral
     				odbusuario = new BaseDatos();
     				odbusuario.ObtenerPasoPrevio(Convert.ToInt32(Session["idDoc"]), userRoleF, isJefe, out etapaPrevio, out estatusPrevio);
     				
-    				if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapaPrevio, estatusPrevio, txtComentario.Text, Convert.ToString(Session["id"])))
+    				if (odbusuario.siguienteEtapa(Convert.ToInt32(Session["idDoc"]), etapaPrevio, estatusPrevio, "[RECHAZO] " + txtComentario.Text, Convert.ToString(Session["id"])))
     				{
     					odbusuario = new BaseDatos();
     					DataSet ds = new DataSet();
@@ -2708,13 +2708,48 @@ namespace sitemaCompras.viewsGeneral
 			DataSet dsComents = db.listaComentariosSolicitudes(idDoc);
 			if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
 			{
-				foreach (DataRow row in dsComents.Tables[0].Rows)
+				// Check if the latest comment is a rejection from Compras (Paso 9)
+				DataRow latestComment = dsComents.Tables[0].Rows[0];
+				bool esRechazoDeCompras = false;
+				if (latestComment["comentario"] != DBNull.Value && latestComment["comentario"].ToString().StartsWith("[RECHAZO]"))
 				{
-					if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
-					    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+					string authorId = latestComment["idUsuaruios"].ToString();
+					BaseDatos dbUser = new BaseDatos();
+					DataSet dsUser = dbUser.infoUsuarios(authorId);
+					if (dsUser != null && dsUser.Tables.Count > 0 && dsUser.Tables[0].Rows.Count > 0)
 					{
-						tieneReserva = true;
-						break;
+						object roleVal = dsUser.Tables[0].Rows[0]["idRolesF"];
+						if (roleVal != DBNull.Value && Convert.ToInt32(roleVal) == 9)
+						{
+							esRechazoDeCompras = true;
+						}
+					}
+				}
+
+				if (!esRechazoDeCompras)
+				{
+					foreach (DataRow row in dsComents.Tables[0].Rows)
+					{
+						if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+						{
+							tieneReserva = true;
+							break;
+						}
+						if (row["comentario"] != DBNull.Value)
+						{
+							string commentUpper = row["comentario"].ToString().ToUpper();
+							if (commentUpper.Contains("SEPARA PARTIDA") || 
+								commentUpper.Contains("PARTIDA SEPARADA") || 
+								commentUpper.Contains("RESERVA DE PARTIDA") || 
+								commentUpper.Contains("RESERVA PARTIDA") || 
+								commentUpper.Contains("PARTIDA RESERVADA") || 
+								commentUpper.Contains("SEPARACION DE PARTIDA") || 
+								commentUpper.Contains("SEPARACIÓN DE PARTIDA"))
+							{
+								tieneReserva = true;
+								break;
+							}
+						}
 					}
 				}
 			}
@@ -2870,13 +2905,48 @@ namespace sitemaCompras.viewsGeneral
 				DataSet dsComents = db.listaComentariosSolicitudes(idDoc);
 				if (dsComents != null && dsComents.Tables.Count > 0 && dsComents.Tables[0].Rows.Count > 0)
 				{
-					foreach (DataRow row in dsComents.Tables[0].Rows)
+					// Check if the latest comment is a rejection from Compras (Paso 9)
+					DataRow latestComment = dsComents.Tables[0].Rows[0];
+					bool esRechazoDeCompras = false;
+					if (latestComment["comentario"] != DBNull.Value && latestComment["comentario"].ToString().StartsWith("[RECHAZO]"))
 					{
-						if ((row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17) ||
-						    (row["comentario"] != DBNull.Value && row["comentario"].ToString().ToUpper().Contains("SEPARA PARTIDA")))
+						string authorId = latestComment["idUsuaruios"].ToString();
+						BaseDatos dbUser = new BaseDatos();
+						DataSet dsUser = dbUser.infoUsuarios(authorId);
+						if (dsUser != null && dsUser.Tables.Count > 0 && dsUser.Tables[0].Rows.Count > 0)
 						{
-							tieneReserva = true;
-							break;
+							object roleVal = dsUser.Tables[0].Rows[0]["idRolesF"];
+							if (roleVal != DBNull.Value && Convert.ToInt32(roleVal) == 9)
+							{
+								esRechazoDeCompras = true;
+							}
+						}
+					}
+
+					if (!esRechazoDeCompras)
+					{
+						foreach (DataRow row in dsComents.Tables[0].Rows)
+						{
+							if (row["idEstatus"] != DBNull.Value && Convert.ToInt32(row["idEstatus"]) == 17)
+							{
+								tieneReserva = true;
+								break;
+							}
+							if (row["comentario"] != DBNull.Value)
+							{
+								string commentUpper = row["comentario"].ToString().ToUpper();
+								if (commentUpper.Contains("SEPARA PARTIDA") || 
+									commentUpper.Contains("PARTIDA SEPARADA") || 
+									commentUpper.Contains("RESERVA DE PARTIDA") || 
+									commentUpper.Contains("RESERVA PARTIDA") || 
+									commentUpper.Contains("PARTIDA RESERVADA") || 
+									commentUpper.Contains("SEPARACION DE PARTIDA") || 
+									commentUpper.Contains("SEPARACIÓN DE PARTIDA"))
+								{
+									tieneReserva = true;
+									break;
+								}
+							}
 						}
 					}
 				}
