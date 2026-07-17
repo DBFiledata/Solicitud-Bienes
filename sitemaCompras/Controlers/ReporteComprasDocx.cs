@@ -5,10 +5,13 @@ namespace sitemaCompras.Controlers
     using System.Data;
     using System.IO;
     using System.Linq;
+    using System.Globalization;
+    using System.Text;
     using Telerik.Windows.Documents.Flow.FormatProviders.Docx;
     using Telerik.Windows.Documents.Flow.FormatProviders.Html;
     using Telerik.Windows.Documents.Flow.Model;
     using Telerik.Windows.Documents.Flow.Model.Editing;
+    using Telerik.Windows.Documents.Flow.Model.Shapes;
     using Telerik.Windows.Documents.Flow.Model.Styles;
     using Telerik.Windows.Documents.Primitives;
 
@@ -22,6 +25,14 @@ namespace sitemaCompras.Controlers
             {
                 document = docxProvider.Import(input);
             }
+            Section section = document.Sections.First();
+
+            // 0. Detect and detach floating header elements (anchored logo image,
+            //    floating versioning table) BEFORE any other processing. HtmlFormatProvider
+            //    discards Word's absolute/floating positioning (DrawingML anchors and
+            //    table tblpPr), so these are extracted manually here and re-injected
+            //    later as absolutely-positioned HTML on top of the flowed export.
+            EncabezadoFlotanteInfo encabezado = ExtraerYRemoverEncabezadoFlotante(document);
 
             // 1. Build replacements dictionary
             Dictionary<string, string> reemplazos = new Dictionary<string, string>();
@@ -78,7 +89,8 @@ namespace sitemaCompras.Controlers
             // 6. Export to HTML
             HtmlFormatProvider htmlProvider = new HtmlFormatProvider();
             string htmlFragment = htmlProvider.Export(document);
-            string htmlCompleto = GenerarPaginaHtmlCompleta(htmlFragment);
+            string encabezadoHtml = ConstruirHtmlEncabezadoFlotante(encabezado);
+            string htmlCompleto = GenerarPaginaHtmlCompleta(htmlFragment, encabezadoHtml, section);
             string dir = Path.GetDirectoryName(outputHtmlPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(outputHtmlPath, htmlCompleto);
@@ -488,10 +500,222 @@ namespace sitemaCompras.Controlers
         }
 
         // =============================================================
+        // FLOATING HEADER EXTRACTION (anchored logo + floating versioning table)
+        // =============================================================
+
+        /// <summary>
+        /// Holds the data needed to re-render the header elements that Word
+        /// positions via absolute/floating layout (DrawingML anchor, table tblpPr) —
+        /// a layout HtmlFormatProvider does not preserve when exporting to flow HTML.
+        /// </summary>
+        private class EncabezadoFlotanteInfo
+        {
+            public bool TieneLogo;
+            public string LogoDataUri;
+            public double LogoLeft, LogoTop, LogoWidth, LogoHeight;
+
+            public bool TieneTablaVersion;
+            public string TablaVersionHtml;
+        }
+
+        /// <summary>
+        /// Finds the anchored logo image and the floating "Código/Emisión/Versión..."
+        /// table (if present), captures what is needed to redraw them with CSS
+        /// absolute positioning, and detaches them from the document so the normal
+        /// HtmlFormatProvider export of the rest of the body doesn't render them
+        /// misplaced (or duplicated) in the flow.
+        /// </summary>
+        private EncabezadoFlotanteInfo ExtraerYRemoverEncabezadoFlotante(RadFlowDocument document)
+        {
+            var info = new EncabezadoFlotanteInfo();
+            Section section = document.Sections.First();
+
+            // --- Logo: anchored/floating image (DrawingML wp:anchor) ---
+            FloatingImage logo = document.EnumerateChildrenOfType<FloatingImage>().FirstOrDefault();
+            if (logo != null && logo.Image != null && logo.Image.ImageSource != null && logo.Image.ImageSource.Data != null)
+            {
+                byte[] data = logo.Image.ImageSource.Data;
+                string ext = string.IsNullOrEmpty(logo.Image.ImageSource.Extension)
+                    ? "png" : logo.Image.ImageSource.Extension.TrimStart('.').ToLowerInvariant();
+
+                info.LogoWidth = logo.Image.Width;
+                info.LogoHeight = logo.Image.Height;
+                info.LogoLeft = ResolverPosicionHorizontalPx(logo.HorizontalPosition, section, info.LogoWidth);
+                info.LogoTop = ResolverPosicionVerticalPx(logo.VerticalPosition, section, info.LogoHeight);
+                info.LogoDataUri = "data:image/" + ext + ";base64," + Convert.ToBase64String(data);
+                info.TieneLogo = true;
+
+                if (logo.Paragraph != null)
+                {
+                    try { logo.Paragraph.Inlines.Remove(logo); }
+                    catch { /* if it can't be detached, leave it - Telerik will render it however it can */ }
+                }
+            }
+
+            // --- Versioning table: floating table (w:tblpPr), not modeled by Telerik's
+            //     Table class, so its absolute position can't be read back - it's
+            //     re-anchored to the top-right corner of the page margins instead. ---
+            Table tablaVersion = null;
+            string[] palabrasClave = { "CÓDIGO", "EMISIÓN", "VERSIÓN", "ACTUALIZACIÓN", "ELABORADO", "APROBADO" };
+            foreach (var t in document.EnumerateChildrenOfType<Table>())
+            {
+                string headerText = ObtenerTextoTabla(t, 6).ToUpperInvariant();
+                int matches = palabrasClave.Count(kw => headerText.Contains(kw));
+                if (matches >= 3) { tablaVersion = t; break; }
+            }
+
+            if (tablaVersion != null)
+            {
+                RadFlowDocument tempDoc = new RadFlowDocument();
+                RadFlowDocumentEditor editor = new RadFlowDocumentEditor(tempDoc);
+                editor.InsertSection();
+                Table clon = tablaVersion.Clone(tempDoc);
+                tempDoc.Sections.First().Blocks.Add(clon);
+
+                HtmlFormatProvider htmlProvider = new HtmlFormatProvider();
+                string tablaHtmlCompleto = htmlProvider.Export(tempDoc);
+                info.TablaVersionHtml = ExtraerCuerpoHtml(tablaHtmlCompleto);
+                info.TieneTablaVersion = !string.IsNullOrEmpty(info.TablaVersionHtml);
+
+                BlockContainerBase padre = tablaVersion.Parent as BlockContainerBase;
+                if (padre != null)
+                {
+                    try { padre.Blocks.Remove(tablaVersion); }
+                    catch { /* if it can't be detached, leave it in flow as a fallback */ }
+                }
+            }
+
+            return info;
+        }
+
+        private string ObtenerTextoTabla(Table table, int maxRows)
+        {
+            string result = "";
+            int rowIdx = 0;
+            foreach (var row in table.Rows)
+            {
+                if (rowIdx >= maxRows) break;
+                foreach (var cell in row.Cells)
+                    foreach (var block in cell.Blocks)
+                    {
+                        Paragraph p = block as Paragraph;
+                        if (p != null)
+                            result += string.Join("", p.Inlines.OfType<Run>().Select(r => r.Text));
+                    }
+                rowIdx++;
+            }
+            return result;
+        }
+
+        /// <summary>Pulls the &lt;body&gt; inner content out of a full HTML document exported by Telerik.</summary>
+        private string ExtraerCuerpoHtml(string htmlCompleto)
+        {
+            int start = htmlCompleto.IndexOf("<body>", StringComparison.OrdinalIgnoreCase);
+            if (start < 0) return "";
+            start += "<body>".Length;
+            int end = htmlCompleto.IndexOf("</body>", start, StringComparison.OrdinalIgnoreCase);
+            if (end < 0) return "";
+            return htmlCompleto.Substring(start, end - start);
+        }
+
+        /// <summary>
+        /// Resolves a Word floating image's HorizontalPosition to a pixel offset measured
+        /// from the page's left edge (Telerik's Flow model already uses 96dpi pixels as its unit).
+        /// </summary>
+        private double ResolverPosicionHorizontalPx(HorizontalPosition hp, Section section, double elementWidth)
+        {
+            double pageWidth = section.PageSize.Width;
+            double marginLeft = section.PageMargins.Left;
+            double marginRight = section.PageMargins.Right;
+
+            if (hp.ValueType == PositionValueType.Alignment)
+            {
+                switch (hp.Alignment)
+                {
+                    case RelativeHorizontalAlignment.Center: return (pageWidth - elementWidth) / 2;
+                    case RelativeHorizontalAlignment.Right:
+                    case RelativeHorizontalAlignment.Outside: return pageWidth - marginRight - elementWidth;
+                    default: return marginLeft;
+                }
+            }
+
+            double offset = hp.Offset;
+            if (hp.RelativeFrom == HorizontalRelativeFrom.Page) return offset;
+            return marginLeft + offset; // Margin, Column, LeftMargin, InsideMargin, etc.
+        }
+
+        /// <summary>
+        /// Resolves a Word floating image's VerticalPosition to a pixel offset measured
+        /// from the page's top edge.
+        /// </summary>
+        private double ResolverPosicionVerticalPx(VerticalPosition vp, Section section, double elementHeight)
+        {
+            double pageHeight = section.PageSize.Height;
+            double marginTop = section.PageMargins.Top;
+            double marginBottom = section.PageMargins.Bottom;
+
+            if (vp.ValueType == PositionValueType.Alignment)
+            {
+                switch (vp.Alignment)
+                {
+                    case RelativeVerticalAlignment.Center: return (pageHeight - elementHeight) / 2;
+                    case RelativeVerticalAlignment.Bottom: return pageHeight - marginBottom - elementHeight;
+                    default: return marginTop;
+                }
+            }
+
+            double offset = vp.Offset;
+            if (vp.RelativeFrom == VerticalRelativeFrom.Page) return offset;
+            return marginTop + offset; // Margin, TopMargin, etc.
+        }
+
+        /// <summary>
+        /// Builds the absolutely-positioned overlay (logo + versioning table) that sits
+        /// on top of the flowed body content within the '.pagina' container.
+        /// </summary>
+        private string ConstruirHtmlEncabezadoFlotante(EncabezadoFlotanteInfo info)
+        {
+            if (!info.TieneLogo && !info.TieneTablaVersion) return "";
+
+            StringBuilder sb = new StringBuilder();
+            sb.Append("<div class='encabezado-flotante'>");
+
+            if (info.TieneLogo)
+            {
+                sb.Append("<img class='logo-institucional' alt='Logo' src='").Append(info.LogoDataUri)
+                  .Append("' style='position:absolute; left:").Append(Px(info.LogoLeft))
+                  .Append("px; top:").Append(Px(info.LogoTop))
+                  .Append("px; width:").Append(Px(info.LogoWidth))
+                  .Append("px; height:").Append(Px(info.LogoHeight))
+                  .Append("px; max-width:none;' />");
+            }
+
+            if (info.TieneTablaVersion)
+            {
+                sb.Append("<div class='tabla-version-flotante'>").Append(info.TablaVersionHtml).Append("</div>");
+            }
+
+            sb.Append("</div>");
+            return sb.ToString();
+        }
+
+        private static string Px(double value)
+        {
+            return Math.Round(value, 1).ToString(CultureInfo.InvariantCulture);
+        }
+
+        // =============================================================
         // HTML WRAPPER
         // =============================================================
-        private string GenerarPaginaHtmlCompleta(string htmlFragment)
+        private string GenerarPaginaHtmlCompleta(string htmlFragment, string encabezadoFlotanteHtml, Section section)
         {
+            double pageWidth = section.PageSize.Width;
+            double pageHeight = section.PageSize.Height;
+            double marginTop = section.PageMargins.Top;
+            double marginRight = section.PageMargins.Right;
+            double marginBottom = section.PageMargins.Bottom;
+            double marginLeft = section.PageMargins.Left;
+
             return @"<!DOCTYPE html>
 <html lang='es'>
 <head>
@@ -499,19 +723,38 @@ namespace sitemaCompras.Controlers
     <meta name='viewport' content='width=device-width, initial-scale=1.0'>
     <title>Solicitud de Bienes y Servicios</title>
     <style>
-        @page { size: legal portrait; margin: 0.8cm; }
-        body { font-family: 'Calibri','Arial',sans-serif; font-size: 11pt; margin: 10px auto; max-width: 1000px; background: #fff; color: #000; }
-        table { border-collapse: collapse; }
+        @page { size: " + Px(pageWidth) + "px " + Px(pageHeight) + @"px; margin: 0; }
+        body { font-family: 'Calibri','Arial',sans-serif; font-size: 11pt; margin: 20px auto; background: #ddd; color: #000; }
+        .pagina { position: relative; width: " + Px(pageWidth) + @"px; min-height: " + Px(pageHeight) + @"px;
+                  margin: 0 auto; background: #fff; box-shadow: 0 0 8px rgba(0,0,0,.15); box-sizing: border-box; }
+        .contenido-flotante { padding: " + Px(marginTop) + "px " + Px(marginRight) + "px " + Px(marginBottom) + "px " + Px(marginLeft) + @"px;
+                               box-sizing: border-box; }
+        .encabezado-flotante { position: relative; }
+        .tabla-version-flotante { position: absolute; top: " + Px(marginTop) + "px; right: " + Px(marginRight) + @"px; }
+        table { border-collapse: collapse; page-break-inside: avoid; }
+        tr { page-break-inside: avoid; }
         td, th { padding: 3px 5px; font-size: 10pt; vertical-align: top; }
         img { max-width: 100%; }
-        @media print { body { margin: 0; max-width: none; } .no-print { display: none; } }
+        @media print {
+            body { margin: 0; background: #fff; }
+            .pagina { box-shadow: none; margin: 0 auto; }
+            .no-print { display: none; }
+            table { page-break-inside: avoid; }
+            tr { page-break-inside: avoid; }
+            .encabezado-flotante { page-break-after: avoid; }
+        }
         .btn-print { position: fixed; top: 10px; right: 10px; padding: 8px 20px; background: #275EAD; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; z-index: 9999; }
         .btn-print:hover { background: #1a4a8a; }
     </style>
 </head>
 <body>
     <button class='btn-print no-print' onclick='window.print()'>Imprimir / Guardar PDF</button>
-    " + htmlFragment + @"
+    <div class='pagina'>
+        " + encabezadoFlotanteHtml + @"
+        <div class='contenido-flotante'>
+            " + htmlFragment + @"
+        </div>
+    </div>
 </body>
 </html>";
         }
