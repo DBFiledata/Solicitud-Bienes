@@ -39,16 +39,22 @@ namespace sitemaCompras.Controlers
             if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
             {
                 DataRow enc = ds.Tables[1].Rows[0];
-                reemplazos["{{FECHA}}"] = Convert.ToDateTime(enc["fechas"]).ToString("dd-MM-yyyy");
+                DateTime fecha = Convert.ToDateTime(enc["fechas"]);
+                // Fecha dividida en tres celdas (DIA | MES | AÑO) del formulario oficial.
+                reemplazos["{{FECHA_DIA}}"] = fecha.ToString("dd");
+                reemplazos["{{FECHA_MES}}"] = fecha.ToString("MM");
+                reemplazos["{{FECHA_ANIO}}"] = fecha.ToString("yyyy");
+                // Compatibilidad: plantillas viejas que aún usan el marcador único.
+                reemplazos["{{FECHA}}"] = fecha.ToString("dd-MM-yyyy");
                 reemplazos["{{DIR_ADMIN}}"] = Convert.ToString(enc["diradmin"]).ToUpper();
                 reemplazos["{{SOLICITANTE}}"] = Convert.ToString(enc["iddirectores"]).ToUpper();
                 reemplazos["{{UNIDAD}}"] = Convert.ToString(enc["Unidad"]).ToUpper();
             }
 
             // 2. Checkboxes
-            reemplazos["{{CHK_BIENES}}"] = "\u2B1C"; reemplazos["{{CHK_SERVICIOS}}"] = "\u2B1C";
-            reemplazos["{{CHK_REEMPLAZO}}"] = "\u2B1C"; reemplazos["{{CHK_OBRA}}"] = "\u2B1C";
-            reemplazos["{{CHK_NUEVO}}"] = "\u2B1C";
+            reemplazos["{{CHK_BIENES}}"] = "\u2610"; reemplazos["{{CHK_SERVICIOS}}"] = "\u2610";
+            reemplazos["{{CHK_REEMPLAZO}}"] = "\u2610"; reemplazos["{{CHK_OBRA}}"] = "\u2610";
+            reemplazos["{{CHK_NUEVO}}"] = "\u2610";
             if (ds.Tables.Count > 2)
             {
                 foreach (DataRow dr in ds.Tables[2].Rows)
