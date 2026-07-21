@@ -16,7 +16,7 @@
                                 <!-- Información sobre marcadores -->
                                 <div class="alert alert-info">
                                     <h6><strong>Instrucciones:</strong></h6>
-                                    <p>Suba un archivo <strong>.docx</strong> (Microsoft Word) que será usado como plantilla para generar las Solicitudes de Bienes y Servicios. 
+                                    <p>Suba un archivo <strong>.docx</strong> (Microsoft Word) o <strong>.xlsx</strong> (Microsoft Excel) que será usado como plantilla para generar las Solicitudes de Bienes y Servicios.
                                     La plantilla debe contener los siguientes marcadores de texto que serán reemplazados automáticamente:</p>
                                     <div class="row">
                                         <div class="col-md-6">
@@ -49,8 +49,8 @@
                                     <div class="card-body">
                                         <div class="form-group d-flex align-items-end">
                                             <div class="col-md-7">
-                                                <label>Archivo de plantilla (.docx):</label>
-                                                <asp:FileUpload ID="FileUploadPlantilla" CssClass="form-control" runat="server" accept=".docx" />
+                                                <label>Archivo de plantilla (.docx / .xlsx):</label>
+                                                <asp:FileUpload ID="FileUploadPlantilla" CssClass="form-control" runat="server" accept=".docx,.xlsx" />
                                             </div>
                                             <div class="col-md-3">
                                                 <asp:Button ID="btnSubirPlantilla" CssClass="btn btn-success form-control" 

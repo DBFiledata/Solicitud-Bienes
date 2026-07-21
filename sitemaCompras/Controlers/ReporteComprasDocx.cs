@@ -14,10 +14,98 @@ namespace sitemaCompras.Controlers
     using Telerik.Windows.Documents.Flow.Model.Shapes;
     using Telerik.Windows.Documents.Flow.Model.Styles;
     using Telerik.Windows.Documents.Primitives;
+    // Spreadsheet types are aliased to avoid clashing with Flow's Table/FloatingImage.
+    using Ss = Telerik.Windows.Documents.Spreadsheet.Model;
+    using SsXlsx = Telerik.Windows.Documents.Spreadsheet.FormatProviders.OpenXml.Xlsx;
+    using SsPdf = Telerik.Windows.Documents.Spreadsheet.FormatProviders.Pdf;
 
     public class ReporteComprasDocx
     {
+        // El area imprimible del formulario oficial es A1:U60 (fila 60, columna U = indices 0-based
+        // 59 y 20). Todo lo que hay mas alla (p.ej. columnas AJ:AN con datos de versionamiento) es
+        // "area de trabajo" de la plantilla Excel, fuera del area de impresion de la hoja, y no debe
+        // formar parte de la grilla renderizada.
+        private const int FormMaxRow = 59;
+        private const int FormMaxCol = 20;
+
+        /// <summary>
+        /// Punto de entrada unico usado por todas las vistas. Detecta el tipo de plantilla
+        /// por su extension y deriva a la ruta de procesamiento correspondiente (Word .docx
+        /// o Excel .xlsx), manteniendo la misma interfaz de entrada y el mismo contrato de
+        /// salida (un archivo HTML imprimible en outputHtmlPath).
+        /// </summary>
         public void GenerarDocumentoDesdePlantilla(DataSet ds, string templatePath, string outputHtmlPath)
+        {
+            string ext = (Path.GetExtension(templatePath) ?? "").ToLowerInvariant();
+            switch (ext)
+            {
+                case ".docx":
+                    GenerarDocumentoWord(ds, templatePath, outputHtmlPath);
+                    break;
+                case ".xlsx":
+                    GenerarDocumentoExcel(ds, templatePath, outputHtmlPath);
+                    break;
+                default:
+                    throw new NotSupportedException(
+                        "Tipo de plantilla no soportado: '" + ext + "'. Solo se admiten plantillas .docx y .xlsx.");
+            }
+        }
+
+        /// <summary>
+        /// Construye el diccionario de marcadores -> valor comun a ambos formatos de plantilla
+        /// (Word y Excel): fecha (completa y desglosada en dia/mes/anio), director, solicitante,
+        /// unidad y los checkboxes de tipo de solicitud (marcado U+25A3 / desmarcado U+2610). El
+        /// texto de {{DESCRIPCION_USO}} se devuelve por separado (out) porque el path Word lo
+        /// distribuye en varias filas mientras que el path Excel lo inyecta en una sola celda.
+        /// </summary>
+        private Dictionary<string, string> ConstruirReemplazos(DataSet ds, out string descripcionUso)
+        {
+            Dictionary<string, string> reemplazos = new Dictionary<string, string>();
+            descripcionUso = "";
+
+            if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
+            {
+                DataRow enc = ds.Tables[1].Rows[0];
+                DateTime fecha = Convert.ToDateTime(enc["fechas"]);
+                // Fecha desglosada en tres celdas (DIA | MES | ANIO) del formulario oficial.
+                reemplazos["{{FECHA_DIA}}"] = fecha.ToString("dd");
+                reemplazos["{{FECHA_MES}}"] = fecha.ToString("MM");
+                reemplazos["{{FECHA_ANIO}}"] = fecha.ToString("yyyy");
+                // Compatibilidad: plantillas que aun usan el marcador unico.
+                reemplazos["{{FECHA}}"] = fecha.ToString("dd-MM-yyyy");
+                reemplazos["{{DIR_ADMIN}}"] = Convert.ToString(enc["diradmin"]).ToUpper();
+                reemplazos["{{SOLICITANTE}}"] = Convert.ToString(enc["iddirectores"]).ToUpper();
+                reemplazos["{{UNIDAD}}"] = Convert.ToString(enc["Unidad"]).ToUpper();
+                descripcionUso = Convert.ToString(enc["descripcion"]);
+            }
+
+            // Checkboxes: U+2610 (BALLOT BOX) desmarcado; U+25A3 (WHITE SQUARE CONTAINING BLACK SMALL SQUARE) para el tipo elegido.
+            reemplazos["{{CHK_BIENES}}"] = "☐"; reemplazos["{{CHK_SERVICIOS}}"] = "☐";
+            reemplazos["{{CHK_REEMPLAZO}}"] = "☐"; reemplazos["{{CHK_OBRA}}"] = "☐";
+            reemplazos["{{CHK_NUEVO}}"] = "☐";
+            if (ds.Tables.Count > 2)
+            {
+                foreach (DataRow dr in ds.Tables[2].Rows)
+                {
+                    int tipo = Convert.ToInt32(dr["idTipo"]);
+                    switch (tipo)
+                    {
+                        case 1: reemplazos["{{CHK_BIENES}}"] = "▣"; break;
+                        case 2: reemplazos["{{CHK_SERVICIOS}}"] = "▣"; break;
+                        case 3: reemplazos["{{CHK_REEMPLAZO}}"] = "▣"; break;
+                        case 4: reemplazos["{{CHK_OBRA}}"] = "▣"; break;
+                        case 5: reemplazos["{{CHK_NUEVO}}"] = "▣"; break;
+                    }
+                }
+            }
+
+            return reemplazos;
+        }
+
+        // =============================================================
+        // WORD (.docx) PROCESSING PATH
+        // =============================================================
+        private void GenerarDocumentoWord(DataSet ds, string templatePath, string outputHtmlPath)
         {
             DocxFormatProvider docxProvider = new DocxFormatProvider();
             RadFlowDocument document;
@@ -34,50 +122,13 @@ namespace sitemaCompras.Controlers
             //    later as absolutely-positioned HTML on top of the flowed export.
             EncabezadoFlotanteInfo encabezado = ExtraerYRemoverEncabezadoFlotante(document);
 
-            // 1. Build replacements dictionary
-            Dictionary<string, string> reemplazos = new Dictionary<string, string>();
-            if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
-            {
-                DataRow enc = ds.Tables[1].Rows[0];
-                DateTime fecha = Convert.ToDateTime(enc["fechas"]);
-                // Fecha dividida en tres celdas (DIA | MES | AÑO) del formulario oficial.
-                reemplazos["{{FECHA_DIA}}"] = fecha.ToString("dd");
-                reemplazos["{{FECHA_MES}}"] = fecha.ToString("MM");
-                reemplazos["{{FECHA_ANIO}}"] = fecha.ToString("yyyy");
-                // Compatibilidad: plantillas viejas que aún usan el marcador único.
-                reemplazos["{{FECHA}}"] = fecha.ToString("dd-MM-yyyy");
-                reemplazos["{{DIR_ADMIN}}"] = Convert.ToString(enc["diradmin"]).ToUpper();
-                reemplazos["{{SOLICITANTE}}"] = Convert.ToString(enc["iddirectores"]).ToUpper();
-                reemplazos["{{UNIDAD}}"] = Convert.ToString(enc["Unidad"]).ToUpper();
-            }
-
-            // 2. Checkboxes
-            reemplazos["{{CHK_BIENES}}"] = "\u2610"; reemplazos["{{CHK_SERVICIOS}}"] = "\u2610";
-            reemplazos["{{CHK_REEMPLAZO}}"] = "\u2610"; reemplazos["{{CHK_OBRA}}"] = "\u2610";
-            reemplazos["{{CHK_NUEVO}}"] = "\u2610";
-            if (ds.Tables.Count > 2)
-            {
-                foreach (DataRow dr in ds.Tables[2].Rows)
-                {
-                    int tipo = Convert.ToInt32(dr["idTipo"]);
-                    switch (tipo)
-                    {
-                        case 1: reemplazos["{{CHK_BIENES}}"] = "\u25A3"; break;
-                        case 2: reemplazos["{{CHK_SERVICIOS}}"] = "\u25A3"; break;
-                        case 3: reemplazos["{{CHK_REEMPLAZO}}"] = "\u25A3"; break;
-                        case 4: reemplazos["{{CHK_OBRA}}"] = "\u25A3"; break;
-                        case 5: reemplazos["{{CHK_NUEVO}}"] = "\u25A3"; break;
-                    }
-                }
-            }
-
+            // 1-2. Build replacements dictionary (shared with the Excel path).
+            string descripcion;
+            Dictionary<string, string> reemplazos = ConstruirReemplazos(ds, out descripcion);
             // 3. Replace text markers (excluding DESCRIPCION_USO and TABLA_RENGLONES)
             ReemplazarMarcadoresEnDocumento(document, reemplazos);
 
             // 4. Handle DESCRIPCION_USO with line breaks
-            string descripcion = "";
-            if (ds.Tables.Count > 1 && ds.Tables[1].Rows.Count > 0)
-                descripcion = Convert.ToString(ds.Tables[1].Rows[0]["descripcion"]);
             ReemplazarDescripcionConSaltos(document, "{{DESCRIPCION_USO}}", descripcion);
 
             // 5. Handle TABLA_RENGLONES - two strategies:
@@ -100,6 +151,277 @@ namespace sitemaCompras.Controlers
             string dir = Path.GetDirectoryName(outputHtmlPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
             File.WriteAllText(outputHtmlPath, htmlCompleto);
+        }
+
+        // =============================================================
+        // EXCEL (.xlsx) PROCESSING PATH
+        // =============================================================
+        // Se inyectan los datos sobre el modelo del workbook (marcadores, renglones, descripcion) y
+        // luego se exporta la hoja FORM a PDF con Telerik RadSpreadProcessing, respetando la
+        // configuracion de pagina del propio Excel (carta, area de impresion, ajustar a una pagina).
+        // Telerik renderiza nativamente celdas combinadas, bordes, fuentes, el logo y el cuadro de
+        // versionamiento, por lo que NO se hace ningun render manual de la grilla. El PDF se embebe
+        // en un HTML minimo para no alterar el contrato de salida (.html) que usan las vistas.
+        private void GenerarDocumentoExcel(DataSet ds, string templatePath, string outputHtmlPath)
+        {
+            SsXlsx.XlsxFormatProvider xlsxProvider = new SsXlsx.XlsxFormatProvider();
+            Ss.Workbook workbook;
+            using (FileStream input = File.OpenRead(templatePath))
+            {
+                workbook = xlsxProvider.Import(input);
+            }
+
+            // Trabajar exclusivamente sobre la hoja FORM (ignorar Instructivo).
+            Ss.Worksheet form = workbook.Worksheets["FORM"];
+            if (form == null) form = workbook.Worksheets.FirstOrDefault();
+            if (form == null) throw new InvalidOperationException("La plantilla Excel no contiene hojas.");
+
+            // Inyeccion de datos sobre el modelo (mismo diccionario compartido con el path Word).
+            string descripcion;
+            Dictionary<string, string> reemplazos = ConstruirReemplazos(ds, out descripcion);
+
+            Ss.CellIndex renglonInicio;
+            bool hayRenglones = LocalizarMarcadorRenglones(form, out renglonInicio);
+            ReemplazarMarcadoresExcel(form, reemplazos);
+            InyectarDescripcionExcel(form, descripcion);
+            if (hayRenglones && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                InyectarRenglonesExcel(form, ds.Tables[0], renglonInicio);
+
+            // Configurar la pagina como el propio Excel la imprime: carta vertical, area de impresion
+            // A1:U60, ajustada a UNA pagina y centrada horizontalmente.
+            var ps = form.WorksheetPageSetup;
+            ps.PaperType = Telerik.Windows.Documents.Model.PaperTypes.Letter;
+            ps.PageOrientation = Telerik.Windows.Documents.Model.PageOrientation.Portrait;
+            ps.PrintArea.SetPrintArea(new Ss.CellRange(0, 0, FormMaxRow, FormMaxCol));
+            ps.FitToPages = true;
+            ps.FitToPagesWide = 1;
+            ps.FitToPagesTall = 1;
+            ps.CenterHorizontally = true;
+            workbook.ActiveWorksheet = form;
+
+            string dir = Path.GetDirectoryName(outputHtmlPath);
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
+            // Exportar SOLO la hoja activa (FORM) a PDF, junto al .html de salida.
+            string pdfPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(outputHtmlPath) + ".pdf");
+            SsPdf.PdfFormatProvider pdfProvider = new SsPdf.PdfFormatProvider();
+            pdfProvider.ExportSettings = new SsPdf.Export.PdfExportSettings(
+                Telerik.Windows.Documents.Spreadsheet.FormatProviders.ExportWhat.ActiveSheet, false);
+            using (FileStream outPdf = File.Create(pdfPath))
+            {
+                pdfProvider.Export(workbook, outPdf);
+            }
+
+            // HTML minimo que embebe el PDF a pantalla completa (el sistema sigue apuntando al .html).
+            File.WriteAllText(outputHtmlPath, GenerarWrapperPdf(Path.GetFileName(pdfPath)));
+        }
+
+        /// <summary>HTML minimo que embebe el PDF generado dentro del iframe de la vista.</summary>
+        private string GenerarWrapperPdf(string pdfNombre)
+        {
+            string bust = DateTime.Now.Ticks.ToString(CultureInfo.InvariantCulture);
+            return "<!DOCTYPE html><html lang='es'><head><meta charset='UTF-8'>" +
+                "<title>Solicitud de Bienes y Servicios</title>" +
+                "<style>html,body{margin:0;padding:0;height:100%;overflow:hidden;}" +
+                "iframe{width:100%;height:100%;border:0;}</style></head>" +
+                "<body><iframe src='" + pdfNombre + "?v=" + bust +
+                "#toolbar=1&navpanes=0' type='application/pdf'></iframe></body></html>";
+        }
+
+        /// <summary>
+        /// Inyecta la descripcion de uso en su celda con ajuste de texto (wrap) activado, y ajusta
+        /// la altura de la fila para que el texto multilinea quepa completo en el PDF exportado.
+        /// </summary>
+        private void InyectarDescripcionExcel(Ss.Worksheet ws, string descripcion)
+        {
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int r = used.FromIndex.RowIndex; r <= used.ToIndex.RowIndex; r++)
+            {
+                for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
+                {
+                    string t = TextoCeldaCrudo(ws, r, c);
+                    if (t == null || !t.Contains("{{DESCRIPCION_USO}}")) continue;
+
+                    string texto = t.Replace("{{DESCRIPCION_USO}}", descripcion ?? "");
+                    Ss.CellSelection sel = ws.Cells.GetCellSelection(r, c);
+                    sel.SetValueAsText(texto);
+                    sel.SetIsWrapped(true);
+
+                    // Estimar el alto necesario segun el ancho (posiblemente combinado) de la celda.
+                    double anchoCelda = AnchoCeldaEfectiva(ws, r, c);
+                    double fs = 10; try { double v = sel.GetFontSize().Value; if (v > 0) fs = v; } catch { }
+                    double fsPx = fs * 96.0 / 72.0;
+                    double charW = fsPx * 0.5;       // ancho aprox. de caracter
+                    double lineH = fsPx * 1.3;       // alto de linea aprox.
+                    int lineas = 1;
+                    if (anchoCelda > 0 && charW > 0)
+                        lineas = Math.Max(1, (int)Math.Ceiling(texto.Length * charW / anchoCelda));
+                    double altoNecesario = lineas * lineH + 4;
+                    if (altoNecesario > AltoFilaPx(ws, r))
+                        ws.Rows.GetRowSelection(r).SetHeight(new Ss.RowHeight(altoNecesario, true));
+                    return;
+                }
+            }
+        }
+
+        /// <summary>Ancho efectivo de una celda: si esta combinada, la suma de sus columnas.</summary>
+        private double AnchoCeldaEfectiva(Ss.Worksheet ws, int r, int c)
+        {
+            Ss.CellRange contain;
+            if (ws.Cells.TryGetContainingMergedRange(new Ss.CellIndex(r, c), out contain))
+                return SumaAnchoColumnas(ws, contain.FromIndex.ColumnIndex, contain.ToIndex.ColumnIndex + 1);
+            return AnchoColumnaPx(ws, c);
+        }
+
+        /// <summary>Busca la celda que contiene {{TABLA_RENGLONES}} dentro del rango usado de FORM.</summary>
+        private bool LocalizarMarcadorRenglones(Ss.Worksheet ws, out Ss.CellIndex inicio)
+        {
+            inicio = new Ss.CellIndex(0, 0);
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int r = used.FromIndex.RowIndex; r <= used.ToIndex.RowIndex; r++)
+            {
+                for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
+                {
+                    string txt = TextoCeldaCrudo(ws, r, c);
+                    if (txt != null && txt.Contains("{{TABLA_RENGLONES}}"))
+                    {
+                        inicio = new Ss.CellIndex(r, c);
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>Reemplaza marcadores de texto simples celda por celda, preservando el formato.</summary>
+        private void ReemplazarMarcadoresExcel(Ss.Worksheet ws, Dictionary<string, string> reemplazos)
+        {
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int r = used.FromIndex.RowIndex; r <= used.ToIndex.RowIndex; r++)
+            {
+                for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
+                {
+                    string original = TextoCeldaCrudo(ws, r, c);
+                    if (string.IsNullOrEmpty(original) || original.IndexOf("{{", StringComparison.Ordinal) < 0)
+                        continue;
+
+                    string nuevo = original;
+                    foreach (var kvp in reemplazos)
+                        if (nuevo.Contains(kvp.Key)) nuevo = nuevo.Replace(kvp.Key, kvp.Value);
+
+                    if (!ReferenceEquals(nuevo, original) && nuevo != original)
+                        ws.Cells.GetCellSelection(r, c).SetValueAsText(nuevo);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Inyecta los renglones de la solicitud a partir de la celda marcadora (primera fila de
+        /// datos). Las plantillas institucionales traen varias filas de renglon ya pre-formateadas
+        /// (con sus bordes y celdas combinadas), por lo que se ESCRIBE sobre esas filas existentes
+        /// preservando su estructura, en lugar de insertar filas en blanco (que romperia los merges
+        /// y desplazaria las secciones de abajo). Solo si los datos superan la ultima fila usada de
+        /// la hoja se insertan filas nuevas al final.
+        /// </summary>
+        private void InyectarRenglonesExcel(Ss.Worksheet ws, DataTable dt, Ss.CellIndex inicio)
+        {
+            int rowBase = inicio.RowIndex;
+            int ultimaFilaUsada = ws.UsedCellRange.ToIndex.RowIndex;
+
+            // Mapear las 6 columnas logicas (Renglon | Cantidad | Unidad | Descripcion | Unitario |
+            // Total) a sus columnas reales leyendo la fila de encabezado. NO se puede caminar por
+            // anclajes consecutivos porque el template intercala columnas sueltas (p.ej. una columna
+            // angosta entre Descripcion y Unitario) que desalinearia los ultimos valores.
+            int[] cols = MapearColumnasRenglones(ws, rowBase, inicio.ColumnIndex);
+
+            for (int i = 0; i < dt.Rows.Count; i++)
+            {
+                int fila = rowBase + i;
+                // Overflow real: si superamos el limite de la hoja, insertar una fila al final.
+                if (fila > ultimaFilaUsada && ws.Rows.CanInsert(fila, 1))
+                {
+                    ws.Rows.Insert(fila, 1);
+                    ultimaFilaUsada = fila;
+                }
+
+                DataRow dr = dt.Rows[i];
+                for (int k = 0; k < 6; k++)
+                {
+                    if (cols[k] < 0) continue;
+                    string valor = (k < dr.Table.Columns.Count) ? Convert.ToString(dr[k]) : "";
+                    ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText(valor);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Determina la columna real de cada una de las 6 columnas logicas del renglon buscando sus
+        /// etiquetas en la fila de encabezado (hasta 4 filas arriba de la fila marcadora). Cada
+        /// etiqueta se ubica en el anclaje (columna inicial) de su celda combinada, que coincide con
+        /// el anclaje de la misma columna en las filas de datos. Si no se encuentra el encabezado,
+        /// cae de vuelta a 6 columnas consecutivas desde el marcador.
+        /// </summary>
+        private int[] MapearColumnasRenglones(Ss.Worksheet ws, int rowBase, int colInicio)
+        {
+            string[] claves = { "RENGL", "CANTIDAD", "UNIDAD", "DESCRIPCI", "UNITARIO", "TOTAL" };
+            int[] cols = { -1, -1, -1, -1, -1, -1 };
+
+            Ss.CellRange used = ws.UsedCellRange;
+            int desde = Math.Max(0, rowBase - 4);
+            for (int r = desde; r < rowBase; r++)
+            {
+                for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
+                {
+                    string t = TextoCeldaCrudo(ws, r, c);
+                    if (string.IsNullOrEmpty(t)) continue;
+                    string up = t.ToUpperInvariant();
+                    for (int k = 0; k < 6; k++)
+                        if (cols[k] < 0 && up.Contains(claves[k])) cols[k] = c;
+                }
+            }
+
+            for (int k = 0; k < 6; k++)
+                if (cols[k] < 0) cols[k] = colInicio + k; // fallback
+            return cols;
+        }
+
+        private double AnchoColumnaPx(Ss.Worksheet ws, int col)
+        {
+            try
+            {
+                var w = ws.Columns.GetColumnSelection(col).GetWidth();
+                if (!w.IsIndeterminate && w.Value != null) return w.Value.Value;
+            }
+            catch { }
+            return ws.Columns.GetDefaultWidth().Value;
+        }
+
+        private double AltoFilaPx(Ss.Worksheet ws, int row)
+        {
+            try
+            {
+                var h = ws.Rows.GetRowSelection(row).GetHeight();
+                if (!h.IsIndeterminate && h.Value != null) return h.Value.Value;
+            }
+            catch { }
+            return ws.Rows.GetDefaultHeight().Value;
+        }
+
+        private double SumaAnchoColumnas(Ss.Worksheet ws, int desde, int hasta)
+        {
+            double total = 0;
+            for (int c = desde; c < hasta; c++) total += AnchoColumnaPx(ws, c);
+            return total;
+        }
+
+        private string TextoCeldaCrudo(Ss.Worksheet ws, int r, int c)
+        {
+            try
+            {
+                var val = ws.Cells.GetCellSelection(r, c).GetValue().Value;
+                return val != null ? val.RawValue : null;
+            }
+            catch { return null; }
         }
 
         // =============================================================
@@ -715,13 +1037,21 @@ namespace sitemaCompras.Controlers
         // =============================================================
         private string GenerarPaginaHtmlCompleta(string htmlFragment, string encabezadoFlotanteHtml, Section section)
         {
-            double pageWidth = section.PageSize.Width;
-            double pageHeight = section.PageSize.Height;
-            double marginTop = section.PageMargins.Top;
-            double marginRight = section.PageMargins.Right;
-            double marginBottom = section.PageMargins.Bottom;
-            double marginLeft = section.PageMargins.Left;
+            return GenerarPaginaHtmlCompleta(
+                htmlFragment, encabezadoFlotanteHtml,
+                section.PageSize.Width, section.PageSize.Height,
+                section.PageMargins.Top, section.PageMargins.Right,
+                section.PageMargins.Bottom, section.PageMargins.Left);
+        }
 
+        /// <summary>
+        /// Sobrecarga agnostica al formato: envuelve el fragmento HTML (Word o Excel) en la
+        /// pagina imprimible con las dimensiones/margenes de pagina expresadas en pixeles 96dpi.
+        /// </summary>
+        private string GenerarPaginaHtmlCompleta(string htmlFragment, string encabezadoFlotanteHtml,
+            double pageWidth, double pageHeight,
+            double marginTop, double marginRight, double marginBottom, double marginLeft)
+        {
             return @"<!DOCTYPE html>
 <html lang='es'>
 <head>

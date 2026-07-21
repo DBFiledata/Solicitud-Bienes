@@ -33,7 +33,7 @@ namespace sitemaCompras.viewsAdmin
         }
 
         /// <summary>
-        /// Sube un nuevo archivo .docx como plantilla activa.
+        /// Sube un nuevo archivo .docx o .xlsx como plantilla activa.
         /// </summary>
         protected void btnSubirPlantilla_Click(object sender, EventArgs e)
         {
@@ -42,16 +42,16 @@ namespace sitemaCompras.viewsAdmin
                 if (FileUploadPlantilla.HasFile)
                 {
                     string extension = Path.GetExtension(FileUploadPlantilla.FileName).ToLower();
-                    if (extension != ".docx")
+                    if (extension != ".docx" && extension != ".xlsx")
                     {
                         ScriptManager.RegisterStartupScript(this, GetType(), "Pop",
-                            "alert('Solo se permiten archivos .docx (Microsoft Word)');", true);
+                            "alert('Solo se permiten archivos .docx (Word) o .xlsx (Excel)');", true);
                         return;
                     }
 
-                    // Generar nombre único para el archivo
+                    // Generar nombre único para el archivo, preservando la extensión real.
                     string timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-                    string nombreArchivo = "plantilla_" + timestamp + ".docx";
+                    string nombreArchivo = "plantilla_" + timestamp + extension;
                     string rutaRelativa = "~/DocumentsPlantillas/" + nombreArchivo;
                     string rutaFisica = HttpContext.Current.Server.MapPath(rutaRelativa);
 
@@ -82,7 +82,7 @@ namespace sitemaCompras.viewsAdmin
                 else
                 {
                     ScriptManager.RegisterStartupScript(this, GetType(), "Pop",
-                        "alert('Debe seleccionar un archivo .docx');", true);
+                        "alert('Debe seleccionar un archivo .docx o .xlsx');", true);
                 }
             }
             catch (Exception ex)
