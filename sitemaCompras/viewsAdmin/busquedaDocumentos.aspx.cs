@@ -676,6 +676,9 @@ namespace sitemaCompras.viewsAdmin
 					DataSet ds4 = new DataSet();
 					odbusuario = new BaseDatos();
 					ds4 = odbusuario.reporteBody(Convert.ToInt32(eleccion5));
+					string eleccion6 = "File_Compras_" + eleccion5;
+					// ===== INICIO: Código Telerik Spreadsheet original (comentado - no eliminar) =====
+					/*
 					reporteCompra = new ReporteCompras();
 					Workbook wk = reporteCompra.createexcellficha(ds4, Convert.ToString(ds4.Tables[1].Rows[0]["diradmin"]).ToUpper(), Convert.ToString(ds4.Tables[1].Rows[0]["iddirectores"]).ToUpper(), Convert.ToString(ds4.Tables[1].Rows[0]["Unidad"]).ToUpper());
 					IWorkbookFormatProvider XlsformatProvider = new XlsxFormatProvider();
@@ -686,13 +689,35 @@ namespace sitemaCompras.viewsAdmin
 						pdfFormatProvider.Export(wk, ms);
 						renderedBytes = ms.ToArray();
 					}
-					string eleccion6 = "File_Compras_" + eleccion5;
 					File.WriteAllBytes(HttpContext.Current.Server.MapPath("~/DocumentsSolicitudes/") + eleccion6 + ".pdf", renderedBytes);
 					string embed = "<object data=\"{0}\" type=\"application/pdf\" width=\"1294px\" height=\"682px\">";
 					embed += "If you are unable to view file, you can download from <a href = \"{0}\">here</a>";
 					embed += " or download <a target = \"_blank\" href = \"http://get.adobe.com/reader/\">Adobe PDF Reader</a> to view the file.";
 					embed += "</object>";
 					ltEmbed.Text = string.Format(embed, ResolveUrl("~/DocumentsSolicitudes/" + eleccion6 + ".pdf"));
+					*/
+					// ===== FIN: Código Telerik Spreadsheet original =====
+					// ===== INICIO: Nuevo flujo con plantilla Word/Excel (ReporteComprasDocx) =====
+					string htmlPath = HttpContext.Current.Server.MapPath("~/DocumentsSolicitudes/") + eleccion6 + ".html";
+					odbusuario = new BaseDatos();
+					string templateRuta = odbusuario.obtenerPlantillaActiva();
+					string templatePath;
+					if (!string.IsNullOrEmpty(templateRuta))
+						templatePath = HttpContext.Current.Server.MapPath(templateRuta);
+					else
+					{
+						templatePath = HttpContext.Current.Server.MapPath("~/DocumentsPlantillas/plantilla_default.docx");
+						if (!File.Exists(templatePath))
+						{
+							ReporteComprasDocx generador = new ReporteComprasDocx();
+							generador.CrearPlantillaDefault(templatePath, HttpContext.Current.Server.MapPath("~/userscontent/img/logoasamblea.png"), HttpContext.Current.Server.MapPath("~/userscontent/img/header.png"), HttpContext.Current.Server.MapPath("~/userscontent/img/compras.png"));
+						}
+					}
+					ReporteComprasDocx reporteDocx = new ReporteComprasDocx();
+					reporteDocx.GenerarDocumentoDesdePlantilla(ds4, templatePath, htmlPath);
+					string embedHtml = "<iframe src=\"{0}\" width=\"1294px\" height=\"682px\" frameborder=\"0\"></iframe>";
+					ltEmbed.Text = string.Format(embedHtml, ResolveUrl("~/DocumentsSolicitudes/" + eleccion6 + ".html") + "?v=" + DateTime.Now.Ticks);
+					// ===== FIN: Nuevo flujo con plantilla Word/Excel =====
 					MultiView1.ActiveViewIndex = 2;
 					btnCloseContent.CommandArgument = "1";
 				}
