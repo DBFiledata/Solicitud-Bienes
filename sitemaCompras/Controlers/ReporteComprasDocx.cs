@@ -146,6 +146,18 @@ namespace sitemaCompras.Controlers
             // 6. Export to HTML
             HtmlFormatProvider htmlProvider = new HtmlFormatProvider();
             string htmlFragment = htmlProvider.Export(document);
+
+            // HtmlFormatProvider resuelve un borde "heredado" (Style=Inherit -- la plantilla nunca
+            // define un borde propio en esa celda) como una linea SOLIDA visible en el HTML exportado,
+            // aun cuando el .docx original no dibuja ninguna linea ahi. Se comprobo que esto ocurre en
+            // un paso interno del exportador (no depende del valor de Cell.Borders en el momento de
+            // exportar: mutar el modelo antes de exportar no tiene ningun efecto), por lo que se
+            // corrige quitando puntualmente el "border-top" ya exportado en las celdas de los campos
+            // de cabecera (se conserva el "border-bottom", que es el subrayado real de cada campo).
+            htmlFragment = QuitarBordeSuperiorFantasma(htmlFragment, "or (a):");
+            htmlFragment = QuitarBordeSuperiorFantasma(htmlFragment, "Funcionario Responsable:");
+            htmlFragment = QuitarBordeSuperiorFantasma(htmlFragment, "Unidad Solicitante:");
+
             string encabezadoHtml = ConstruirHtmlEncabezadoFlotante(encabezado);
             string htmlCompleto = GenerarPaginaHtmlCompleta(htmlFragment, encabezadoHtml, section);
             string dir = Path.GetDirectoryName(outputHtmlPath);
@@ -451,20 +463,46 @@ namespace sitemaCompras.Controlers
             }
         }
 
+        // NOTA DE UNIDADES: Run.FontSize asignado por API se exporta a HTML como pixeles LITERALES
+        // (verificado empiricamente: FontSize=6 exporta "font-size:6px", no "8px" como si fueran
+        // puntos convertidos). Esto es distinto de los tamaños heredados del estilo del .docx
+        // original, que si se convierten correctamente de puntos a pixeles (96/72) al exportar. Las
+        // constantes de abajo ya estan expresadas en px, con su equivalente en puntos en el comentario,
+        // para no fijar por error un tamaño mas chico que el que se busca reemplazar.
+
+        // Campos de cabecera cuyo valor inyectado puede ser largo (nombres de directores,
+        // funcionarios o unidades/direcciones institucionales). Se reduce su fuente para que
+        // quepan en una sola linea sin desbordar la celda ni romper la alineacion con el
+        // subrayado de cada campo.
+        private static readonly string[] MarcadoresEncabezadoCompacto = { "{{DIR_ADMIN}}", "{{SOLICITANTE}}", "{{UNIDAD}}" };
+        private const double FontSizeEncabezadoCompacto = 12; // ~9pt
+
+        // Tamaño de fuente para el cuerpo de la solicitud (tabla de renglones y descripcion de uso),
+        // usado como fallback cuando no se puede preservar el tamaño de una celda existente. Mayor
+        // que el tamaño base del documento (11pt = 14.67px) para mejorar la legibilidad general.
+        private const double FontSizeCuerpo = 16; // ~12pt
+
         private void ReemplazarEnParrafo(Paragraph paragraph, Dictionary<string, string> reemplazos)
         {
             var runs = paragraph.Inlines.OfType<Run>().ToList();
             if (runs.Count == 0) return;
             string texto = string.Join("", runs.Select(r => r.Text));
             bool changed = false;
+            bool esCampoCompacto = false;
             foreach (var kvp in reemplazos)
             {
-                if (texto.Contains(kvp.Key)) { texto = texto.Replace(kvp.Key, kvp.Value); changed = true; }
+                if (texto.Contains(kvp.Key))
+                {
+                    texto = texto.Replace(kvp.Key, kvp.Value);
+                    changed = true;
+                    if (Array.IndexOf(MarcadoresEncabezadoCompacto, kvp.Key) >= 0) esCampoCompacto = true;
+                }
             }
             if (changed)
             {
                 for (int i = runs.Count - 1; i > 0; i--) paragraph.Inlines.Remove(runs[i]);
                 runs[0].Text = texto;
+                if (esCampoCompacto) runs[0].FontSize = FontSizeEncabezadoCompacto;
             }
         }
 
@@ -541,7 +579,7 @@ namespace sitemaCompras.Controlers
 
             // 2. Collect all available empty rows below the marker row
             var emptyRows = new List<TableCell>();
-            double sharedFontSize = 10;
+            double sharedFontSize = FontSizeCuerpo;
             bool fontDetected = false;
 
             for (int r = markerRowIdx + 1; r < table.Rows.Count; r++)
@@ -762,7 +800,7 @@ namespace sitemaCompras.Controlers
                     var cell = row.Cells[c];
                     // Clear existing content and set new value
                     var existingBlocks = cell.Blocks.ToList();
-                    double fontSize = 10;
+                    double fontSize = FontSizeCuerpo;
                     // Try to preserve font from existing paragraph
                     if (existingBlocks.Count > 0 && existingBlocks[0] is Paragraph existP)
                     {
@@ -792,7 +830,7 @@ namespace sitemaCompras.Controlers
                     string valor = (c < dr.Table.Columns.Count) ? dr[c].ToString() : "";
                     Paragraph p = cell.Blocks.AddParagraph();
                     Run run = p.Inlines.AddRun(valor);
-                    run.FontSize = 10;
+                    run.FontSize = FontSizeCuerpo;
                 }
                 dataIdx++;
             }
@@ -809,7 +847,7 @@ namespace sitemaCompras.Controlers
             {
                 TableCell c = hr.Cells.AddTableCell(); c.Borders = new TableCellBorders(border);
                 Paragraph p = c.Blocks.AddParagraph(); p.TextAlignment = Alignment.Center;
-                Run r = p.Inlines.AddRun(h); r.FontSize = 10; r.FontWeight = System.Windows.FontWeights.Bold;
+                Run r = p.Inlines.AddRun(h); r.FontSize = FontSizeCuerpo; r.FontWeight = System.Windows.FontWeights.Bold;
             }
             // Data
             foreach (DataRow dr in dt.Rows)
@@ -821,7 +859,7 @@ namespace sitemaCompras.Controlers
                     Paragraph p = cell.Blocks.AddParagraph();
                     p.TextAlignment = (c == 3) ? Alignment.Left : Alignment.Center;
                     Run r = p.Inlines.AddRun((c < dr.Table.Columns.Count) ? dr[c].ToString() : "");
-                    r.FontSize = 10;
+                    r.FontSize = FontSizeCuerpo;
                 }
             }
             return table;
@@ -933,6 +971,45 @@ namespace sitemaCompras.Controlers
                 rowIdx++;
             }
             return result;
+        }
+
+        /// <summary>
+        /// Quita el "border-top" fantasma que HtmlFormatProvider agrega a la celda que contiene el
+        /// texto estatico indicado y a la celda del valor inyectado inmediatamente siguiente en la
+        /// misma fila (p.ej. "Señor (a):" + {{DIR_ADMIN}}), preservando el "border-bottom" real
+        /// (el subrayado del campo) y el resto del estilo de la celda intacto.
+        /// </summary>
+        private string QuitarBordeSuperiorFantasma(string html, string etiquetaEstatica)
+        {
+            int idx = html.IndexOf(etiquetaEstatica, StringComparison.Ordinal);
+            if (idx < 0) return html;
+
+            int tdStart = html.LastIndexOf("<td", idx, StringComparison.OrdinalIgnoreCase);
+            if (tdStart < 0) return html;
+            int tdOpenEnd = html.IndexOf('>', tdStart);
+            if (tdOpenEnd < 0) return html;
+
+            html = QuitarBorderTopDeEtiqueta(html, tdStart, tdOpenEnd);
+
+            // Celda del valor inyectado: el siguiente <td> de la misma fila (antes del </tr>).
+            int tdCloseIdx = html.IndexOf("</td>", tdOpenEnd, StringComparison.OrdinalIgnoreCase);
+            if (tdCloseIdx < 0) return html;
+            int trCloseIdx = html.IndexOf("</tr>", tdCloseIdx, StringComparison.OrdinalIgnoreCase);
+            int nextTdStart = html.IndexOf("<td", tdCloseIdx, StringComparison.OrdinalIgnoreCase);
+            if (nextTdStart < 0 || (trCloseIdx >= 0 && nextTdStart > trCloseIdx)) return html;
+            int nextTdOpenEnd = html.IndexOf('>', nextTdStart);
+            if (nextTdOpenEnd < 0) return html;
+
+            return QuitarBorderTopDeEtiqueta(html, nextTdStart, nextTdOpenEnd);
+        }
+
+        private string QuitarBorderTopDeEtiqueta(string html, int tagStart, int tagOpenEnd)
+        {
+            string tagAbierta = html.Substring(tagStart, tagOpenEnd - tagStart + 1);
+            string sinBorde = System.Text.RegularExpressions.Regex.Replace(
+                tagAbierta, "border-top:[^;\"]*;", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            if (sinBorde == tagAbierta) return html;
+            return html.Substring(0, tagStart) + sinBorde + html.Substring(tagOpenEnd + 1);
         }
 
         /// <summary>Pulls the &lt;body&gt; inner content out of a full HTML document exported by Telerik.</summary>
