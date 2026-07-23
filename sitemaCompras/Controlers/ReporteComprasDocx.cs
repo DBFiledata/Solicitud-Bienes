@@ -199,26 +199,33 @@ namespace sitemaCompras.Controlers
             if (hayRenglones && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
                 InyectarRenglonesExcel(form, ds.Tables[0], renglonInicio);
 
-            // Configurar la pagina como el propio Excel la imprime: carta vertical, area de impresion
-            // A1:U60, ajustada a UNA pagina y centrada horizontalmente.
+            // Configurar la pagina para que el formulario CUBRA la hoja completa: se respeta el
+            // tamaño de papel y la orientacion definidos en la propia plantilla (este formulario es
+            // tamaño Legal/oficio, mas alto que carta; forzar carta lo achicaba dejando margenes
+            // laterales grandes). Se acota el area de impresion a A1:U60, se ajusta a UNA pagina, se
+            // centra, y se reducen los margenes al minimo para maximizar el tamaño del formulario.
             var ps = form.WorksheetPageSetup;
-            ps.PaperType = Telerik.Windows.Documents.Model.PaperTypes.Letter;
-            ps.PageOrientation = Telerik.Windows.Documents.Model.PageOrientation.Portrait;
             ps.PrintArea.SetPrintArea(new Ss.CellRange(0, 0, FormMaxRow, FormMaxCol));
+            ps.Margins = new Ss.Printing.PageMargins(4);
             ps.FitToPages = true;
             ps.FitToPagesWide = 1;
             ps.FitToPagesTall = 1;
             ps.CenterHorizontally = true;
+            ps.CenterVertically = true;
             workbook.ActiveWorksheet = form;
 
             string dir = Path.GetDirectoryName(outputHtmlPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            // Exportar SOLO la hoja activa (FORM) a PDF, junto al .html de salida.
+            // Exportar SOLO la hoja activa (FORM) a PDF, junto al .html de salida. Se usa la maxima
+            // calidad de imagen disponible para que la imagen del cuadro de versionamiento (EMF) se
+            // vea lo mas nitida posible.
             string pdfPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(outputHtmlPath) + ".pdf");
             SsPdf.PdfFormatProvider pdfProvider = new SsPdf.PdfFormatProvider();
-            pdfProvider.ExportSettings = new SsPdf.Export.PdfExportSettings(
+            var pdfSettings = new SsPdf.Export.PdfExportSettings(
                 Telerik.Windows.Documents.Spreadsheet.FormatProviders.ExportWhat.ActiveSheet, false);
+            pdfSettings.PdfFileSettings.ImageQuality = Telerik.Windows.Documents.Fixed.FormatProviders.Pdf.Export.ImageQuality.High;
+            pdfProvider.ExportSettings = pdfSettings;
             using (FileStream outPdf = File.Create(pdfPath))
             {
                 pdfProvider.Export(workbook, outPdf);
