@@ -7,6 +7,7 @@ namespace sitemaCompras.Controlers
     using System.Linq;
     using System.Globalization;
     using System.Text;
+    using System.Drawing;
     using Telerik.Windows.Documents.Flow.FormatProviders.Docx;
     using Telerik.Windows.Documents.Flow.FormatProviders.Html;
     using Telerik.Windows.Documents.Flow.Model;
@@ -183,47 +184,71 @@ namespace sitemaCompras.Controlers
                 workbook = xlsxProvider.Import(input);
             }
 
-            // Trabajar exclusivamente sobre la hoja FORM (ignorar Instructivo).
+            // Trabajar sobre la hoja FORM; quitar Instructivo para que no genere paginas extra.
             Ss.Worksheet form = workbook.Worksheets["FORM"];
             if (form == null) form = workbook.Worksheets.FirstOrDefault();
             if (form == null) throw new InvalidOperationException("La plantilla Excel no contiene hojas.");
+            if (workbook.Worksheets.Contains("Instructivo")) workbook.Worksheets.Remove("Instructivo");
 
-            // Inyeccion de datos sobre el modelo (mismo diccionario compartido con el path Word).
+            // 1. Inyectar los datos COMPARTIDOS (encabezado + descripcion de uso), identicos en todas
+            //    las paginas: se hacen sobre FORM antes de clonar, para que cada copia los herede.
             string descripcion;
             Dictionary<string, string> reemplazos = ConstruirReemplazos(ds, out descripcion);
-
-            Ss.CellIndex renglonInicio;
-            bool hayRenglones = LocalizarMarcadorRenglones(form, out renglonInicio);
             ReemplazarMarcadoresExcel(form, reemplazos);
             InyectarDescripcionExcel(form, descripcion);
-            if (hayRenglones && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
-                InyectarRenglonesExcel(form, ds.Tables[0], renglonInicio);
 
-            // Configurar la pagina para que el formulario CUBRA la hoja completa: se respeta el
-            // tamaño de papel y la orientacion definidos en la propia plantilla (este formulario es
-            // tamaño Legal/oficio, mas alto que carta; forzar carta lo achicaba dejando margenes
-            // laterales grandes). Se acota el area de impresion a A1:U60, se ajusta a UNA pagina, se
-            // centra, y se reducen los margenes al minimo para maximizar el tamaño del formulario.
-            var ps = form.WorksheetPageSetup;
-            ps.PrintArea.SetPrintArea(new Ss.CellRange(0, 0, FormMaxRow, FormMaxCol));
-            ps.Margins = new Ss.Printing.PageMargins(4);
-            ps.FitToPages = true;
-            ps.FitToPagesWide = 1;
-            ps.FitToPagesTall = 1;
-            ps.CenterHorizontally = true;
-            ps.CenterVertically = true;
-            workbook.ActiveWorksheet = form;
+            // 2. Renglones: repartirlos en lotes (uno por pagina) segun la capacidad de la banda de
+            //    renglones, y clonar el formulario una vez por pagina adicional. Cada renglon puede
+            //    ocupar varias lineas (su fila crece con ajuste de texto), por lo que la reparticion
+            //    es por "lineas" y no por conteo fijo, evitando que se corte el contenido.
+            Ss.CellIndex renglonInicio;
+            bool hayRenglones = LocalizarMarcadorRenglones(form, out renglonInicio);
+            if (hayRenglones && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                int[] cols = MapearColumnasRenglones(form, renglonInicio.RowIndex, renglonInicio.ColumnIndex);
+                int filasBanda = ContarFilasBanda(form, renglonInicio.RowIndex);
+                List<List<DataRow>> lotes = RepartirRenglones(form, ds.Tables[0], cols, renglonInicio.RowIndex, filasBanda);
+
+                var hojas = new List<Ss.Worksheet> { form };
+                for (int p = 1; p < lotes.Count; p++)
+                {
+                    Ss.Worksheet clon = workbook.Worksheets.Add();
+                    clon.CopyFrom(form); // hereda encabezado + descripcion, area de renglones vacia
+                    hojas.Add(clon);
+                }
+                for (int p = 0; p < lotes.Count; p++)
+                    InyectarLoteRenglones(hojas[p], lotes[p], cols, renglonInicio, filasBanda);
+            }
+            else if (hayRenglones)
+            {
+                // Sin renglones: limpiar el marcador para que no quede {{TABLA_RENGLONES}} visible.
+                form.Cells.GetCellSelection(renglonInicio).SetValueAsText("");
+            }
+
+            // 3. Configurar la pagina en TODAS las hojas: se respeta el tamaño de papel/orientacion de
+            //    la plantilla (este formulario es tamaño Legal/oficio), area de impresion A1:U60,
+            //    ajustar a una pagina, centrado y margenes minimos para cubrir la hoja.
+            foreach (Ss.Worksheet w in workbook.Worksheets.ToList())
+            {
+                var ps = w.WorksheetPageSetup;
+                ps.PrintArea.SetPrintArea(new Ss.CellRange(0, 0, FormMaxRow, FormMaxCol));
+                ps.Margins = new Ss.Printing.PageMargins(4);
+                ps.FitToPages = true;
+                ps.FitToPagesWide = 1;
+                ps.FitToPagesTall = 1;
+                ps.CenterHorizontally = true;
+                ps.CenterVertically = true;
+            }
 
             string dir = Path.GetDirectoryName(outputHtmlPath);
             if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
-            // Exportar SOLO la hoja activa (FORM) a PDF, junto al .html de salida. Se usa la maxima
-            // calidad de imagen disponible para que la imagen del cuadro de versionamiento (EMF) se
-            // vea lo mas nitida posible.
+            // 4. Exportar TODO el libro a PDF (cada hoja = una pagina; el pie "Pagina &P de &N" del
+            //    formulario numera solo a traves de las paginas). Calidad de imagen alta para el EMF.
             string pdfPath = Path.Combine(dir, Path.GetFileNameWithoutExtension(outputHtmlPath) + ".pdf");
             SsPdf.PdfFormatProvider pdfProvider = new SsPdf.PdfFormatProvider();
             var pdfSettings = new SsPdf.Export.PdfExportSettings(
-                Telerik.Windows.Documents.Spreadsheet.FormatProviders.ExportWhat.ActiveSheet, false);
+                Telerik.Windows.Documents.Spreadsheet.FormatProviders.ExportWhat.EntireWorkbook, false);
             pdfSettings.PdfFileSettings.ImageQuality = Telerik.Windows.Documents.Fixed.FormatProviders.Pdf.Export.ImageQuality.High;
             pdfProvider.ExportSettings = pdfSettings;
             using (FileStream outPdf = File.Create(pdfPath))
@@ -248,39 +273,120 @@ namespace sitemaCompras.Controlers
         }
 
         /// <summary>
-        /// Inyecta la descripcion de uso en su celda con ajuste de texto (wrap) activado, y ajusta
-        /// la altura de la fila para que el texto multilinea quepa completo en el PDF exportado.
+        /// Inyecta la descripcion de uso distribuyendola por palabras a lo largo de los renglones
+        /// disponibles del area de descripcion (la celda del marcador y las filas a ancho completo
+        /// que le siguen, hasta la seccion "Partidas Presupuestarias"), una linea por renglon, tal
+        /// como se llena el formulario fisico. Asi el texto NO se amontona en la primera celda: al
+        /// terminar el ancho de una linea/celda, salta al siguiente renglon.
         /// </summary>
         private void InyectarDescripcionExcel(Ss.Worksheet ws, string descripcion)
         {
             Ss.CellRange used = ws.UsedCellRange;
-            for (int r = used.FromIndex.RowIndex; r <= used.ToIndex.RowIndex; r++)
-            {
+
+            // 1. Localizar la celda del marcador {{DESCRIPCION_USO}}.
+            int markerRow = -1, markerCol = -1;
+            for (int r = used.FromIndex.RowIndex; r <= used.ToIndex.RowIndex && markerRow < 0; r++)
                 for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
                 {
                     string t = TextoCeldaCrudo(ws, r, c);
-                    if (t == null || !t.Contains("{{DESCRIPCION_USO}}")) continue;
+                    if (t != null && t.Contains("{{DESCRIPCION_USO}}")) { markerRow = r; markerCol = c; break; }
+                }
+            if (markerRow < 0) return;
 
-                    string texto = t.Replace("{{DESCRIPCION_USO}}", descripcion ?? "");
-                    Ss.CellSelection sel = ws.Cells.GetCellSelection(r, c);
-                    sel.SetValueAsText(texto);
-                    sel.SetIsWrapped(true);
+            // Preservar cualquier texto estatico que acompañe al marcador en su celda (p.ej. si el
+            // marcador estuviera junto a una etiqueta), reemplazandolo por la primera linea luego.
+            string prefijo = (TextoCeldaCrudo(ws, markerRow, markerCol) ?? "").Replace("{{DESCRIPCION_USO}}", "");
 
-                    // Estimar el alto necesario segun el ancho (posiblemente combinado) de la celda.
-                    double anchoCelda = AnchoCeldaEfectiva(ws, r, c);
-                    double fs = 10; try { double v = sel.GetFontSize().Value; if (v > 0) fs = v; } catch { }
-                    double fsPx = fs * 96.0 / 72.0;
-                    double charW = fsPx * 0.5;       // ancho aprox. de caracter
-                    double lineH = fsPx * 1.3;       // alto de linea aprox.
-                    int lineas = 1;
-                    if (anchoCelda > 0 && charW > 0)
-                        lineas = Math.Max(1, (int)Math.Ceiling(texto.Length * charW / anchoCelda));
-                    double altoNecesario = lineas * lineH + 4;
-                    if (altoNecesario > AltoFilaPx(ws, r))
-                        ws.Rows.GetRowSelection(r).SetHeight(new Ss.RowHeight(altoNecesario, true));
-                    return;
+            // 2. Reunir los renglones destino: primero la propia celda del marcador, luego las filas
+            //    de abajo (ancladas en la primera columna con contenido/merge, tipicamente B) hasta
+            //    encontrar la seccion "Partidas Presupuestarias" o el fin del area de descripcion.
+            var renglones = new List<int[]>(); // {fila, columnaAncla}
+            renglones.Add(new[] { markerRow, markerCol });
+            for (int r = markerRow + 1; r <= used.ToIndex.RowIndex; r++)
+            {
+                if (FilaContiene(ws, r, "PARTIDAS PRESUP")) break;
+                renglones.Add(new[] { r, AnclaRenglon(ws, r, used.FromIndex.ColumnIndex) });
+            }
+
+            // 3. Word-wrap greedy: repartir palabras por renglon segun la capacidad (ancho) de cada uno.
+            double fs = 10;
+            try { double v = ws.Cells.GetCellSelection(markerRow, markerCol).GetFontSize().Value; if (v > 0) fs = v; } catch { }
+            double charW = Math.Max(1, fs * 96.0 / 72.0 * 0.52); // ancho aprox. de caracter en px
+
+            string[] palabras = (descripcion ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            int pi = 0;
+            for (int i = 0; i < renglones.Count; i++)
+            {
+                int fila = renglones[i][0], col = renglones[i][1];
+                // Ancho disponible: para el renglon del marcador, el de su celda combinada (la parte
+                // a la derecha de la etiqueta); para los renglones de continuacion, desde su ancla
+                // hasta el borde derecho del contenido (asi las filas sin merge no calculan un ancho
+                // angosto erroneo que desalinearia esa linea).
+                double ancho = (i == 0)
+                    ? AnchoCeldaEfectiva(ws, fila, col)
+                    : SumaAnchoColumnas(ws, col, FormMaxCol + 1); // hasta el borde del formulario (col U)
+                ancho *= 0.92; // margen de seguridad
+                int capacidad = Math.Max(1, (int)(ancho / charW));
+
+                // El primer renglon puede llevar un prefijo estatico (normalmente vacio).
+                string linea = (i == 0) ? prefijo : "";
+                bool ultimoRenglon = (i == renglones.Count - 1);
+
+                while (pi < palabras.Length)
+                {
+                    string candidata = (linea.Length == 0) ? palabras[pi] : linea + " " + palabras[pi];
+                    // En el ultimo renglon disponible se mete todo lo que quede (aunque exceda).
+                    if (!ultimoRenglon && candidata.Length > capacidad && linea.Length > 0) break;
+                    linea = candidata;
+                    pi++;
+                }
+
+                Ss.CellSelection sel = ws.Cells.GetCellSelection(fila, col);
+                sel.SetValueAsText(linea);
+                // Alinear a la izquierda sin sangria para que todas las lineas arranquen en el mismo
+                // borde (las filas sin celda combinada pueden heredar una alineacion/sangria distinta).
+                try { sel.SetHorizontalAlignment(Ss.RadHorizontalAlignment.Left); sel.SetIndent(0); } catch { }
+                if (ultimoRenglon) sel.SetIsWrapped(true); // por si sobra texto en el ultimo renglon
+
+                if (pi >= palabras.Length && i < renglones.Count - 1)
+                {
+                    // Ya no queda texto: limpiar los renglones restantes por si tuvieran algo.
+                    for (int j = i + 1; j < renglones.Count; j++)
+                        ws.Cells.GetCellSelection(renglones[j][0], renglones[j][1]).SetValueAsText("");
+                    break;
                 }
             }
+        }
+
+        /// <summary>Indica si alguna celda de la fila contiene el texto dado (mayusculas).</summary>
+        private bool FilaContiene(Ss.Worksheet ws, int fila, string textoMayus)
+        {
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int c = used.FromIndex.ColumnIndex; c <= used.ToIndex.ColumnIndex; c++)
+            {
+                string t = TextoCeldaCrudo(ws, fila, c);
+                if (!string.IsNullOrEmpty(t) && t.ToUpperInvariant().Contains(textoMayus)) return true;
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// Columna de anclaje del renglon de descripcion: la esquina izquierda del rango combinado
+        /// a ancho completo de esa fila (tipicamente B). Si la fila no tiene merge, cae a la primera
+        /// columna con contenido despues del margen izquierdo.
+        /// </summary>
+        private int AnclaRenglon(Ss.Worksheet ws, int fila, int usedFromCol)
+        {
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int c = usedFromCol; c <= used.ToIndex.ColumnIndex; c++)
+            {
+                Ss.CellRange contain;
+                if (ws.Cells.TryGetContainingMergedRange(new Ss.CellIndex(fila, c), out contain)
+                    && contain.ToIndex.ColumnIndex - contain.FromIndex.ColumnIndex >= 3)
+                    return contain.FromIndex.ColumnIndex;
+            }
+            // Sin merge ancho: saltar la columna-margen A (0) si aplica.
+            return Math.Min(usedFromCol + 1, used.ToIndex.ColumnIndex);
         }
 
         /// <summary>Ancho efectivo de una celda: si esta combinada, la suma de sus columnas.</summary>
@@ -335,40 +441,183 @@ namespace sitemaCompras.Controlers
         }
 
         /// <summary>
-        /// Inyecta los renglones de la solicitud a partir de la celda marcadora (primera fila de
-        /// datos). Las plantillas institucionales traen varias filas de renglon ya pre-formateadas
-        /// (con sus bordes y celdas combinadas), por lo que se ESCRIBE sobre esas filas existentes
-        /// preservando su estructura, en lugar de insertar filas en blanco (que romperia los merges
-        /// y desplazaria las secciones de abajo). Solo si los datos superan la ultima fila usada de
-        /// la hoja se insertan filas nuevas al final.
+        /// Cuenta las filas de la "banda" de renglones: desde la fila marcadora hasta (sin incluir)
+        /// la fila de la etiqueta "Especifique el uso..." (inicio de la seccion de descripcion). Es
+        /// la cantidad de renglones que caben visualmente en una pagina del formulario.
         /// </summary>
-        private void InyectarRenglonesExcel(Ss.Worksheet ws, DataTable dt, Ss.CellIndex inicio)
+        private int ContarFilasBanda(Ss.Worksheet ws, int markerRow)
+        {
+            Ss.CellRange used = ws.UsedCellRange;
+            for (int r = markerRow + 1; r <= used.ToIndex.RowIndex; r++)
+                if (FilaContiene(ws, r, "ESPECIFIQUE EL USO"))
+                    return r - markerRow;
+            // Fallback razonable si no se encuentra la etiqueta.
+            return Math.Max(1, Math.Min(24, used.ToIndex.RowIndex - markerRow));
+        }
+
+        /// <summary>
+        /// Reparte los renglones en lotes (uno por pagina). El presupuesto de cada pagina es la
+        /// cantidad de filas de la banda (en "lineas"): cada renglon consume tantas lineas como
+        /// necesite su descripcion al ajustarse (wrap) al ancho de la columna DESCRIPCION. Cuando un
+        /// renglon no entra en el presupuesto restante de la pagina, abre una pagina nueva.
+        /// </summary>
+        private List<List<DataRow>> RepartirRenglones(Ss.Worksheet ws, DataTable dt, int[] cols, int markerRow, int filasBanda)
+        {
+            int descCol = cols[3];
+            int descColFin = ColumnaFinDescripcion(cols);
+            double anchoDesc = (descCol >= 0 && descColFin > descCol)
+                ? SumaAnchoColumnas(ws, descCol, descColFin + 1) * 0.94
+                : AnchoCeldaEfectiva(ws, markerRow, descCol) * 0.94;
+            string fontFamily; double fontSizePx;
+            ObtenerFuenteCelda(ws, markerRow, descCol, out fontFamily, out fontSizePx);
+
+            var lotes = new List<List<DataRow>>();
+            var actual = new List<DataRow>();
+            int usadas = 0;
+            foreach (DataRow dr in dt.Rows)
+            {
+                string desc = (3 < dr.Table.Columns.Count) ? Convert.ToString(dr[3]) : "";
+                int lineas = ContarLineasTexto(desc, fontFamily, fontSizePx, anchoDesc);
+                // Si no entra en lo que queda de la pagina (y ya hay algo), abrir pagina nueva.
+                if (actual.Count > 0 && usadas + lineas > filasBanda)
+                {
+                    lotes.Add(actual);
+                    actual = new List<DataRow>();
+                    usadas = 0;
+                }
+                actual.Add(dr);
+                usadas += lineas;
+            }
+            if (actual.Count > 0) lotes.Add(actual);
+            if (lotes.Count == 0) lotes.Add(new List<DataRow>());
+            return lotes;
+        }
+
+        /// <summary>
+        /// Inyecta un lote de renglones en la banda de una hoja, una fila por renglon, con ajuste de
+        /// texto (wrap) en la descripcion y creciendo la altura de la fila EXACTAMENTE lo que necesita
+        /// su contenido (medido con GDI+, no estimado), para que se vea todo sin desperdiciar espacio.
+        /// NO inserta filas (la banda es de tamaño fijo); los renglones sobrantes van en otra pagina.
+        /// Limpia el marcador y las filas de banda no usadas.
+        /// </summary>
+        private void InyectarLoteRenglones(Ss.Worksheet ws, List<DataRow> renglones, int[] cols, Ss.CellIndex inicio, int filasBanda)
         {
             int rowBase = inicio.RowIndex;
-            int ultimaFilaUsada = ws.UsedCellRange.ToIndex.RowIndex;
+            int descCol = cols[3];
+            int descColFin = ColumnaFinDescripcion(cols);
+            double anchoDesc = (descCol >= 0 && descColFin > descCol)
+                ? SumaAnchoColumnas(ws, descCol, descColFin + 1) * 0.94
+                : (descCol >= 0 ? AnchoCeldaEfectiva(ws, rowBase, descCol) * 0.94 : 0);
+            string fontFamily = "Arial"; double fontSizePx = 10 * 96.0 / 72.0;
+            if (descCol >= 0) ObtenerFuenteCelda(ws, rowBase, descCol, out fontFamily, out fontSizePx);
+            double lineH = AltoLineaPx(fontFamily, fontSizePx);
+            double altoBase = AltoFilaPx(ws, rowBase);
 
-            // Mapear las 6 columnas logicas (Renglon | Cantidad | Unidad | Descripcion | Unitario |
-            // Total) a sus columnas reales leyendo la fila de encabezado. NO se puede caminar por
-            // anclajes consecutivos porque el template intercala columnas sueltas (p.ej. una columna
-            // angosta entre Descripcion y Unitario) que desalinearia los ultimos valores.
-            int[] cols = MapearColumnasRenglones(ws, rowBase, inicio.ColumnIndex);
-
-            for (int i = 0; i < dt.Rows.Count; i++)
+            for (int i = 0; i < filasBanda; i++)
             {
                 int fila = rowBase + i;
-                // Overflow real: si superamos el limite de la hoja, insertar una fila al final.
-                if (fila > ultimaFilaUsada && ws.Rows.CanInsert(fila, 1))
+                if (i < renglones.Count)
                 {
-                    ws.Rows.Insert(fila, 1);
-                    ultimaFilaUsada = fila;
-                }
+                    DataRow dr = renglones[i];
 
-                DataRow dr = dt.Rows[i];
-                for (int k = 0; k < 6; k++)
+                    // La plantilla no combina la celda de descripcion de forma consistente en todas
+                    // las filas de la banda (algunas filas quedan sin combinar, o combinadas a un
+                    // ancho distinto): se fuerza aca la misma combinacion en cada fila para que el
+                    // ancho real de render coincida con el anchoDesc usado para medir el texto.
+                    if (descCol >= 0 && descColFin > descCol)
+                    {
+                        Ss.CellSelection rangoDesc = ws.Cells.GetCellSelection(fila, descCol, fila, descColFin);
+                        rangoDesc.Unmerge();
+                        rangoDesc.Merge();
+                    }
+
+                    for (int k = 0; k < 6; k++)
+                    {
+                        if (cols[k] < 0) continue;
+                        string valor = (k < dr.Table.Columns.Count) ? Convert.ToString(dr[k]) : "";
+                        ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText(valor);
+                    }
+                    // Ajuste de texto + alto de fila EXACTO para la descripcion (medido, no estimado).
+                    if (descCol >= 0 && anchoDesc > 0)
+                    {
+                        Ss.CellSelection descSel = ws.Cells.GetCellSelection(fila, descCol);
+                        descSel.SetIsWrapped(true);
+                        string desc = (3 < dr.Table.Columns.Count) ? Convert.ToString(dr[3]) : "";
+                        int lineas = ContarLineasTexto(desc, fontFamily, fontSizePx, anchoDesc);
+                        double altoNec = lineas * lineH + 4;
+                        ws.Rows.GetRowSelection(fila).SetHeight(new Ss.RowHeight(Math.Max(altoNec, altoBase), true));
+                    }
+                }
+                else
                 {
-                    if (cols[k] < 0) continue;
-                    string valor = (k < dr.Table.Columns.Count) ? Convert.ToString(dr[k]) : "";
-                    ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText(valor);
+                    // Fila de banda sin renglon: limpiar por si el marcador cayo aqui o quedo algo, y
+                    // devolverla a su alto original (por si una pagina previa la habia agrandado).
+                    for (int k = 0; k < 6; k++)
+                        if (cols[k] >= 0)
+                        {
+                            string t = TextoCeldaCrudo(ws, fila, cols[k]);
+                            if (!string.IsNullOrEmpty(t) && t.Contains("{{"))
+                                ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText("");
+                        }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Lee la fuente (familia y tamaño) de una celda, con fallback razonable. El tamaño se
+        /// devuelve en PIXELES (96dpi): se verifico empiricamente contra el XML crudo del .xlsx que
+        /// CellSelection.GetFontSize() en el modelo Spreadsheet de Telerik devuelve el tamaño ya
+        /// convertido a px (p.ej. una fuente reelmente de 10pt devuelve 13.33 = 10*96/72), igual que
+        /// el resto de las medidas de este modelo (PageSize, margenes, anchos de columna).
+        /// </summary>
+        private void ObtenerFuenteCelda(Ss.Worksheet ws, int row, int col, out string fontFamily, out double fontSizePx)
+        {
+            fontFamily = "Arial"; fontSizePx = 10 * 96.0 / 72.0;
+            try
+            {
+                Ss.CellSelection sel = ws.Cells.GetCellSelection(row, col);
+                var ff = sel.GetFontFamily().Value;
+                string nombre = (ff != null && ff.LocalValue != null) ? ff.LocalValue.Source : null;
+                if (!string.IsNullOrEmpty(nombre)) fontFamily = nombre;
+                double fs = sel.GetFontSize().Value;
+                if (fs > 0) fontSizePx = fs;
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// Cuenta con precision cuantas lineas ocupa un texto al ajustarse (word-wrap) a un ancho
+        /// disponible en px, usando medicion real de GDI+ (Graphics.MeasureString) con la fuente y
+        /// tamaño reales de la celda -- en vez de estimar por cantidad de caracteres, que sobre- o
+        /// sub-estima segun mayusculas/fuente y producia filas mucho mas altas de lo necesario.
+        /// </summary>
+        private int ContarLineasTexto(string texto, string fontFamily, double fontSizePx, double anchoDisponiblePx)
+        {
+            if (string.IsNullOrEmpty(texto) || anchoDisponiblePx < 1) return 1;
+            using (Bitmap bmp = new Bitmap(1, 1))
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.PageUnit = GraphicsUnit.Pixel;
+                using (Font f = new Font(fontFamily, (float)fontSizePx, FontStyle.Regular, GraphicsUnit.Pixel))
+                {
+                    SizeF medida = g.MeasureString(texto, f, Math.Max(1, (int)anchoDisponiblePx));
+                    float lineH = f.GetHeight(g);
+                    if (lineH <= 0) return 1;
+                    return Math.Max(1, (int)Math.Round(medida.Height / lineH));
+                }
+            }
+        }
+
+        /// <summary>Alto de una linea de texto en px (96dpi) para la fuente/tamaño (en px) dados, medido con GDI+.</summary>
+        private double AltoLineaPx(string fontFamily, double fontSizePx)
+        {
+            using (Bitmap bmp = new Bitmap(1, 1))
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.PageUnit = GraphicsUnit.Pixel;
+                using (Font f = new Font(fontFamily, (float)fontSizePx, FontStyle.Regular, GraphicsUnit.Pixel))
+                {
+                    return f.GetHeight(g);
                 }
             }
         }
@@ -402,6 +651,20 @@ namespace sitemaCompras.Controlers
             for (int k = 0; k < 6; k++)
                 if (cols[k] < 0) cols[k] = colInicio + k; // fallback
             return cols;
+        }
+
+        /// <summary>
+        /// Ultima columna del area de descripcion: la columna justo antes de donde empieza UNITARIO
+        /// (limite real detectado en el encabezado), no una letra fija -- la plantilla combina la
+        /// celda de descripcion con un ancho distinto segun la fila (algunas hasta la columna previa
+        /// a UNITARIO, otras una columna antes, y otras sin combinar), asi que este limite se usa
+        /// para forzar la misma combinacion/ancho en todas las filas de la banda.
+        /// </summary>
+        private int ColumnaFinDescripcion(int[] cols)
+        {
+            int descCol = cols[3];
+            int unitarioCol = cols[4];
+            return (descCol >= 0 && unitarioCol > descCol) ? unitarioCol - 1 : descCol;
         }
 
         private double AnchoColumnaPx(Ss.Worksheet ws, int col)
