@@ -216,7 +216,7 @@ namespace sitemaCompras.Controlers
             {
                 int[] cols = MapearColumnasRenglones(form, renglonInicio.RowIndex, renglonInicio.ColumnIndex);
                 int filasBanda = ContarFilasBanda(form, renglonInicio.RowIndex);
-                List<List<DataRow>> lotes = RepartirRenglones(form, ds.Tables[0], cols, renglonInicio.RowIndex, filasBanda);
+                List<List<LineaRenglon>> lotes = RepartirRenglones(form, ds.Tables[0], cols, renglonInicio.RowIndex, filasBanda);
 
                 var hojas = new List<Ss.Worksheet> { form };
                 for (int p = 1; p < lotes.Count; p++)
@@ -526,16 +526,32 @@ namespace sitemaCompras.Controlers
             return Math.Max(1, Math.Min(24, used.ToIndex.RowIndex - markerRow));
         }
 
+        private const string MarcadorContinuaRenglon = "***************Continua***************";
+
         /// <summary>
-        /// Reparte los renglones en lotes (uno por pagina). Cada renglon consume tantas FILAS FISICAS
-        /// de la banda como lineas necesite su descripcion al partirse por palabras (tipo factura: la
-        /// primera fila lleva renglon/cantidad/unidad y la descripcion arranca ahi, las lineas
-        /// siguientes de la descripcion ocupan las filas de abajo, y recien despues empieza el
-        /// proximo renglon). El presupuesto de la pagina es simplemente filasBanda (24): al no crecer
-        /// ninguna fila mas alla de su alto original, el total nunca puede exceder el alto fisico de
-        /// la pagina.
+        /// Una linea fisica de la banda de renglones a inyectar: o bien una linea real de la
+        /// descripcion de un renglon (con su renglon de origen, para saber si es la primera linea y
+        /// hay que mostrar renglon/cantidad/unidad), o el marcador de continuacion cuando la
+        /// descripcion de un renglon se corta al llegar al final de una pagina.
         /// </summary>
-        private List<List<DataRow>> RepartirRenglones(Ss.Worksheet ws, DataTable dt, int[] cols, int markerRow, int filasBanda)
+        private class LineaRenglon
+        {
+            public DataRow Renglon;
+            public string Texto;
+            public bool EsPrimeraLineaDelRenglon;
+            public bool EsMarcadorContinua;
+        }
+
+        /// <summary>
+        /// Reparte TODAS las lineas de descripcion de TODOS los renglones (aplanadas en una sola
+        /// secuencia) en paginas de filasBanda filas cada una, llenando siempre las 24 filas de la
+        /// banda antes de saltar de pagina -- no se dejan renglones enteros para la pagina siguiente
+        /// solo porque no entran completos. Si la ultima fila disponible de una pagina caeria a mitad
+        /// de la descripcion de un renglon (no es su ultima linea), esa fila se reemplaza por el
+        /// marcador "***************Continua***************" y la linea que hubiera ido ahi se
+        /// difiere intacta al principio de la pagina siguiente, retomando exactamente donde se corto.
+        /// </summary>
+        private List<List<LineaRenglon>> RepartirRenglones(Ss.Worksheet ws, DataTable dt, int[] cols, int markerRow, int filasBanda)
         {
             int descCol = cols[3];
             int descColFin = ColumnaFinDescripcion(cols);
@@ -545,73 +561,94 @@ namespace sitemaCompras.Controlers
             string fontFamily; double fontSizePx;
             ObtenerFuenteCelda(ws, markerRow, descCol, out fontFamily, out fontSizePx);
 
-            var lotes = new List<List<DataRow>>();
-            var actual = new List<DataRow>();
-            int usadas = 0;
+            var todasLasLineas = new List<LineaRenglon>();
             foreach (DataRow dr in dt.Rows)
             {
                 string desc = (3 < dr.Table.Columns.Count) ? Convert.ToString(dr[3]) : "";
-                int lineas = DistribuirEnLineas(desc, fontFamily, fontSizePx, anchoDesc).Count;
-                // Si no entra en lo que queda de la pagina (y ya hay algo), abrir pagina nueva.
-                if (actual.Count > 0 && usadas + lineas > filasBanda)
-                {
-                    lotes.Add(actual);
-                    actual = new List<DataRow>();
-                    usadas = 0;
-                }
-                actual.Add(dr);
-                usadas += lineas;
+                List<string> lineas = DistribuirEnLineas(desc, fontFamily, fontSizePx, anchoDesc);
+                for (int li = 0; li < lineas.Count; li++)
+                    todasLasLineas.Add(new LineaRenglon { Renglon = dr, Texto = lineas[li], EsPrimeraLineaDelRenglon = (li == 0) });
             }
-            if (actual.Count > 0) lotes.Add(actual);
-            if (lotes.Count == 0) lotes.Add(new List<DataRow>());
-            return lotes;
+
+            var paginas = new List<List<LineaRenglon>>();
+            int idx = 0;
+            while (idx < todasLasLineas.Count)
+            {
+                var pagina = new List<LineaRenglon>();
+                int filasRestantes = filasBanda;
+                while (filasRestantes > 0 && idx < todasLasLineas.Count)
+                {
+                    LineaRenglon actual = todasLasLineas[idx];
+                    bool esUltimaFilaDisponible = filasRestantes == 1;
+                    bool hayMasLineasDelMismoRenglonDespues = idx + 1 < todasLasLineas.Count
+                        && ReferenceEquals(todasLasLineas[idx + 1].Renglon, actual.Renglon);
+
+                    if (esUltimaFilaDisponible && hayMasLineasDelMismoRenglonDespues)
+                    {
+                        // Cortaria la descripcion a mitad: se marca "Continua" en vez de la linea, que
+                        // se difiere (no se avanza idx) para retomarla al inicio de la proxima pagina.
+                        pagina.Add(new LineaRenglon { EsMarcadorContinua = true, Texto = MarcadorContinuaRenglon });
+                    }
+                    else
+                    {
+                        pagina.Add(actual);
+                        idx++;
+                    }
+                    filasRestantes--;
+                }
+                paginas.Add(pagina);
+            }
+            if (paginas.Count == 0) paginas.Add(new List<LineaRenglon>());
+            return paginas;
         }
 
         /// <summary>
-        /// Inyecta un lote de renglones en la banda de una hoja, tipo factura: cada renglon ocupa
-        /// tantas filas fisicas consecutivas como lineas tenga su descripcion al partirse por
-        /// palabras -- renglon/cantidad/unidad/precios solo en la primera fila, las siguientes solo
-        /// continuan la descripcion -- y recien ahi empieza el proximo renglon. NINGUNA fila cambia
-        /// de alto (todas quedan en su alto original de plantilla); las filas de banda que sobran al
-        /// final quedan visibles y vacias, como en un formulario fisico parcialmente lleno.
+        /// Inyecta las lineas de una pagina en la banda de renglones, tipo factura: cada fila fisica
+        /// lleva una linea de descripcion, con renglon/cantidad/unidad/precios solo en la primera
+        /// linea de cada renglon. Si la pagina llena las 24 filas y la descripcion de un renglon
+        /// queda cortada, la ultima fila lleva el marcador "Continua" (ver RepartirRenglones) y las
+        /// lineas restantes de ese mismo renglon llegan como una nueva "pagina" que retoma desde ahi,
+        /// sin repetir renglon/cantidad/unidad (no es un renglon nuevo). NINGUNA fila cambia de alto.
         /// </summary>
-        private void InyectarLoteRenglones(Ss.Worksheet ws, List<DataRow> renglones, int[] cols, Ss.CellIndex inicio, int filasBanda)
+        private void InyectarLoteRenglones(Ss.Worksheet ws, List<LineaRenglon> lineas, int[] cols, Ss.CellIndex inicio, int filasBanda)
         {
             int rowBase = inicio.RowIndex;
             int descCol = cols[3];
             int descColFin = ColumnaFinDescripcion(cols);
-            double anchoDesc = (descCol >= 0 && descColFin > descCol)
-                ? SumaAnchoColumnas(ws, descCol, descColFin + 1) * 0.94
-                : (descCol >= 0 ? AnchoCeldaEfectiva(ws, rowBase, descCol) * 0.94 : 0);
-            string fontFamily = "Arial"; double fontSizePx = 10 * 96.0 / 72.0;
-            if (descCol >= 0) ObtenerFuenteCelda(ws, rowBase, descCol, out fontFamily, out fontSizePx);
+            int limite = rowBase + filasBanda; // primera fila fuera de la banda
+
+            // Limpiar cualquier marcador {{...}} que haya quedado en toda la banda clonada (p.ej.
+            // {{TABLA_RENGLONES}} en su fila original) ANTES de escribir: como ahora no todas las
+            // filas de la banda reciben renglon/cantidad/unidad (las de continuacion de un renglon
+            // cortado por "Continua" no), el marcador podria quedar visible si solo se limpiaran las
+            // filas realmente sobrantes al final.
+            for (int r = rowBase; r < limite; r++)
+                for (int k = 0; k < 6; k++)
+                    if (cols[k] >= 0)
+                    {
+                        string t = TextoCeldaCrudo(ws, r, cols[k]);
+                        if (!string.IsNullOrEmpty(t) && t.Contains("{{"))
+                            ws.Cells.GetCellSelection(r, cols[k]).SetValueAsText("");
+                    }
 
             int fila = rowBase;
-            int limite = rowBase + filasBanda; // primera fila fuera de la banda
-            foreach (DataRow dr in renglones)
+            foreach (LineaRenglon ln in lineas)
             {
-                if (fila >= limite) break; // no deberia pasar si RepartirRenglones armo bien el lote
+                if (fila >= limite) break; // no deberia pasar si RepartirRenglones armo bien la pagina
 
-                string desc = (3 < dr.Table.Columns.Count) ? Convert.ToString(dr[3]) : "";
-                List<string> lineasDesc = (descCol >= 0 && anchoDesc > 0)
-                    ? DistribuirEnLineas(desc, fontFamily, fontSizePx, anchoDesc)
-                    : new List<string> { desc };
-
-                for (int li = 0; li < lineasDesc.Count && fila < limite; li++, fila++)
+                if (ln.EsPrimeraLineaDelRenglon)
                 {
-                    if (li == 0)
+                    DataRow dr = ln.Renglon;
+                    for (int k = 0; k < 6; k++)
                     {
-                        // Primera fila del renglon: renglon/cantidad/unidad/unitario/total (la
-                        // descripcion se escribe aparte abajo, sea la primera fila o no).
-                        for (int k = 0; k < 6; k++)
-                        {
-                            if (k == 3 || cols[k] < 0) continue;
-                            string valor = (k < dr.Table.Columns.Count) ? Convert.ToString(dr[k]) : "";
-                            ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText(valor);
-                        }
+                        if (k == 3 || cols[k] < 0) continue;
+                        string valor = (k < dr.Table.Columns.Count) ? Convert.ToString(dr[k]) : "";
+                        ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText(valor);
                     }
-                    if (descCol < 0) continue;
+                }
 
+                if (descCol >= 0)
+                {
                     // La plantilla no combina la celda de descripcion de forma consistente en todas
                     // las filas de la banda (algunas filas quedan sin combinar, o combinadas a un
                     // ancho distinto): se fuerza aca la misma combinacion en cada fila para que el
@@ -624,21 +661,17 @@ namespace sitemaCompras.Controlers
                     }
 
                     Ss.CellSelection descSel = ws.Cells.GetCellSelection(fila, descCol);
-                    descSel.SetValueAsText(lineasDesc[li]);
+                    descSel.SetValueAsText(ln.Texto);
                     descSel.SetIsWrapped(false); // cada fila ya lleva exactamente una linea ajustada
-                    try { descSel.SetHorizontalAlignment(Ss.RadHorizontalAlignment.Left); descSel.SetIndent(0); } catch { }
-                }
-            }
-
-            // Limpiar filas de banda que quedaron sin usar (por si el marcador cayo ahi o tenian algo).
-            for (; fila < limite; fila++)
-                for (int k = 0; k < 6; k++)
-                    if (cols[k] >= 0)
+                    try
                     {
-                        string t = TextoCeldaCrudo(ws, fila, cols[k]);
-                        if (!string.IsNullOrEmpty(t) && t.Contains("{{"))
-                            ws.Cells.GetCellSelection(fila, cols[k]).SetValueAsText("");
+                        descSel.SetHorizontalAlignment(ln.EsMarcadorContinua ? Ss.RadHorizontalAlignment.Center : Ss.RadHorizontalAlignment.Left);
+                        descSel.SetIndent(0);
                     }
+                    catch { }
+                }
+                fila++;
+            }
         }
 
         /// <summary>
