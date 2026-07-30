@@ -243,8 +243,9 @@
                                     </div>
                                     <div class="col-1 row align-items-end" style="height: 186px;">
                                         <div class="col">
-                                            <asp:Button ID="btnSalvar" ToolTip="Salvar" runat="server" Text="💾" class="btn" Style="background-color: green" OnClick="btnSalvar_Click" />
+                                            <asp:Button ID="btnSalvar" ToolTip="Guardar borrador" runat="server" Text="💾" class="btn" Style="background-color: green" OnClick="btnSalvar_Click" />
                                             <asp:Button ID="btnActualizar" ToolTip="Actualizar" runat="server" Text="💾" class="btn" Visible="false" Style="background-color: green" OnClick="btnActualizar_Click" />
+                                            <asp:Button ID="btnEnviar" ToolTip="Enviar al Aprobador Interno" runat="server" Text="📤" class="btn" Visible="false" Style="background-color: #0d6efd" OnClick="btnEnviar_Click" OnClientClick="return confirm('¿Enviar la solicitud al Aprobador Interno? Ya no podrá editarla mientras esté en revisión.');" />
                                         </div>
 
                                     </div>

@@ -457,6 +457,13 @@
     <Compile Include="viewsGeneral\Enviados.aspx.designer.cs">
       <DependentUpon>Enviados.aspx</DependentUpon>
     </Compile>
+    <Compile Include="viewsGeneral\MisSolicitudes.aspx.cs">
+      <DependentUpon>MisSolicitudes.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsGeneral\MisSolicitudes.aspx.designer.cs">
+      <DependentUpon>MisSolicitudes.aspx</DependentUpon>
+    </Compile>
     <Compile Include="viewsGeneral\Entregado.aspx.cs">
       <DependentUpon>Entregado.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -526,6 +533,7 @@
     <Content Include="viewsGeneral\Asignado.aspx" />
     <Content Include="viewsGeneral\EnProceso.aspx" />
     <Content Include="viewsGeneral\Enviados.aspx" />
+    <Content Include="viewsGeneral\MisSolicitudes.aspx" />
     <Content Include="viewsGeneral\Entregado.aspx" />
     <Content Include="viewsGeneral\PorRecibir.aspx" />
     <Content Include="viewsGeneral\busqueda.aspx" />

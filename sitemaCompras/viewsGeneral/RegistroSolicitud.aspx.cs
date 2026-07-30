@@ -18,6 +18,22 @@ namespace sitemaCompras.viewsGeneral
 
     public partial class RegistroSolicitud : Page
     {
+    	// Estados del catalogo estatus_solicitudes usados en el Paso 1.
+    	/// <summary>"Por enviar" (16): borrador guardado por el Solicitante, aun fuera del flujo.
+    	/// Ninguna bandeja filtra por este estatus, por lo que la solicitud solo es visible para su
+    	/// autor desde "Mis Solicitudes".</summary>
+    	private const int EstatusBorrador = 16;
+
+    	/// <summary>"En espera de Aprobación" (2): junto con la etapa 1 (Unidad) es exactamente lo que
+    	/// filtra la bandeja del Aprobador Interno (Paso 2) en porAprobar.aspx.</summary>
+    	private const int EstatusEnEsperaAprobacion = 2;
+
+    	/// <summary>"Subsanar" (6): solicitud devuelta al Solicitante para que la corrija y reenvie.</summary>
+    	private const int EstatusSubsanar = 6;
+
+    	/// <summary>Etapa "Unidad" (1).</summary>
+    	private const int EtapaUnidad = 1;
+
     	private BaseDatos odbusuario;
 
     	private ReporteCompras reporteCompra;
@@ -166,6 +182,8 @@ namespace sitemaCompras.viewsGeneral
 
     	protected Button btnActualizar;
 
+    	protected Button btnEnviar;
+
     	protected Panel panelBtnVer;
 
     	protected Button btnVerdoc2;
@@ -276,6 +294,13 @@ namespace sitemaCompras.viewsGeneral
     			ds = odbusuario.infoUsuarios(Convert.ToString(Session["id"]));
     			txtUnidad.Text = ds.Tables[0].Rows[0][3].ToString();
     			MultiView1.ActiveViewIndex = 0;
+
+    			// Continuar un borrador o corregir una solicitud devuelta, abierta desde "Mis Solicitudes".
+    			int idEditar;
+    			if (int.TryParse(Convert.ToString(Request.QueryString["id"]), out idEditar) && idEditar > 0)
+    			{
+    				CargarSolicitud(idEditar);
+    			}
     		}
 
     		if (Session["type"] != null && Session["type"].ToString() != "2")
@@ -298,18 +323,12 @@ namespace sitemaCompras.viewsGeneral
      			{
      				DataSet ds = new DataSet();
      				odbusuario = new BaseDatos();
-     				int estatus = 0;
-     				int etapa = 0;
-     				if ((string)Session["type"] == "2")
-     				{
-     					estatus = 2;
-     					etapa = 1;
-     				}
-     				else if ((string)Session["type"] == "3")
-     				{
-     					estatus = 2;
-     					etapa = 1;
-     				}
+     				// Guardar solo persiste la solicitud como BORRADOR: no la avanza en el flujo ni la
+     				// hace visible para el Aprobador Interno. Antes se guardaba con estatus 2 + etapa 1,
+     				// que es justo lo que filtra su bandeja, por lo que guardar equivalia a enviar.
+     				// El paso al Paso 2 ocurre solo al presionar Enviar (btnEnviar_Click).
+     				int estatus = EstatusBorrador;
+     				int etapa = EtapaUnidad;
 				odbusuario.BeginTransaction();
 				ds = odbusuario.salvarSolicitudes(0, "", txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), estatus, etapa, Convert.ToString(Session["id"]), 0, txtSB.Text, 0f, "", 1);
 				if (ds == null) throw new InvalidOperationException("salvarSolicitudes returned null");
@@ -320,6 +339,9 @@ namespace sitemaCompras.viewsGeneral
      					panelMensajes.Enabled = true;
      					btnActualizar.Visible = true;
      					btnSalvar.Visible = false;
+     					// Recien con la solicitud persistida tiene sentido ofrecer el envio al flujo,
+     					// y solo al Solicitante (el Aprobador usa su propio boton Aprobar).
+     					btnEnviar.Visible = ((string)Session["type"] == "2");
      					if ((string)Session["type"] == "2")
      					{
      						BaseDatos odbRead = new BaseDatos();
@@ -373,6 +395,138 @@ namespace sitemaCompras.viewsGeneral
 			ErrorHandler.ShowUserError(this, "guardar la solicitud", ex.Message);
 		}
      	}
+
+    	/// <summary>
+    	/// Transiciona la solicitud del borrador (Paso 1) al Paso 2, dejandola en la bandeja del
+    	/// Aprobador Interno (etapa 1 / estatus 2). Es la unica accion que hace avanzar la solicitud
+    	/// desde esta pantalla para el Solicitante; guardar ya no lo hace. Sirve tanto para el primer
+    	/// envio de un borrador como para el reenvio de una solicitud devuelta para subsanar.
+    	/// </summary>
+    	protected void btnEnviar_Click(object sender, EventArgs e)
+    	{
+    		// Defensa en profundidad: el envio desde el Paso 1 es exclusivo del Solicitante.
+    		if ((string)Session["type"] != "2")
+    		{
+    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No tiene permisos para realizar esta acción.');", addScriptTags: true);
+    			return;
+    		}
+    		try
+    		{
+    			if (Session["idDoc"] == null)
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe guardar la solicitud antes de enviarla.');", addScriptTags: true);
+    				return;
+    			}
+    			int id = Convert.ToInt32(Session["idDoc"]);
+
+    			odbusuario = new BaseDatos();
+    			string[] datos = odbusuario.datosSolicitudes(id);
+    			if (datos == null)
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se encontró la solicitud.');", addScriptTags: true);
+    				return;
+    			}
+
+    			// Solo el autor puede enviar, y solo si la solicitud todavia no entro al flujo.
+    			int estatusActual;
+    			int.TryParse(datos[6], out estatusActual);
+    			bool esAutor = Convert.ToString(datos[8]) == Convert.ToString(Session["id"]);
+    			if (!esAutor || (estatusActual != EstatusBorrador && estatusActual != EstatusSubsanar))
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Esta solicitud ya no puede enviarse desde aquí.');", addScriptTags: true);
+    				return;
+    			}
+
+    			// No tiene sentido enviar una solicitud sin renglones: el Aprobador la recibiria vacia.
+    			odbusuario = new BaseDatos();
+    			DataSet dsDetalles = odbusuario.listaDetallesSolicitudes(id);
+    			if (dsDetalles == null || dsDetalles.Tables.Count == 0 || dsDetalles.Tables[0].Rows.Count == 0)
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Debe agregar al menos un renglón en la sección de contenido antes de enviar.');", addScriptTags: true);
+    				return;
+    			}
+
+    			odbusuario = new BaseDatos();
+    			if (odbusuario.siguienteEtapa(id, EtapaUnidad, EstatusEnEsperaAprobacion, "Enviado para aprobación de la unidad", Convert.ToString(Session["id"])))
+    			{
+    				btnEnviar.Visible = false;
+    				btnActualizar.Visible = false;
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Solicitud enviada al Aprobador Interno.'); window.location='MisSolicitudes.aspx';", addScriptTags: true);
+    			}
+    			else
+    			{
+    				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('No se pudo enviar la solicitud.');", addScriptTags: true);
+    			}
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "btnEnviar_Click");
+    			ErrorHandler.ShowUserError(this, "enviar la solicitud", ex.Message);
+    		}
+    	}
+
+    	/// <summary>
+    	/// Carga en pantalla una solicitud existente para continuar editandola (borrador) o corregirla
+    	/// (devuelta para subsanar), tal como llega desde "Mis Solicitudes". Valida que pertenezca al
+    	/// usuario y que siga en un estado editable, para que no se pueda abrir cualquier solicitud
+    	/// manipulando el id de la URL.
+    	/// </summary>
+    	private void CargarSolicitud(int id)
+    	{
+    		odbusuario = new BaseDatos();
+    		string[] datos = odbusuario.datosSolicitudes(id);
+    		if (datos == null) return;
+
+    		int estatusActual;
+    		int.TryParse(datos[6], out estatusActual);
+    		bool esAutor = Convert.ToString(datos[8]) == Convert.ToString(Session["id"]);
+    		bool editable = (estatusActual == EstatusBorrador || estatusActual == EstatusSubsanar);
+    		if (!esAutor || !editable)
+    		{
+    			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Esta solicitud no está disponible para edición.');", addScriptTags: true);
+    			return;
+    		}
+
+    		Session["idDoc"] = id;
+    		Session["etapaActual"] = datos[7];
+    		Session["estatusActual"] = datos[6];
+    		Session["UsuarioActual"] = datos[8];
+
+    		txtTitulo.Text = datos[3];
+    		txtSB.Text = datos[1];
+    		txtDescripcion.Text = datos[4];
+    		DateTime fecha;
+    		if (DateTime.TryParse(datos[5], out fecha)) txtFecha.Text = fecha.ToString("yyyy-MM-dd");
+
+    		// Tipos de solicitud marcados (Bienes / Servicios / Reemplazo / Obra / Nuevo).
+    		odbusuario = new BaseDatos();
+    		DataSet dsTipos = odbusuario.listaSolicitudesTipoSolucitudes(id);
+    		if (dsTipos != null && dsTipos.Tables.Count > 0)
+    		{
+    			foreach (DataRow r in dsTipos.Tables[0].Rows)
+    			{
+    				ListItem item = checkTipoSol.Items.FindByValue(Convert.ToString(r[0]));
+    				if (item != null) item.Selected = true;
+    			}
+    		}
+
+    		// Renglones ya cargados de la solicitud. div3 (el contenedor de la grilla) arranca oculto
+    		// en el markup y normalmente solo se revela al agregar el primer renglon nuevo
+    		// (btnAddRenglon_Click); como aca ya puede haber renglones existentes desde el alta, hay
+    		// que mostrarlo explicitamente o quedarian cargados en la grilla pero invisibles.
+    		odbusuario = new BaseDatos();
+    		gridContenido.DataSource = odbusuario.listaDetallesSolicitudes(id);
+    		gridContenido.DataBind();
+    		div3.Visible = true;
+
+    		// En edicion se actualiza (no se crea) y puede enviarse al flujo.
+    		Panel1.Enabled = true;
+    		Panel2.Enabled = true;
+    		panelMensajes.Enabled = true;
+    		btnSalvar.Visible = false;
+    		btnActualizar.Visible = true;
+    		btnEnviar.Visible = true;
+    	}
 
     	protected void btnVerDoc_Click(object sender, EventArgs e)
     	{
@@ -519,6 +673,10 @@ namespace sitemaCompras.viewsGeneral
 				odbusuario.gestionarSolicitudes(id, null, txtTitulo.Text, txtDescripcion.Text, Convert.ToDateTime(txtFecha.Text), Convert.ToInt32(Session["estatusActual"]), Convert.ToInt32(Session["etapaActual"]), Convert.ToString(Session["UsuarioActual"]), 0, txtSB.Text, null, null, 2);
      					btnActualizar.Visible = true;
      					btnSalvar.Visible = false;
+     					// Enviar solo mientras la solicitud siga fuera del flujo (borrador) o haya sido
+     					// devuelta para subsanar; ya avanzada, el envio no le corresponde al Solicitante.
+     					btnEnviar.Visible = ((string)Session["type"] == "2") && estatusActual.HasValue
+     						&& (estatusActual.Value == EstatusBorrador || estatusActual.Value == EstatusSubsanar);
      					if ((string)Session["type"] == "2")
      					{
      						string[] datosUser = new string[9];

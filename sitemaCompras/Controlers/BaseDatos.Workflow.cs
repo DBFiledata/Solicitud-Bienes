@@ -98,9 +98,12 @@ namespace sitemaCompras.Controlers
                     }
                     else // Paso 3
                     {
-                        // Regresa al Paso 2: Aprobador Interno (Unidad)
+                        // Excepcion al retroceso secuencial: el rechazo del Paso 3 (DGAF) NO vuelve al
+                        // Paso 2 (Aprobador Interno) sino directamente al Paso 1 (Solicitante), para que
+                        // este corrija la solicitud sin repetir la aprobacion interna. El resto de los
+                        // pasos mantiene el retroceso al paso inmediatamente anterior.
                         etapaPrevio = 1; // Unidad
-                        estatusPrevio = 2; // En espera de Aprobación
+                        estatusPrevio = 6; // Subsanar (bandeja del Solicitante, mismo destino que el rechazo del Paso 2)
                     }
                 }
                 else if (userRoleF == 9) // Jefe de Compras (Paso 4, 7, 13) o Analista (Paso 6, 9, 12, 17)
