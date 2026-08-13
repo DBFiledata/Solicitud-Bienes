@@ -31,6 +31,21 @@ namespace sitemaCompras.Controlers
         private const int FormMaxRow = 59;
         private const int FormMaxCol = 20;
 
+        // El area "Especifique el uso de los bienes o servicios requeridos" ({{DESCRIPCION_USO}}) se
+        // reparte en una linea por renglon del formulario midiendo el ancho REAL de cada celda con
+        // GDI+, no contando caracteres: en Arial una "m" mide casi el triple que una "i", asi que un
+        // limite fijo de caracteres sobra en las lineas con muchas letras angostas y se pasa (texto
+        // recortado por el renderizador) en las que tienen muchas anchas.
+        // Margen de seguridad sobre el ancho medido: la exportacion a PDF/HTML no usa exactamente
+        // las mismas metricas que GDI+, y quedarse corto solo deja un espacio minimo al final de la
+        // linea, mientras que pasarse hace que el renderizador recorte el texto sobrante.
+        private const double DescMargenAncho = 0.98;
+        // Fallback cuando la plantilla no declara un ancho utilizable para la celda (plantillas
+        // subidas por el usuario con anchos automaticos): capacidad aproximada en caracteres de la
+        // primera linea (comparte fila con la etiqueta) y de las siguientes (ancho completo).
+        private const int DescCaracteresPrimeraLinea = 78;
+        private const int DescCaracteresLineaCompleta = 135;
+
         /// <summary>
         /// Punto de entrada unico usado por todas las vistas. Detecta el tipo de plantilla
         /// por su extension y deriva a la ruta de procesamiento correspondiente (Word .docx
@@ -379,38 +394,33 @@ namespace sitemaCompras.Controlers
                 renglones.Add(new[] { r, AnclaRenglon(ws, r, used.FromIndex.ColumnIndex) });
             }
 
-            // 3. Word-wrap greedy: repartir palabras por renglon segun la capacidad (ancho) de cada uno.
-            double fs = 10;
-            try { double v = ws.Cells.GetCellSelection(markerRow, markerCol).GetFontSize().Value; if (v > 0) fs = v; } catch { }
-            double charW = Math.Max(1, fs * 96.0 / 72.0 * 0.52); // ancho aprox. de caracter en px
+            // 3. Ancho utilizable (px) de cada renglon destino: la celda del marcador es tan ancha
+            //    como su rango combinado (comparte la fila con la etiqueta, por eso es la mas
+            //    angosta) y las de continuacion llegan desde su ancla hasta el borde del area
+            //    imprimible (columna U), no hasta las columnas de trabajo de la plantilla.
+            string fontFamily; double fontSizePx;
+            ObtenerFuenteCelda(ws, markerRow, markerCol, out fontFamily, out fontSizePx);
 
-            string[] palabras = (descripcion ?? "").Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            int pi = 0;
+            var anchos = new List<double>();
+            for (int i = 0; i < renglones.Count; i++)
+                anchos.Add(i == 0
+                    ? AnchoCeldaEfectiva(ws, renglones[i][0], renglones[i][1])
+                    : SumaAnchoColumnas(ws, renglones[i][1], FormMaxCol + 1));
+            // Lo que ocupe un prefijo estatico en la celda del marcador se le descuenta a esa linea.
+            if (prefijo.Length > 0) anchos[0] -= MedirTextoPx(prefijo, fontFamily, fontSizePx);
+
+            // 4. Word-wrap greedy: cada linea se llena hasta el ultimo espacio que entra en el ancho
+            //    real de su celda, respetando los saltos de linea explicitos del usuario.
+            List<string> lineas = DistribuirDescripcionEnLineas(descripcion, anchos, fontFamily, fontSizePx);
+
             for (int i = 0; i < renglones.Count; i++)
             {
                 int fila = renglones[i][0], col = renglones[i][1];
-                // Ancho disponible: para el renglon del marcador, el de su celda combinada (la parte
-                // a la derecha de la etiqueta); para los renglones de continuacion, desde su ancla
-                // hasta el borde derecho del contenido (asi las filas sin merge no calculan un ancho
-                // angosto erroneo que desalinearia esa linea).
-                double ancho = (i == 0)
-                    ? AnchoCeldaEfectiva(ws, fila, col)
-                    : SumaAnchoColumnas(ws, col, FormMaxCol + 1); // hasta el borde del formulario (col U)
-                ancho *= 0.92; // margen de seguridad
-                int capacidad = Math.Max(1, (int)(ancho / charW));
-
-                // El primer renglon puede llevar un prefijo estatico (normalmente vacio).
-                string linea = (i == 0) ? prefijo : "";
+                string linea = (i < lineas.Count) ? lineas[i] : "";
+                // El primer renglon puede llevar un prefijo estatico (normalmente vacio: en la
+                // plantilla oficial la etiqueta vive en su propia celda, a la izquierda del marcador).
+                if (i == 0 && prefijo.Length > 0) linea = prefijo + linea;
                 bool ultimoRenglon = (i == renglones.Count - 1);
-
-                while (pi < palabras.Length)
-                {
-                    string candidata = (linea.Length == 0) ? palabras[pi] : linea + " " + palabras[pi];
-                    // En el ultimo renglon disponible se mete todo lo que quede (aunque exceda).
-                    if (!ultimoRenglon && candidata.Length > capacidad && linea.Length > 0) break;
-                    linea = candidata;
-                    pi++;
-                }
 
                 Ss.CellSelection sel = ws.Cells.GetCellSelection(fila, col);
                 sel.SetValueAsText(linea);
@@ -418,14 +428,6 @@ namespace sitemaCompras.Controlers
                 // borde (las filas sin celda combinada pueden heredar una alineacion/sangria distinta).
                 try { sel.SetHorizontalAlignment(Ss.RadHorizontalAlignment.Left); sel.SetIndent(0); } catch { }
                 if (ultimoRenglon) sel.SetIsWrapped(true); // por si sobra texto en el ultimo renglon
-
-                if (pi >= palabras.Length && i < renglones.Count - 1)
-                {
-                    // Ya no queda texto: limpiar los renglones restantes por si tuvieran algo.
-                    for (int j = i + 1; j < renglones.Count; j++)
-                        ws.Cells.GetCellSelection(renglones[j][0], renglones[j][1]).SetValueAsText("");
-                    break;
-                }
             }
         }
 
@@ -944,6 +946,10 @@ namespace sitemaCompras.Controlers
         private bool BuscarDescripcionEnTabla(Table table, string marcador, string texto)
         {
             int markerRowIdx = -1;
+            Paragraph markerParagraph = null;   // celda del marcador: es la PRIMERA linea del texto
+            TableCell markerCell = null;
+            string markerPrefijo = "";          // texto estatico que acompañe al marcador en su celda
+            string markerFontFamily = "Arial";
 
             // 1. Find which row contains the marker
             for (int r = 0; r < table.Rows.Count; r++)
@@ -957,11 +963,14 @@ namespace sitemaCompras.Controlers
                             string cellText = string.Join("", p.Inlines.OfType<Run>().Select(x => x.Text));
                             if (cellText.Contains(marcador))
                             {
-                                // Clear the marker from this cell
+                                // Collapse the cell to a single run; its text se escribe mas abajo,
+                                // una vez repartido el texto en lineas.
                                 var runs = p.Inlines.OfType<Run>().ToList();
-                                string labelOnly = cellText.Replace(marcador, "").Trim();
                                 for (int i = runs.Count - 1; i > 0; i--) p.Inlines.Remove(runs[i]);
-                                if (runs.Count > 0) runs[0].Text = labelOnly;
+                                markerParagraph = p;
+                                markerCell = cell;
+                                markerPrefijo = cellText.Replace(marcador, "").Trim();
+                                markerFontFamily = NombreFuenteRun(runs.Count > 0 ? runs[0] : null);
                                 markerRowIdx = r;
                                 break;
                             }
@@ -1008,25 +1017,37 @@ namespace sitemaCompras.Controlers
                     emptyRows.Add(targetCell);
             }
 
-            if (emptyRows.Count == 0) return true; // No empty rows, nothing to fill
+            // 3. Ancho utilizable (px) de cada celda destino: la del marcador es la primera linea
+            //    (comparte fila con la etiqueta, por eso es la mas angosta) y las filas vacias de
+            //    abajo van a ancho completo. Se mide la celda real; solo si la plantilla no declara
+            //    un ancho utilizable se cae a la estimacion por caracteres.
+            var anchos = new List<double>();
+            anchos.Add(AnchoCeldaWordPx(markerCell, DescCaracteresPrimeraLinea, markerFontFamily, sharedFontSize));
+            foreach (var cell in emptyRows)
+                anchos.Add(AnchoCeldaWordPx(cell, DescCaracteresLineaCompleta, markerFontFamily, sharedFontSize));
+            // Lo que ocupe un prefijo estatico en la celda del marcador se le descuenta a esa linea.
+            if (markerPrefijo.Length > 0)
+                anchos[0] -= MedirTextoPx(markerPrefijo + " ", markerFontFamily, sharedFontSize);
 
-            // 3. Split text into chunks: one chunk per available row
-            //    Strategy: split at explicit \n first, then chunk by words if needed
-            string[] rawLineas;
-            if (texto.Contains("\r\n") || texto.Contains("\n"))
-                rawLineas = texto.Split(new[] { "\r\n", "\n" }, StringSplitOptions.RemoveEmptyEntries);
-            else
-                rawLineas = new[] { texto };
+            // 4. Reparto: cada linea se llena hasta el ultimo espacio que entra en el ancho real de
+            //    su celda, respetando los saltos de linea explicitos del usuario.
+            List<string> chunks = DistribuirDescripcionEnLineas(texto, anchos, markerFontFamily, sharedFontSize);
 
-            // If we have more explicit lines than rows, merge the overflow into the last row
-            // If we have fewer lines than rows, distribute by splitting the longest lines by words
-            List<string> chunks = DistribuirEnChunks(rawLineas, emptyRows.Count);
+            // 5. Primera linea: la propia celda del marcador. Se unifica su tamaño con el del resto
+            //    del cuerpo para que las lineas de un mismo parrafo se vean todas iguales (y para que
+            //    coincidan con la medicion, hecha con un unico tamaño de fuente).
+            var markerRuns = markerParagraph.Inlines.OfType<Run>().ToList();
+            string primeraLinea = chunks.Count > 0 ? chunks[0] : "";
+            if (markerPrefijo.Length > 0)
+                primeraLinea = (primeraLinea.Length > 0) ? markerPrefijo + " " + primeraLinea : markerPrefijo;
+            if (markerRuns.Count > 0) { markerRuns[0].Text = primeraLinea; markerRuns[0].FontSize = sharedFontSize; }
+            else markerParagraph.Inlines.AddRun(primeraLinea).FontSize = sharedFontSize;
 
-            // 4. Write one chunk per empty row
+            // 6. Lineas siguientes: una por fila vacia de ancho completo.
             for (int i = 0; i < emptyRows.Count; i++)
             {
                 var cell = emptyRows[i];
-                string chunkText = i < chunks.Count ? chunks[i] : "";
+                string chunkText = (i + 1) < chunks.Count ? chunks[i + 1] : "";
 
                 // Clear existing content
                 foreach (var b in cell.Blocks.ToList()) cell.Blocks.Remove(b);
@@ -1041,40 +1062,115 @@ namespace sitemaCompras.Controlers
         }
 
         /// <summary>
-        /// Distributes lines of text into exactly targetCount chunks.
-        /// If too few lines: splits longest lines by words to fill all slots.
-        /// If too many lines: merges excess into the last slot.
+        /// Reparte el texto de la descripcion de uso en una linea por renglon del formulario,
+        /// llenando cada renglon hasta el ultimo espacio que entra en el ancho REAL de su celda:
+        /// <paramref name="anchosPx"/> trae el ancho utilizable (px) de cada renglon destino en
+        /// orden -- el primero es la celda que comparte fila con la etiqueta "Especifique el uso...",
+        /// por eso es el mas angosto -- y cada linea candidata se mide con GDI+ usando la fuente y el
+        /// tamaño reales, igual que la banda de renglones (ver <see cref="DistribuirEnLineas"/>, que
+        /// hace lo mismo con un unico ancho y sin saltos explicitos).
+        /// Ninguna palabra se descarta ni se parte a la mitad: la que no entra abre la linea siguiente,
+        /// y una palabra mas ancha que su celda ocupa la linea entera. Los saltos de linea explicitos
+        /// del usuario se respetan como corte forzado. Si el texto necesita mas lineas que las
+        /// disponibles, todo el sobrante se acumula en la ultima (que se escribe con ajuste de texto),
+        /// de modo que el contenido nunca se pierde.
         /// </summary>
-        private List<string> DistribuirEnChunks(string[] lineas, int targetCount)
+        private List<string> DistribuirDescripcionEnLineas(string texto, IList<double> anchosPx, string fontFamily, double fontSizePx)
         {
-            var chunks = new List<string>(lineas);
+            var lineas = new List<string>();
+            if (string.IsNullOrWhiteSpace(texto) || anchosPx == null || anchosPx.Count == 0) return lineas;
 
-            // If text is a single long string with no breaks, split by words
-            if (chunks.Count == 1 && targetCount > 1)
+            string[] parrafos = texto.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+            using (Bitmap bmp = new Bitmap(1, 1))
+            using (Graphics g = Graphics.FromImage(bmp))
             {
-                string full = chunks[0];
-                string[] words = full.Split(' ');
-                int wordsPerChunk = Math.Max(1, (int)Math.Ceiling((double)words.Length / targetCount));
-                chunks.Clear();
-                for (int i = 0; i < words.Length; i += wordsPerChunk)
+                g.PageUnit = GraphicsUnit.Pixel;
+                using (Font f = new Font(fontFamily, (float)fontSizePx, FontStyle.Regular, GraphicsUnit.Pixel))
                 {
-                    int take = Math.Min(wordsPerChunk, words.Length - i);
-                    chunks.Add(string.Join(" ", words, i, take));
+                    foreach (string parrafo in parrafos)
+                    {
+                        string[] palabras = parrafo.Split(new[] { ' ', '\t' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (palabras.Length == 0) continue;
+
+                        string linea = "";
+                        foreach (string palabra in palabras)
+                        {
+                            // El ancho depende del renglon que se este llenando: solo el primero
+                            // comparte su fila con la etiqueta. Si sobran lineas se repite el ultimo
+                            // ancho conocido (el sobrante termina acumulado ahi de todos modos).
+                            double disponible = anchosPx[Math.Min(lineas.Count, anchosPx.Count - 1)] * DescMargenAncho;
+                            string candidata = (linea.Length == 0) ? palabra : linea + " " + palabra;
+                            if (linea.Length > 0 && g.MeasureString(candidata, f).Width > disponible)
+                            {
+                                lineas.Add(linea);      // corte por el ultimo espacio que entraba
+                                linea = palabra;        // la palabra que no entro abre la linea siguiente
+                            }
+                            else linea = candidata;
+                        }
+                        if (linea.Length > 0) lineas.Add(linea);  // el salto explicito cierra el renglon actual
+                    }
                 }
             }
 
-            // If still fewer chunks than rows, pad with empty strings
-            while (chunks.Count < targetCount) chunks.Add("");
-
-            // If more chunks than rows, merge excess into last slot
-            if (chunks.Count > targetCount)
+            // Sobrante: si el texto no cabe en los renglones disponibles, todo lo que resta se
+            // acumula en el ultimo (la celda se escribe con ajuste de texto para no perderlo).
+            if (lineas.Count > anchosPx.Count)
             {
-                var merged = chunks.Take(targetCount - 1).ToList();
-                merged.Add(string.Join(" ", chunks.Skip(targetCount - 1)));
-                chunks = merged;
+                var recortadas = lineas.Take(anchosPx.Count - 1).ToList();
+                recortadas.Add(string.Join(" ", lineas.Skip(anchosPx.Count - 1)));
+                lineas = recortadas;
             }
 
-            return chunks;
+            return lineas;
+        }
+
+        /// <summary>Ancho en px que ocupa un texto con la fuente indicada (medido con GDI+).</summary>
+        private double MedirTextoPx(string texto, string fontFamily, double fontSizePx)
+        {
+            if (string.IsNullOrEmpty(texto)) return 0;
+            using (Bitmap bmp = new Bitmap(1, 1))
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.PageUnit = GraphicsUnit.Pixel;
+                using (Font f = new Font(fontFamily, (float)fontSizePx, FontStyle.Regular, GraphicsUnit.Pixel))
+                    return g.MeasureString(texto, f).Width;
+            }
+        }
+
+        /// <summary>
+        /// Ancho utilizable (px a 96dpi) de una celda de tabla Word. El modelo Flow expresa el ancho
+        /// preferido de la celda en esa misma unidad (verificado contra la plantilla oficial: los
+        /// 5086 dxa de la celda del marcador se leen como 339.07 = 5086/1440*96). Si la plantilla no
+        /// declara un ancho fijo (plantillas subidas con anchos automaticos o porcentuales), se cae a
+        /// una estimacion a partir de <paramref name="caracteresFallback"/>, midiendo cuanto ocupa esa
+        /// cantidad de caracteres promedio con la fuente real.
+        /// </summary>
+        private double AnchoCeldaWordPx(TableCell cell, int caracteresFallback, string fontFamily, double fontSizePx)
+        {
+            try
+            {
+                if (cell != null && cell.PreferredWidth.Type == TableWidthUnitType.Fixed && cell.PreferredWidth.Value > 0)
+                    return cell.PreferredWidth.Value;
+            }
+            catch { }
+
+            const string muestra = "abcdefghijklmnopqrstuvwxyz aeiou, de la ";
+            return MedirTextoPx(muestra, fontFamily, fontSizePx) / muestra.Length * caracteresFallback;
+        }
+
+        /// <summary>Nombre de la familia tipografica de un run, con fallback a Arial.</summary>
+        private string NombreFuenteRun(Run run)
+        {
+            try
+            {
+                if (run != null && run.FontFamily != null && run.FontFamily.LocalValue != null)
+                {
+                    string nombre = run.FontFamily.LocalValue.Source;
+                    if (!string.IsNullOrEmpty(nombre)) return nombre;
+                }
+            }
+            catch { }
+            return "Arial";
         }
 
         // =============================================================

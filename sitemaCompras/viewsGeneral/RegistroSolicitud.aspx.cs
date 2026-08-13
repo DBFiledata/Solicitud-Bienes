@@ -303,14 +303,13 @@ namespace sitemaCompras.viewsGeneral
     			}
     		}
 
-    		if (Session["type"] != null && Session["type"].ToString() != "2")
-    		{
-    			div4.Visible = false;
-    			if (gridContenido.Columns.Count > 7)
-    			{
-    				gridContenido.Columns[7].Visible = false;
-    			}
-    		}
+    		// La seccion de contenido (campos de renglon + acciones de la grilla) queda habilitada para
+    		// todos los roles que pueden abrir esta pantalla, que son unicamente el Solicitante (2) y
+    		// el Aprobador (3) -- el Page_Load de arriba expulsa a cualquier otro. Ambos ORIGINAN sus
+    		// propias solicitudes aca, asi que ambos necesitan cargar renglones. Esto no le da al
+    		// Aprobador capacidad de editar contenido en los pasos posteriores del flujo: esa
+    		// restriccion vive en las otras vistas (porAprobar, EnProceso, busqueda, Enviados), donde
+    		// la seccion sigue siendo de solo lectura.
     	}
 
      	protected void btnSalvar_Click(object sender, EventArgs e)
@@ -339,9 +338,10 @@ namespace sitemaCompras.viewsGeneral
      					panelMensajes.Enabled = true;
      					btnActualizar.Visible = true;
      					btnSalvar.Visible = false;
-     					// Recien con la solicitud persistida tiene sentido ofrecer el envio al flujo,
-     					// y solo al Solicitante (el Aprobador usa su propio boton Aprobar).
-     					btnEnviar.Visible = ((string)Session["type"] == "2");
+     					// Recien con la solicitud persistida tiene sentido ofrecer el envio al flujo.
+     					// Aplica a los dos roles que originan solicitudes aca (Solicitante y Aprobador):
+     					// recien creada siempre es un borrador, asi que todavia no entro al flujo.
+     					btnEnviar.Visible = true;
      					if ((string)Session["type"] == "2")
      					{
      						BaseDatos odbRead = new BaseDatos();
@@ -479,8 +479,10 @@ namespace sitemaCompras.viewsGeneral
 
     		int estatusActual;
     		int.TryParse(datos[6], out estatusActual);
+    		int etapaActualSol;
+    		int.TryParse(datos[7], out etapaActualSol);
     		bool esAutor = Convert.ToString(datos[8]) == Convert.ToString(Session["id"]);
-    		bool editable = (estatusActual == EstatusBorrador || estatusActual == EstatusSubsanar);
+    		bool editable = EsEditablePorAutor(estatusActual, etapaActualSol);
     		if (!esAutor || !editable)
     		{
     			ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Esta solicitud no está disponible para edición.');", addScriptTags: true);
@@ -519,13 +521,29 @@ namespace sitemaCompras.viewsGeneral
     		gridContenido.DataBind();
     		div3.Visible = true;
 
-    		// En edicion se actualiza (no se crea) y puede enviarse al flujo.
+    		// En edicion se actualiza (no se crea). "Enviar" solo cuando la solicitud todavia no entro
+    		// al flujo: si ya esta en el Paso 2 esperando al Aprobador, el autor puede seguir
+    		// corrigiendola pero no reenviarla (ya esta en la bandeja del Aprobador, y reenviarla
+    		// reiniciaria su decision).
     		Panel1.Enabled = true;
     		Panel2.Enabled = true;
     		panelMensajes.Enabled = true;
     		btnSalvar.Visible = false;
     		btnActualizar.Visible = true;
-    		btnEnviar.Visible = true;
+    		btnEnviar.Visible = (estatusActual == EstatusBorrador || estatusActual == EstatusSubsanar);
+    	}
+
+    	/// <summary>
+    	/// Indica si el autor de la solicitud todavia puede editarla: mientras sea un borrador sin
+    	/// enviar, mientras haya sido devuelta para subsanar, y tambien una vez enviada mientras siga
+    	/// en el Paso 2 (Unidad, en espera del visto bueno del Aprobador Interno). Editarla en ese
+    	/// punto no altera su etapa ni su estatus, asi que no interfiere con la decision del Aprobador.
+    	/// Una vez que el Aprobador la avanza al Paso 3 (D.G.A.F.), deja de ser editable desde aqui.
+    	/// </summary>
+    	private bool EsEditablePorAutor(int estatus, int etapa)
+    	{
+    		if (estatus == EstatusBorrador || estatus == EstatusSubsanar) return true;
+    		return estatus == EstatusEnEsperaAprobacion && etapa == EtapaUnidad;
     	}
 
     	protected void btnVerDoc_Click(object sender, EventArgs e)
@@ -674,8 +692,10 @@ namespace sitemaCompras.viewsGeneral
      					btnActualizar.Visible = true;
      					btnSalvar.Visible = false;
      					// Enviar solo mientras la solicitud siga fuera del flujo (borrador) o haya sido
-     					// devuelta para subsanar; ya avanzada, el envio no le corresponde al Solicitante.
-     					btnEnviar.Visible = ((string)Session["type"] == "2") && estatusActual.HasValue
+     					// devuelta para subsanar; ya avanzada, el envio no le corresponde a su autor.
+     					// Mismo criterio para Solicitante y Aprobador: lo que manda es el estado de la
+     					// solicitud, no el rol (ambos originan solicitudes propias desde esta pantalla).
+     					btnEnviar.Visible = estatusActual.HasValue
      						&& (estatusActual.Value == EstatusBorrador || estatusActual.Value == EstatusSubsanar);
      					if ((string)Session["type"] == "2")
      					{
@@ -771,6 +791,29 @@ namespace sitemaCompras.viewsGeneral
      				ErrorHandler.LogError(ex, "gridContenido_RowCommand_eliminarRenglon");
      			}
      		}
+    		if (e.CommandName.Equals("subirRenglon", StringComparison.CurrentCultureIgnoreCase)
+    			|| e.CommandName.Equals("bajarRenglon", StringComparison.CurrentCultureIgnoreCase))
+    		{
+    			try
+    			{
+    				GridViewRow gvr3 = (GridViewRow)((Button)e.CommandSource).NamingContainer;
+    				int idRenglon = Convert.ToInt32(gvr3.Cells[0].Text.ToString().Trim());
+    				int idDoc = Convert.ToInt32(Session["idDoc"]);
+    				bool subir = e.CommandName.Equals("subirRenglon", StringComparison.CurrentCultureIgnoreCase);
+
+    				odbusuario = new BaseDatos();
+    				// El SP no hace nada si el renglon ya esta en el extremo, asi que no hace falta
+    				// validar aca si se puede mover.
+    				odbusuario.actualizarPosicionRenglon(idDoc, idRenglon, subir);
+    				RenumerarRenglones(idDoc);
+    				RefrescarGridContenido(idDoc);
+    			}
+    			catch (Exception ex)
+    			{
+    				ErrorHandler.LogError(ex, "gridContenido_RowCommand_moverRenglon");
+    				ErrorHandler.ShowUserError(this, "Error al mover el renglón. Contacte al administrador.");
+    			}
+    		}
      	}
 
     	protected void btnAddRenglon_Click(object sender, EventArgs e)
@@ -783,14 +826,21 @@ namespace sitemaCompras.viewsGeneral
     				odbusuario = new BaseDatos();
     				float? total = null;
     				float? costo = DecimalHelper.ParseFloatRobust(txtCosto.Text);
-    				int valorConvertido4;
-    				int? renglon = ((!string.IsNullOrWhiteSpace(txtRenglon.Text) && int.TryParse(txtRenglon.Text, out valorConvertido4)) ? new int?(valorConvertido4) : ((int?)null));
-    				float? cantidad = DecimalHelper.ParseFloatRobust(txtCantidad.Text);
+    				// Cantidad es ENTERA (P.Unitario y Total siguen siendo decimales).
+    				int? cantidad = DecimalHelper.ParseIntRobust(txtCantidad.Text);
+    				if (!string.IsNullOrWhiteSpace(txtCantidad.Text) && !cantidad.HasValue)
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('La cantidad debe ser un número entero (sin decimales).');", addScriptTags: true);
+    					return;
+    				}
     				id = Convert.ToInt32(Session["idDoc"]);
-    				string cantidad2 = DecimalHelper.FormatFloatForDb(cantidad);
+    				string cantidad2 = DecimalHelper.FormatIntForDb(cantidad);
     				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
-    				id = Convert.ToInt32(Session["idDoc"]);
+    				// El renglon se numera solo segun su posicion en la tabla; el valor que escriba el
+    				// usuario indica DONDE insertarlo, no que numero llevara (ver ReubicarRenglon).
+    				int? posicionDestino = DecimalHelper.ParseIntRobust(txtRenglon.Text);
+    				int? renglon = null;
     				if (costo.HasValue && cantidad.HasValue)
     				{
     					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
@@ -798,16 +848,12 @@ namespace sitemaCompras.viewsGeneral
     				}
     				if (odbusuario.gestionarDetallesSolicitudes(0, txtDecsContent.Text, renglon, cantidad2, txtUnidadContent.Text, txtDecsContent.Text, costo2, total2, id, 1))
     				{
-    					odbusuario = new BaseDatos();
-    					DataSet ds = new DataSet();
-    					ds = odbusuario.listaDetallesSolicitudes(id);
-    					gridContenido.DataSource = ds;
-    					gridContenido.DataBind();
+    					// El SP siempre agrega al final; si el usuario pidio una posicion intermedia,
+    					// se sube el recien creado hasta ella desplazando a los que estaban debajo.
+    					if (posicionDestino.HasValue) ReubicarRenglon(id, IdUltimoRenglon(id), posicionDestino.Value);
+    					RenumerarRenglones(id);
+    					RefrescarGridContenido(id);
     					limpiarCamposContenido();
-    					if (!div3.Visible)
-    					{
-    						div3.Visible = true;
-    					}
     				}
     				else
     				{
@@ -837,11 +883,10 @@ namespace sitemaCompras.viewsGeneral
     			idDoc = Convert.ToInt32(Session["idDoc"]);
     			if (odbusuario.gestionarDetallesSolicitudes(id, "", 0, "", "", "", "", "", 0, 3))
     			{
-    				odbusuario = new BaseDatos();
-    				DataSet ds = new DataSet();
-    				ds = odbusuario.listaDetallesSolicitudes(idDoc);
-    				gridContenido.DataSource = ds;
-    				gridContenido.DataBind();
+    				// El SP ya compacta las posiciones al borrar (reordenarPosiciones); falta reflejar
+    				// esa compactacion en la columna visible RENGLON para que no queden huecos.
+    				RenumerarRenglones(idDoc);
+    				RefrescarGridContenido(idDoc);
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Renglon eliminado');", addScriptTags: true);
     			}
     			else
@@ -869,12 +914,21 @@ namespace sitemaCompras.viewsGeneral
     				idDoc = Convert.ToInt32(Session["idDoc"]);
     				float? total = null;
     				float? costo = DecimalHelper.ParseFloatRobust(txtCostoEdit.Text);
-    				int valorConvertido4;
-    				int? renglon = ((!string.IsNullOrWhiteSpace(txtRenglonEdit.Text) && int.TryParse(txtRenglonEdit.Text, out valorConvertido4)) ? new int?(valorConvertido4) : ((int?)null));
-    				float? cantidad = DecimalHelper.ParseFloatRobust(txtCantidadEdit.Text);
-    				string cantidad2 = DecimalHelper.FormatFloatForDb(cantidad);
+    				// Cantidad es ENTERA (P.Unitario y Total siguen siendo decimales).
+    				int? cantidad = DecimalHelper.ParseIntRobust(txtCantidadEdit.Text);
+    				if (!string.IsNullOrWhiteSpace(txtCantidadEdit.Text) && !cantidad.HasValue)
+    				{
+    					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('La cantidad debe ser un número entero (sin decimales).');", addScriptTags: true);
+    					mpeEditRenglon.Show();
+    					return;
+    				}
+    				string cantidad2 = DecimalHelper.FormatIntForDb(cantidad);
     				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
+    				// Al igual que al agregar, RENGLON no se escribe a mano: el valor tipeado indica a
+    				// que posicion se quiere mover este renglon, y la numeracion se recalcula sola.
+    				int? posicionDestino = DecimalHelper.ParseIntRobust(txtRenglonEdit.Text);
+    				int? renglon = null;
     				if (costo.HasValue && cantidad.HasValue)
     				{
     					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
@@ -882,11 +936,9 @@ namespace sitemaCompras.viewsGeneral
     				}
     				if (odbusuario.gestionarDetallesSolicitudes(id, txtDecsContentEdit.Text, renglon, cantidad2, txtUnidadContentEdit.Text, txtDecsContentEdit.Text, costo2, total2, idDoc, 2))
     				{
-    					odbusuario = new BaseDatos();
-    					DataSet ds = new DataSet();
-    					ds = odbusuario.listaDetallesSolicitudes(idDoc);
-    					gridContenido.DataSource = ds;
-    					gridContenido.DataBind();
+    					if (posicionDestino.HasValue) ReubicarRenglon(idDoc, id, posicionDestino.Value);
+    					RenumerarRenglones(idDoc);
+    					RefrescarGridContenido(idDoc);
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Renglon editado');", addScriptTags: true);
     				}
     				else
@@ -905,6 +957,87 @@ namespace sitemaCompras.viewsGeneral
      			ErrorHandler.ShowUserError(this, "Error al actualizar renglón. Contacte al administrador.");
      		}
      	}
+
+    	/// <summary>Recarga la grilla de renglones desde la base y la deja visible.</summary>
+    	private void RefrescarGridContenido(int idSolicitud)
+    	{
+    		odbusuario = new BaseDatos();
+    		gridContenido.DataSource = odbusuario.listaDetallesSolicitudes(idSolicitud);
+    		gridContenido.DataBind();
+    		div3.Visible = true;
+    	}
+
+    	/// <summary>
+    	/// Devuelve los renglones de la solicitud en su orden actual (la consulta ya viene ordenada
+    	/// por posicion), o null si no hay ninguno.
+    	/// </summary>
+    	private DataTable ObtenerRenglonesOrdenados(int idSolicitud)
+    	{
+    		odbusuario = new BaseDatos();
+    		DataSet ds = odbusuario.listaDetallesSolicitudes(idSolicitud);
+    		if (ds == null || ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0) return null;
+    		return ds.Tables[0];
+    	}
+
+    	/// <summary>Id del renglon que quedo ultimo en la solicitud (el recien agregado).</summary>
+    	private int IdUltimoRenglon(int idSolicitud)
+    	{
+    		DataTable dt = ObtenerRenglonesOrdenados(idSolicitud);
+    		if (dt == null) return 0;
+    		return Convert.ToInt32(dt.Rows[dt.Rows.Count - 1]["idDetalles_Solicitudes"]);
+    	}
+
+    	/// <summary>
+    	/// Mueve un renglon a la posicion pedida (1 = primero) desplazando a los demas, intercambiando
+    	/// de a un lugar por vez con el SP actualizarPosicionRenglon. Se hace paso a paso -- y no con
+    	/// un UPDATE directo -- para no dejar posiciones duplicadas ni con huecos a mitad de camino:
+    	/// el SP solo intercambia contra un vecino existente, asi que cada paso deja la secuencia
+    	/// consistente. La cantidad de renglones por solicitud es chica, asi que el costo es menor.
+    	/// </summary>
+    	private void ReubicarRenglon(int idSolicitud, int idRenglon, int posicionDestino)
+    	{
+    		DataTable dt = ObtenerRenglonesOrdenados(idSolicitud);
+    		if (dt == null || idRenglon <= 0) return;
+
+    		int posicionActual = -1;
+    		for (int i = 0; i < dt.Rows.Count; i++)
+    		{
+    			if (Convert.ToInt32(dt.Rows[i]["idDetalles_Solicitudes"]) == idRenglon) { posicionActual = i + 1; break; }
+    		}
+    		if (posicionActual < 0) return;
+
+    		// Acotar el destino al rango valido para que un numero fuera de rango no haga nada raro.
+    		int destino = Math.Max(1, Math.Min(posicionDestino, dt.Rows.Count));
+    		if (destino == posicionActual) return;
+
+    		bool subir = destino < posicionActual;
+    		int pasos = Math.Abs(destino - posicionActual);
+    		for (int i = 0; i < pasos; i++)
+    		{
+    			odbusuario = new BaseDatos();
+    			if (!odbusuario.actualizarPosicionRenglon(idSolicitud, idRenglon, subir)) break;
+    		}
+    	}
+
+    	/// <summary>
+    	/// Reescribe la columna visible RENGLON como 1..N siguiendo el orden actual de posiciones, sin
+    	/// huecos ni duplicados. Es necesario porque el reporte PDF (reporteBody) muestra el valor
+    	/// almacenado en "renglones" pero ordena las filas por posicion: si no se sincronizan, el PDF
+    	/// sale con la numeracion desordenada.
+    	///
+    	/// Un solo round-trip a la base (SP renumerarRenglonesSolicitud), sin importar cuantas filas
+    	/// necesiten corregirse. ANTES esto se hacia con un loop en C# que abria una conexion nueva por
+    	/// cada fila desalineada -- en produccion se detecto que solicitudes viejas con muchos renglones
+    	/// historicamente desalineados (ej. una con 48, casi todos con el numero mal) hacian que agregar
+    	/// UN renglon se congelara varios segundos antes de fallar, porque disparaba ~48 llamadas
+    	/// secuenciales a la base en un mismo request. En local nunca se noto porque los datos de prueba
+    	/// eran chicos y ya estaban bien numerados desde el principio.
+    	/// </summary>
+    	private void RenumerarRenglones(int idSolicitud)
+    	{
+    		odbusuario = new BaseDatos();
+    		odbusuario.renumerarRenglonesSolicitud(idSolicitud);
+    	}
 
      	protected void gridArchivo_RowCommand(object sender, GridViewCommandEventArgs e)
     	{

@@ -1081,6 +1081,69 @@ namespace sitemaCompras.Controlers
     		}
     	}
 
+    	/// <summary>
+    	/// Intercambia un renglon con su vecino inmediato (arriba si esSubir, abajo si no) dentro de
+    	/// la solicitud, usando el SP actualizarPosicionRenglon que ya existia en la base. El SP no
+    	/// hace nada si el renglon ya esta en el extremo (no existe vecino con esa posicion), asi que
+    	/// llamarlo de mas es inofensivo. Solo mueve la POSICION; la columna visible RENGLON se
+    	/// renumera aparte (ver RenumerarRenglones en la vista), porque el reporte PDF lee ese valor
+    	/// almacenado y ordena por posicion: si divergen, el PDF sale con numeracion desordenada.
+    	/// </summary>
+    	public bool actualizarPosicionRenglon(int idSolicitud, int idRenglon, bool esSubir)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "actualizarPosicionRenglon";
+    			Cmd.Parameters.Add(new MySqlParameter("@idDoc", idSolicitud));
+    			Cmd.Parameters.Add(new MySqlParameter("@idRenglon", idRenglon));
+    			Cmd.Parameters.Add(new MySqlParameter("@esSubir", esSubir));
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
+    			Cmd.ExecuteNonQuery();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
+    			return true;
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "actualizarPosicionRenglon", "DB operation failed");
+    			return false;
+    		}
+    	}
+
+    	/// <summary>
+    	/// Renumera de una sola pasada la columna visible `renglones` de TODOS los renglones de una
+    	/// solicitud, tomando `posicion_detalles_solicitudes.posicion` como fuente de verdad. Un solo
+    	/// round-trip a la base sin importar cuantas filas necesiten corregirse -- reemplaza el enfoque
+    	/// anterior de RegistroSolicitud.aspx.cs que abria una conexion nueva por cada fila a corregir
+    	/// en un loop secuencial, lo cual se volvia notoriamente lento (varios segundos, a veces con
+    	/// timeout) en solicitudes con muchos renglones historicamente desalineados. Ver
+    	/// sql/renumerar_renglones_solicitud_SP.sql para el detalle completo del hallazgo.
+    	/// </summary>
+    	public bool renumerarRenglonesSolicitud(int idSolicitud)
+    	{
+    		try
+    		{
+    			Cmd.Parameters.Clear();
+    			Cmd.CommandType = CommandType.StoredProcedure;
+    			Cmd.CommandText = "renumerarRenglonesSolicitud";
+    			Cmd.Parameters.Add(new MySqlParameter("@p_idSolicitudes", idSolicitud));
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Open();
+    			Cmd.ExecuteNonQuery();
+    			if (_currentTransaction == null)
+    				Cmd.Connection.Close();
+    			return true;
+    		}
+    		catch (Exception ex)
+    		{
+    			ErrorHandler.LogError(ex, "renumerarRenglonesSolicitud", "DB operation failed");
+    			return false;
+    		}
+    	}
+
     	public bool gestionarDirectoresAdministrativos(int? id, string nombre, string apellido, int estatus, int proceso)
     	{
     		try
@@ -2224,6 +2287,30 @@ namespace sitemaCompras.Controlers
     	{
     		if (!val.HasValue) return null;
     		return val.Value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture);
+    	}
+
+    	/// <summary>
+    	/// Interpreta una cantidad ENTERA. Devuelve null si el texto esta vacio o si no representa un
+    	/// entero exacto (p.ej. "2.5"): la columna Cantidad de los renglones solo admite enteros, a
+    	/// diferencia de P.Unitario y Total que si son decimales. Acepta "5", "5.00" y "5,00" (todos
+    	/// valen 5) para no rechazar lo que el usuario ya tenia cargado con formato decimal.
+    	/// </summary>
+    	public static int? ParseIntRobust(string val)
+    	{
+    		if (string.IsNullOrWhiteSpace(val)) return null;
+    		string clean = val.Replace(" ", "").Replace(",", ".").Trim();
+    		decimal res;
+    		if (!decimal.TryParse(clean, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out res))
+    			return null;
+    		if (res != decimal.Truncate(res)) return null; // tiene parte decimal: no es una cantidad valida
+    		if (res < int.MinValue || res > int.MaxValue) return null;
+    		return (int)res;
+    	}
+
+    	public static string FormatIntForDb(int? val)
+    	{
+    		if (!val.HasValue) return null;
+    		return val.Value.ToString(System.Globalization.CultureInfo.InvariantCulture);
     	}
     }
 }

@@ -68,11 +68,11 @@
                     <div class="d-flex align-items-center justify-content-center mt-1 col-12">
                         <div class="form-group col-1">
                             <asp:Label ID="Label8" runat="server" Text="Renglon:"></asp:Label>
-                            <asp:TextBox ID="txtRenglonEdit" CssClass="form-control" TextMode="Number" runat="server"></asp:TextBox>
+                            <asp:TextBox ID="txtRenglonEdit" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Posición a la que se moverá el renglón. La numeración se recalcula sola." runat="server"></asp:TextBox>
                         </div>
                         <div class="form-group col-1">
                             <asp:Label ID="Label19" runat="server" Text="Cantidad:"></asp:Label>
-                            <asp:TextBox ID="txtCantidadEdit" CssClass="form-control" runat="server"></asp:TextBox>
+                            <asp:TextBox ID="txtCantidadEdit" CssClass="form-control" TextMode="Number" min="0" step="1" ToolTip="Solo números enteros." runat="server"></asp:TextBox>
                         </div>
                         <div class="form-group col-1">
                             <asp:Label ID="Label21" runat="server" Text="Unidad:"></asp:Label>
@@ -286,11 +286,11 @@
 
                                             <div class="form-group col-1">
                                                 <asp:Label ID="Label13" runat="server" Text="Renglon:"></asp:Label>
-                                                <asp:TextBox ID="txtRenglon" CssClass="form-control" TextMode="Number" runat="server"></asp:TextBox>
+                                                <asp:TextBox ID="txtRenglon" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Posición en la que se insertará el renglón. Vacío = al final. La numeración se recalcula sola." runat="server"></asp:TextBox>
                                             </div>
                                             <div class="form-group col-2">
                                                 <asp:Label ID="Label9" runat="server" Text="Cantidad:"></asp:Label>
-                                                <asp:TextBox ID="txtCantidad" CssClass="form-control"  runat="server"></asp:TextBox>
+                                                <asp:TextBox ID="txtCantidad" CssClass="form-control" TextMode="Number" min="0" step="1" ToolTip="Solo números enteros." runat="server"></asp:TextBox>
                                             </div>
                                             <div class="form-group col-2">
                                                 <asp:Label ID="Label10" runat="server" Text="Unidad:"></asp:Label>
@@ -328,6 +328,8 @@
                                                             <asp:TemplateField HeaderText="Procesos" ItemStyle-Width="11%">
                                                                 <ItemStyle HorizontalAlign="Center" VerticalAlign="Middle" />
                                                                 <ItemTemplate>
+                                                                    <asp:Button ID="btnSubirRenglon" CommandName="subirRenglon" Text="⬆️" CssClass="btn btn-link" ToolTip="Subir renglón" runat="server" />
+                                                                    <asp:Button ID="btnBajarRenglon" CommandName="bajarRenglon" Text="⬇️" CssClass="btn btn-link" ToolTip="Bajar renglón" runat="server" />
                                                                     <asp:Button ID="Button1" CommandName="editarRenglon" Text="📝" CssClass="btn btn-link" ToolTip="Editar" runat="server" />
                                                                     <asp:Button ID="Button2" CommandName="eliminarRenglon" Text="❌" CssClass="btn btn-link" ToolTip="eliminar" runat="server" />
                                                                 </ItemTemplate>

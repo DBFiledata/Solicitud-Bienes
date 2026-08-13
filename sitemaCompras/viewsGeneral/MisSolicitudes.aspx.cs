@@ -8,7 +8,8 @@ namespace sitemaCompras.viewsGeneral
     using sitemaCompras.Controlers;
 
     /// <summary>
-    /// Bandeja propia del Solicitante: reúne las solicitudes que todavía no entraron al flujo
+    /// Bandeja propia del autor de la solicitud, disponible para los dos roles que las originan
+    /// (Solicitante y Aprobador): reúne las solicitudes que todavía no entraron al flujo
     /// (borradores guardados con "Por enviar") y las que fueron devueltas para corregir
     /// ("Subsanar"), que son exactamente los dos estados en los que la solicitud le pertenece y
     /// puede editarla. Desde aquí se retoma la edición en RegistroSolicitud.aspx, que es donde vive
@@ -22,7 +23,27 @@ namespace sitemaCompras.viewsGeneral
     	/// <summary>"Subsanar" (6): devuelta al Solicitante para que la corrija y la reenvíe.</summary>
     	private const int EstatusSubsanar = 6;
 
+    	/// <summary>"En espera de Aprobación" (2): ya enviada, esperando el visto bueno del Aprobador.</summary>
+    	private const int EstatusEnEsperaAprobacion = 2;
+
+    	/// <summary>Etapa "Unidad" (1): el tramo del flujo que abarca los Pasos 1 y 2.</summary>
+    	private const int EtapaUnidad = 1;
+
     	private BaseDatos odbusuario;
+
+    	/// <summary>
+    	/// La vista la usan tanto el Solicitante como el Aprobador (ambos originan solicitudes
+    	/// propias), asi que se elige el master de su rol para que cada uno conserve su menu, igual
+    	/// que hace RegistroSolicitud.aspx. El master declarado en el marcado es el del Solicitante y
+    	/// funciona como valor por defecto.
+    	/// </summary>
+    	private void Page_PreInit(object sender, EventArgs e)
+    	{
+    		if ((string)Session["type"] == "3")
+    		{
+    			MasterPageFile = "~/viewsGeneral/NestedMasterAprobador.master";
+    		}
+    	}
 
     	protected Label lblId;
 
@@ -62,8 +83,11 @@ namespace sitemaCompras.viewsGeneral
     	}
 
     	/// <summary>
-    	/// Lista las solicitudes propias en los dos estados editables. Se consulta una vez por estado
-    	/// porque filtroSolicitudes admite un solo estatus por llamada, y se unen los resultados.
+    	/// Lista las solicitudes propias en los estados que el autor todavía puede editar: borrador sin
+    	/// enviar, devuelta para subsanar, y ya enviada pero aún en el Paso 2 esperando al Aprobador
+    	/// Interno (en ese último caso se acota además a la etapa Unidad, para no traer solicitudes que
+    	/// ya avanzaron). Se consulta una vez por estado porque filtroSolicitudes admite un solo
+    	/// estatus por llamada, y se unen los resultados.
     	/// </summary>
     	private void CargarMisSolicitudes(int? id, string titulo)
     	{
@@ -71,26 +95,28 @@ namespace sitemaCompras.viewsGeneral
     		{
     			string usuario = Convert.ToString(Session["id"]);
 
-    			odbusuario = new BaseDatos();
-    			DataSet dsBorradores = odbusuario.filtroSolicitudes(id, "", "", titulo, EstatusBorrador, null, usuario, null, null, null, null, null, null);
-
-    			odbusuario = new BaseDatos();
-    			DataSet dsDevueltas = odbusuario.filtroSolicitudes(id, "", "", titulo, EstatusSubsanar, null, usuario, null, null, null, null, null, null);
+    			// {estatus, etapa}: etapa null = sin acotar.
+    			int?[][] estadosEditables = new int?[][]
+    			{
+    				new int?[] { EstatusBorrador, null },
+    				new int?[] { EstatusSubsanar, null },
+    				new int?[] { EstatusEnEsperaAprobacion, EtapaUnidad }
+    			};
 
     			DataTable dt = null;
-    			if (dsBorradores != null && dsBorradores.Tables.Count > 0)
+    			foreach (int?[] estado in estadosEditables)
     			{
-    				dt = dsBorradores.Tables[0];
-    			}
-    			if (dsDevueltas != null && dsDevueltas.Tables.Count > 0)
-    			{
+    				odbusuario = new BaseDatos();
+    				DataSet dsEstado = odbusuario.filtroSolicitudes(id, "", "", titulo, estado[0], estado[1], usuario, null, null, null, null, null, null);
+    				if (dsEstado == null || dsEstado.Tables.Count == 0) continue;
+
     				if (dt == null)
     				{
-    					dt = dsDevueltas.Tables[0];
+    					dt = dsEstado.Tables[0];
     				}
     				else
     				{
-    					dt.Merge(dsDevueltas.Tables[0]);
+    					dt.Merge(dsEstado.Tables[0]);
     				}
     			}
 
