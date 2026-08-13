@@ -852,7 +852,7 @@
                                             <div class="col-12">
                                                 <asp:Label ID="Label4" runat="server" Text="Descripcion:"></asp:Label>
                                                 <asp:TextBox ID="txtDescripcion" ToolTip="Especifique el uso de los bienes o servicios requeridos"
-                                                    CssClass="form-control" TextMode="MultiLine" Height="182px" runat="server"></asp:TextBox>
+                                                    CssClass="form-control" TextMode="MultiLine" Height="182px" maxlength="455" runat="server"></asp:TextBox>
                                                 <%--Width="105%"--%>
                                             </div>
                                         </asp:Panel>

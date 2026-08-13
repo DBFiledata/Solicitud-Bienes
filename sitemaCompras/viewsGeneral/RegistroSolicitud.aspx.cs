@@ -34,6 +34,16 @@ namespace sitemaCompras.viewsGeneral
     	/// <summary>Etapa "Unidad" (1).</summary>
     	private const int EtapaUnidad = 1;
 
+    	/// <summary>
+    	/// Tope de la descripcion de uso ({{DESCRIPCION_USO}} en el documento generado). El area
+    	/// "Especifique el uso de los bienes o servicios requeridos" del formulario oficial tiene
+    	/// renglones fisicos fijos, y este es el largo que los llena sin apretar el texto: medido
+    	/// sobre la plantilla real, entran ~478 caracteres de texto corriente en sus primeros cuatro
+    	/// renglones. El limite tambien viaja al navegador como atributo maxlength del textarea, pero
+    	/// se revalida aca porque ese atributo se puede saltear (DevTools, o un POST armado a mano).
+    	/// </summary>
+    	private const int MaxCaracteresDescripcion = 455;
+
     	private BaseDatos odbusuario;
 
     	private ReporteCompras reporteCompra;
@@ -312,8 +322,25 @@ namespace sitemaCompras.viewsGeneral
     		// la seccion sigue siendo de solo lectura.
     	}
 
+     	/// <summary>
+     	/// Valida el tope de la descripcion en el servidor y avisa al usuario si se paso. Se cuenta
+     	/// con los saltos de linea normalizados a uno solo: el navegador cuenta "\n" para el
+     	/// maxlength del textarea, pero el POST los manda como "\r\n", asi que sin normalizar un
+     	/// texto que el navegador dejo pasar justo en el limite se rechazaria aca por cada Enter.
+     	/// </summary>
+     	private bool DescripcionExcedeLimite()
+     	{
+     		int largo = (txtDescripcion.Text ?? "").Replace("\r\n", "\n").Length;
+     		if (largo <= MaxCaracteresDescripcion) return false;
+     		ScriptManager.RegisterStartupScript(this, GetType(), "PopDescripcion",
+     			"alert('La descripción no puede superar los " + MaxCaracteresDescripcion
+     			+ " caracteres; actualmente tiene " + largo + ".');", addScriptTags: true);
+     		return true;
+     	}
+
      	protected void btnSalvar_Click(object sender, EventArgs e)
      	{
+     		if (DescripcionExcedeLimite()) return;
      		try
      		{
      			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);
@@ -668,6 +695,7 @@ namespace sitemaCompras.viewsGeneral
 
       	protected void btnActualizar_Click(object sender, EventArgs e)
      	{
+     		if (DescripcionExcedeLimite()) return;
      		try
      		{
      			int checkeditemscount = checkTipoSol.Items.Cast<ListItem>().Count((ListItem li) => li.Selected);

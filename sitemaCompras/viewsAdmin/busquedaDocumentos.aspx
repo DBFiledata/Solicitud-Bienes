@@ -874,7 +874,7 @@
                                         <asp:Panel ID="panelInfoGeneral3_1" CssClass="form-group col-9" runat="server">
                                             <div class="col-12">
                                                 <asp:Label ID="Label4" runat="server" Text="Descripcion:"></asp:Label>
-                                                <asp:TextBox ID="txtDescripcion" CssClass="form-control" TextMode="MultiLine" Height="182px" runat="server"></asp:TextBox>
+                                                <asp:TextBox ID="txtDescripcion" CssClass="form-control" TextMode="MultiLine" Height="182px" maxlength="455" runat="server"></asp:TextBox>
                                             </div>
                                         </asp:Panel>
 
