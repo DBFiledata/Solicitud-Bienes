@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Marcador de cierre **"ÚLTIMA LÍNEA"** al final de la tabla de renglones, automático y sin configuración: el texto `***************ÚLTIMA LÍNEA***************` se escribe centrado en la fila inmediatamente siguiente al último renglón cargado, indicando que no hay más artículos después de ese punto (el equivalente al `Continua` que ya se insertaba al saltar de página, pero para el cierre). En la salida Excel entra como una línea más en la secuencia que reparte `RepartirRenglones`, así que la paginación lo ubica solo; si el último renglón ocupa la última fila de la banda, el marcador cae al principio de la página siguiente como cualquier otra línea. En la salida Word se escribe en la columna DESCRIPCIÓN de la fila siguiente al último renglón, agregando una fila si la tabla no tenía ninguna libre. Aplica a las dos estrategias del path Word (tabla existente detectada por encabezados y tabla construida desde el marcador `{{TABLA_RENGLONES}}`).
+
+### Fixed
+- Corregido que los marcadores de la tabla de renglones (`Continua`, y ahora `ÚLTIMA LÍNEA`) **nunca quedaban centrados** en la salida Excel pese a que el código lo pedía explícitamente: `CellSelection.SetIndent` restablece la alineación horizontal de la celda a `Left` (verificado con la versión de Telerik en uso: fijar `Center` y luego `SetIndent(0)` deja la celda en `Left`), y la sangría se aplicaba después de la alineación. Se invierte el orden en los dos lugares donde aparece el par (`InyectarLoteRenglones` y `InyectarDescripcionExcel`): primero la sangría, después la alineación.
+
 ## [1.1.0] - 2026-08-13
 
 ### Added

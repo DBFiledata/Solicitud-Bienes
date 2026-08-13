@@ -426,7 +426,8 @@ namespace sitemaCompras.Controlers
                 sel.SetValueAsText(linea);
                 // Alinear a la izquierda sin sangria para que todas las lineas arranquen en el mismo
                 // borde (las filas sin celda combinada pueden heredar una alineacion/sangria distinta).
-                try { sel.SetHorizontalAlignment(Ss.RadHorizontalAlignment.Left); sel.SetIndent(0); } catch { }
+                // La sangria va primero: SetIndent restablece la alineacion horizontal a Left.
+                try { sel.SetIndent(0); sel.SetHorizontalAlignment(Ss.RadHorizontalAlignment.Left); } catch { }
                 if (ultimoRenglon) sel.SetIsWrapped(true); // por si sobra texto en el ultimo renglon
             }
         }
@@ -529,19 +530,22 @@ namespace sitemaCompras.Controlers
         }
 
         private const string MarcadorContinuaRenglon = "***************Continua***************";
+        private const string MarcadorUltimaLineaRenglon = "***************ÚLTIMA LÍNEA***************";
 
         /// <summary>
         /// Una linea fisica de la banda de renglones a inyectar: o bien una linea real de la
         /// descripcion de un renglon (con su renglon de origen, para saber si es la primera linea y
-        /// hay que mostrar renglon/cantidad/unidad), o el marcador de continuacion cuando la
-        /// descripcion de un renglon se corta al llegar al final de una pagina.
+        /// hay que mostrar renglon/cantidad/unidad), o una fila de marcador: "Continua" cuando la
+        /// descripcion de un renglon se corta al llegar al final de una pagina, y "Ultima Linea"
+        /// para cerrar la tabla debajo del ultimo renglon. Las filas de marcador no llevan renglon,
+        /// cantidad ni unidad, y su texto va centrado.
         /// </summary>
         private class LineaRenglon
         {
             public DataRow Renglon;
             public string Texto;
             public bool EsPrimeraLineaDelRenglon;
-            public bool EsMarcadorContinua;
+            public bool EsMarcador;
         }
 
         /// <summary>
@@ -552,6 +556,8 @@ namespace sitemaCompras.Controlers
         /// de la descripcion de un renglon (no es su ultima linea), esa fila se reemplaza por el
         /// marcador "***************Continua***************" y la linea que hubiera ido ahi se
         /// difiere intacta al principio de la pagina siguiente, retomando exactamente donde se corto.
+        /// Al final de todo se agrega una fila mas con "***************ÚLTIMA LÍNEA***************",
+        /// que cierra la tabla debajo del ultimo renglon cargado.
         /// </summary>
         private List<List<LineaRenglon>> RepartirRenglones(Ss.Worksheet ws, DataTable dt, int[] cols, int markerRow, int filasBanda)
         {
@@ -572,6 +578,14 @@ namespace sitemaCompras.Controlers
                     todasLasLineas.Add(new LineaRenglon { Renglon = dr, Texto = lineas[li], EsPrimeraLineaDelRenglon = (li == 0) });
             }
 
+            // Cierre de la tabla: una fila mas con "Ultima Linea" justo debajo del ultimo renglon
+            // cargado, para que se vea que no hay mas articulos despues de ese punto (el equivalente
+            // al "Continua", pero para el final). Entra a la secuencia como una linea mas, asi la
+            // paginacion la ubica sola en la fila siguiente a la ultima descripcion; si no quedan
+            // filas en la banda, cae al principio de la pagina siguiente como cualquier otra linea.
+            if (todasLasLineas.Count > 0)
+                todasLasLineas.Add(new LineaRenglon { EsMarcador = true, Texto = MarcadorUltimaLineaRenglon });
+
             var paginas = new List<List<LineaRenglon>>();
             int idx = 0;
             while (idx < todasLasLineas.Count)
@@ -589,7 +603,7 @@ namespace sitemaCompras.Controlers
                     {
                         // Cortaria la descripcion a mitad: se marca "Continua" en vez de la linea, que
                         // se difiere (no se avanza idx) para retomarla al inicio de la proxima pagina.
-                        pagina.Add(new LineaRenglon { EsMarcadorContinua = true, Texto = MarcadorContinuaRenglon });
+                        pagina.Add(new LineaRenglon { EsMarcador = true, Texto = MarcadorContinuaRenglon });
                     }
                     else
                     {
@@ -610,7 +624,8 @@ namespace sitemaCompras.Controlers
         /// linea de cada renglon. Si la pagina llena las 24 filas y la descripcion de un renglon
         /// queda cortada, la ultima fila lleva el marcador "Continua" (ver RepartirRenglones) y las
         /// lineas restantes de ese mismo renglon llegan como una nueva "pagina" que retoma desde ahi,
-        /// sin repetir renglon/cantidad/unidad (no es un renglon nuevo). NINGUNA fila cambia de alto.
+        /// sin repetir renglon/cantidad/unidad (no es un renglon nuevo). La ultima pagina cierra con
+        /// el marcador "Ultima Linea". Ambos marcadores van centrados. NINGUNA fila cambia de alto.
         /// </summary>
         private void InyectarLoteRenglones(Ss.Worksheet ws, List<LineaRenglon> lineas, int[] cols, Ss.CellIndex inicio, int filasBanda)
         {
@@ -667,8 +682,11 @@ namespace sitemaCompras.Controlers
                     descSel.SetIsWrapped(false); // cada fila ya lleva exactamente una linea ajustada
                     try
                     {
-                        descSel.SetHorizontalAlignment(ln.EsMarcadorContinua ? Ss.RadHorizontalAlignment.Center : Ss.RadHorizontalAlignment.Left);
+                        // OJO con el orden: SetIndent restablece la alineacion horizontal a Left
+                        // (verificado con esta version de Telerik), asi que la sangria va PRIMERO y
+                        // la alineacion despues; al reves, los marcadores nunca quedan centrados.
                         descSel.SetIndent(0);
+                        descSel.SetHorizontalAlignment(ln.EsMarcador ? Ss.RadHorizontalAlignment.Center : Ss.RadHorizontalAlignment.Left);
                     }
                     catch { }
                 }
@@ -1279,6 +1297,7 @@ namespace sitemaCompras.Controlers
 
             // Fill data into existing empty rows
             int dataIdx = 0;
+            int filaSiguiente = firstDataRow; // fila libre inmediatamente despues del ultimo renglon
             for (int r = firstDataRow; r < table.Rows.Count && dataIdx < dt.Rows.Count; r++)
             {
                 var row = table.Rows[r];
@@ -1309,6 +1328,7 @@ namespace sitemaCompras.Controlers
                     nr.FontSize = fontSize;
                 }
                 dataIdx++;
+                filaSiguiente = r + 1;
             }
 
             // If we still have data but ran out of rows, add new rows
@@ -1326,6 +1346,42 @@ namespace sitemaCompras.Controlers
                     run.FontSize = FontSizeCuerpo;
                 }
                 dataIdx++;
+                filaSiguiente = table.Rows.Count;
+            }
+
+            // Cierre de la tabla: "Ultima Linea" centrado en la fila siguiente al ultimo renglon
+            // cargado, igual que en la salida Excel.
+            if (dt.Rows.Count > 0) EscribirMarcadorUltimaLinea(table, filaSiguiente);
+        }
+
+        /// <summary>
+        /// Escribe el marcador de cierre "Ultima Linea" centrado en la columna de descripcion de la
+        /// fila indicada, dejando vacias las demas columnas. Si la tabla ya no tiene filas libres
+        /// (los renglones llegaron justo hasta el final), agrega una fila al final para el marcador.
+        /// </summary>
+        private void EscribirMarcadorUltimaLinea(Table table, int filaIndice)
+        {
+            TableRow fila;
+            if (filaIndice >= 0 && filaIndice < table.Rows.Count)
+            {
+                fila = table.Rows[filaIndice];
+            }
+            else
+            {
+                fila = table.Rows.AddTableRow();
+                for (int c = 0; c < 6; c++)
+                    fila.Cells.AddTableCell().Borders = new TableCellBorders(new Border(BorderStyle.Single));
+            }
+
+            for (int c = 0; c < fila.Cells.Count && c < 6; c++)
+            {
+                TableCell cell = fila.Cells[c];
+                foreach (var b in cell.Blocks.ToList()) cell.Blocks.Remove(b);
+                Paragraph p = cell.Blocks.AddParagraph();
+                if (c != 3) continue;                   // el marcador va solo en DESCRIPCION
+                p.TextAlignment = Alignment.Center;
+                Run r = p.Inlines.AddRun(MarcadorUltimaLineaRenglon);
+                r.FontSize = FontSizeCuerpo;
             }
         }
 
@@ -1355,6 +1411,8 @@ namespace sitemaCompras.Controlers
                     r.FontSize = FontSizeCuerpo;
                 }
             }
+            // Cierre de la tabla debajo del ultimo renglon cargado.
+            if (dt.Rows.Count > 0) EscribirMarcadorUltimaLinea(table, table.Rows.Count);
             return table;
         }
 
