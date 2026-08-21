@@ -22,6 +22,7 @@
 
     	protected void btnCerrarsesion_Click(object sender, EventArgs e)
     	{
+    		new sitemaCompras.Controlers.BaseDatos().RegistrarAuditoria("LOGOUT", "sesion", null, null, null, null, null, "Cierre de sesión", "OK");
     		Session.Abandon();
     		Session.Clear();
     		FormsAuthentication.SignOut();

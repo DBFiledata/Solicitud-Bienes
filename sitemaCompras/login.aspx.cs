@@ -40,6 +40,7 @@ namespace sitemaCompras
     			Session["type"] = datos[2];
     			Session["unidad"] = datos[3];
     			Session["rolesF"] = datos[4];
+    			odbusuario.RegistrarAuditoria("LOGIN_OK", "sesion", null, null, null, null, null, "Inicio de sesión", "OK", Login.UserName);
     			FormsAuthentication.SetAuthCookie(Login.UserName, Login.RememberMeSet);
     			FormsAuthentication.RedirectFromLoginPage(Login.UserName, Login.RememberMeSet);
     			string nombre = User.Identity.Name;
@@ -91,6 +92,7 @@ namespace sitemaCompras
     		}
     		else
     		{
+    			odbusuario.RegistrarAuditoria("LOGIN_FAIL", "sesion", null, null, null, null, null, "Intento de inicio de sesión fallido", "ERROR", Login.UserName);
     			e.Authenticated = false;
     		}
     	}

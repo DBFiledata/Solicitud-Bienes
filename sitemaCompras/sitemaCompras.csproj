@@ -184,6 +184,7 @@
     <!-- Controlers -->
     <Compile Include="Controlers\BaseDatos.cs" />
     <Compile Include="Controlers\BaseDatos.Workflow.cs" />
+    <Compile Include="Controlers\BaseDatos.Auditoria.cs" />
     <Compile Include="Controlers\Mailer.cs" />
     <Compile Include="Controlers\ReporteCompras.cs" />
     <Compile Include="Controlers\ReporteComprasDocx.cs" />
@@ -269,6 +270,13 @@
     </Compile>
     <Compile Include="viewsAdmin\Proveedores.aspx.designer.cs">
       <DependentUpon>Proveedores.aspx</DependentUpon>
+    </Compile>
+    <Compile Include="viewsAdmin\Auditoria.aspx.cs">
+      <DependentUpon>Auditoria.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="viewsAdmin\Auditoria.aspx.designer.cs">
+      <DependentUpon>Auditoria.aspx</DependentUpon>
     </Compile>
     <Compile Include="viewsAdmin\EstatusSol.aspx.cs">
       <DependentUpon>EstatusSol.aspx</DependentUpon>
@@ -497,6 +505,7 @@
     <Content Include="Bundle.config" />
     <Content Include="favicon.ico" />
     <Content Include="libman.json" />
+    <Content Include="Scripts\contador-caracteres.js" />
     <!-- viewsAdmin content -->
     <Content Include="viewsAdmin\admin.Master" />
     <Content Include="viewsAdmin\superAdmin.master" />
@@ -505,6 +514,7 @@
     <Content Include="viewsAdmin\Users.aspx" />
     <Content Include="viewsAdmin\Perfil.aspx" />
     <Content Include="viewsAdmin\Proveedores.aspx" />
+    <Content Include="viewsAdmin\Auditoria.aspx" />
     <Content Include="viewsAdmin\EstatusSol.aspx" />
     <Content Include="viewsAdmin\EstatusUsers.aspx" />
     <Content Include="viewsAdmin\EtapasSol.aspx" />

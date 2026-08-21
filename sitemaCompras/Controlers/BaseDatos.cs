@@ -1337,6 +1337,11 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				RegistrarAuditoria("ASIGNACION_PROVEEDOR", "solicitud", id, null, null, null, null,
+    					"Proveedor asignado: " + proveedor + ", precio: " + precio + ", orden: " + ordenCompra, "OK");
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1368,6 +1373,11 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				RegistrarAuditoria("ASIGNACION_PROVEEDOR", "solicitud", id, null, null, null, null,
+    					"Cotización de 3 proveedores — orden: " + ordenCompra, "OK");
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1403,6 +1413,21 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				switch (proceso)
+    				{
+    				case 1:
+    					RegistrarAuditoria("CREAR_SOLICITUD", "solicitud", id, null, etapa, null, estatus, "Alta de solicitud", "OK", usuaruio);
+    					break;
+    				case 2:
+    					RegistrarAuditoria("EDICION", "solicitud", id, null, null, null, null, "Edición de generales de la solicitud", "OK", usuaruio);
+    					break;
+    				case 3:
+    					RegistrarAuditoria("ELIMINAR_SOLICITUD", "solicitud", id, null, null, null, null, "Eliminación de solicitud", "OK", usuaruio);
+    					break;
+    				}
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1440,6 +1465,18 @@ namespace sitemaCompras.Controlers
     			ds = new DataSet();
     			Adap.Fill(ds);
     			DataSet ejecucion = ((ds == null) ? null : ds);
+    			if (ejecucion != null && proceso == 1)
+    			{
+    				// El alta devuelve el id nuevo en Tables[3].Rows[0][0] (ver RegistroSolicitud).
+    				int? nuevoId = null;
+    				try
+    				{
+    					if (ds.Tables.Count > 3 && ds.Tables[3].Rows.Count > 0)
+    						nuevoId = Convert.ToInt32(ds.Tables[3].Rows[0][0].ToString());
+    				}
+    				catch { nuevoId = null; }
+    				RegistrarAuditoria("CREAR_SOLICITUD", "solicitud", nuevoId, null, etapa, null, estatus, "Alta de solicitud", "OK", usuaruio);
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1465,6 +1502,11 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				RegistrarAuditoria("ASIGNACION_COTIZADOR", "solicitud", id, null, null, null, null,
+    					"Cotizador asignado: " + idCotizador, "OK");
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1617,6 +1659,11 @@ namespace sitemaCompras.Controlers
     	{
     		try
     		{
+    			// Auditoría: capturar el estatus de ORIGEN antes del cambio.
+    			int? etapaOrigenAudit;
+    			int? estatusOrigenAudit;
+    			LeerEtapaEstatusSolicitud(id, out etapaOrigenAudit, out estatusOrigenAudit);
+
     			Cmd.Parameters.Clear();
     			Cmd.CommandType = CommandType.StoredProcedure;
     			Cmd.CommandText = "asignarEstatus";
@@ -1629,6 +1676,11 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				RegistrarAuditoria("CAMBIO_ESTATUS", "solicitud", id,
+    					etapa, etapa, estatusOrigenAudit, estatus, coment, "OK", userN);
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1644,6 +1696,11 @@ namespace sitemaCompras.Controlers
     	{
     		try
     		{
+    			// Auditoría: capturar el paso de ORIGEN antes de que el UPDATE lo pise.
+    			int? etapaOrigenAudit;
+    			int? estatusOrigenAudit;
+    			LeerEtapaEstatusSolicitud(id, out etapaOrigenAudit, out estatusOrigenAudit);
+
     			Cmd.Parameters.Clear();
     			Cmd.CommandType = CommandType.StoredProcedure;
     			Cmd.CommandText = "siguienteEtapa";
@@ -1656,6 +1713,13 @@ namespace sitemaCompras.Controlers
     				Cmd.Connection.Open();
     			int d = Cmd.ExecuteNonQuery();
     			bool ejecucion = d > 0;
+    			if (ejecucion)
+    			{
+    				// El rechazo ya viene marcado por la vista con el prefijo "[RECHAZO]".
+    				bool esRechazo = coment != null && coment.TrimStart().StartsWith("[RECHAZO]");
+    				RegistrarAuditoria(esRechazo ? "RECHAZO" : "AVANCE_PASO", "solicitud", id,
+    					etapaOrigenAudit, etapa, estatusOrigenAudit, estatus, coment, "OK", userN);
+    			}
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
     			return ejecucion;
@@ -1836,29 +1900,32 @@ namespace sitemaCompras.Controlers
     			ds = new DataSet();
     			Adap = new MySqlDataAdapter(Cmd);
     			Adap.Fill(ds);
-    			bool condicion = false;
+
+    			if (ds.Tables.Count == 0 || ds.Tables[0].Rows.Count == 0)
+    			{
+    				// Credenciales inválidas, usuario inexistente o inactivo (idEstatus != 1):
+    				// el SP simplemente no devuelve fila. No es un error, es un login fallido.
+    				if (_currentTransaction == null)
+    					Cmd.Connection.Close();
+    				return (false, null);
+    			}
+
+    			DataRow fila = ds.Tables[0].Rows[0];
     			string[] resultado = new string[5]
     			{
-    				Convert.ToString(ds.Tables[0].Rows[0]["nombres"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["apellidos"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["idTipo"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["idUnidades"]),
-    				Convert.ToString(ds.Tables[0].Rows[0]["idRolesF"])
+    				Convert.ToString(fila["nombres"]),
+    				Convert.ToString(fila["apellidos"]),
+    				Convert.ToString(fila["idTipo"]),
+    				Convert.ToString(fila["idUnidades"]),
+    				Convert.ToString(fila["idRolesF"])
     			};
-    			if (resultado != null)
-    			{
-    				condicion = true;
-    				return (condicion, resultado);
-    			}
-    			resultado = null;
-    			condicion = false;
     			if (_currentTransaction == null)
     				Cmd.Connection.Close();
-    			return (condicion, resultado);
+    			return (true, resultado);
     		}
     		catch (Exception ex)
     		{
-    			ErrorHandler.LogError(ex, "listaSolicitudesTipoSolucitudes", "DB operation failed");
+    			ErrorHandler.LogError(ex, "login", "DB operation failed");
     			return (false, null);
     		}
     	}
