@@ -831,9 +831,9 @@ namespace sitemaCompras.viewsGeneral
 
     				odbusuario = new BaseDatos();
     				// El SP no hace nada si el renglon ya esta en el extremo, asi que no hace falta
-    				// validar aca si se puede mover.
+    				// validar aca si se puede mover. Esto solo cambia el orden (posicion); el numero
+    				// visible RENGLON es manual y no se toca.
     				odbusuario.actualizarPosicionRenglon(idDoc, idRenglon, subir);
-    				RenumerarRenglones(idDoc);
     				RefrescarGridContenido(idDoc);
     			}
     			catch (Exception ex)
@@ -865,10 +865,10 @@ namespace sitemaCompras.viewsGeneral
     				string cantidad2 = DecimalHelper.FormatIntForDb(cantidad);
     				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
-    				// El renglon se numera solo segun su posicion en la tabla; el valor que escriba el
-    				// usuario indica DONDE insertarlo, no que numero llevara (ver ReubicarRenglon).
-    				int? posicionDestino = DecimalHelper.ParseIntRobust(txtRenglon.Text);
-    				int? renglon = null;
+    				// RENGLON es manual y opcional: se guarda tal cual lo escribio el usuario (o null si
+    				// lo dejo vacio), sin auto-numerarse. Si ademas escribio un numero, ese mismo valor
+    				// se usa tambien como posicion de insercion (ver ReubicarRenglon).
+    				int? renglon = DecimalHelper.ParseIntRobust(txtRenglon.Text);
     				if (costo.HasValue && cantidad.HasValue)
     				{
     					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
@@ -878,8 +878,7 @@ namespace sitemaCompras.viewsGeneral
     				{
     					// El SP siempre agrega al final; si el usuario pidio una posicion intermedia,
     					// se sube el recien creado hasta ella desplazando a los que estaban debajo.
-    					if (posicionDestino.HasValue) ReubicarRenglon(id, IdUltimoRenglon(id), posicionDestino.Value);
-    					RenumerarRenglones(id);
+    					if (renglon.HasValue) ReubicarRenglon(id, IdUltimoRenglon(id), renglon.Value);
     					RefrescarGridContenido(id);
     					limpiarCamposContenido();
     				}
@@ -911,9 +910,6 @@ namespace sitemaCompras.viewsGeneral
     			idDoc = Convert.ToInt32(Session["idDoc"]);
     			if (odbusuario.gestionarDetallesSolicitudes(id, "", 0, "", "", "", "", "", 0, 3))
     			{
-    				// El SP ya compacta las posiciones al borrar (reordenarPosiciones); falta reflejar
-    				// esa compactacion en la columna visible RENGLON para que no queden huecos.
-    				RenumerarRenglones(idDoc);
     				RefrescarGridContenido(idDoc);
     				ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Renglon eliminado');", addScriptTags: true);
     			}
@@ -953,10 +949,10 @@ namespace sitemaCompras.viewsGeneral
     				string cantidad2 = DecimalHelper.FormatIntForDb(cantidad);
     				string costo2 = DecimalHelper.FormatFloatForDb(costo);
     				string total2 = null;
-    				// Al igual que al agregar, RENGLON no se escribe a mano: el valor tipeado indica a
-    				// que posicion se quiere mover este renglon, y la numeracion se recalcula sola.
-    				int? posicionDestino = DecimalHelper.ParseIntRobust(txtRenglonEdit.Text);
-    				int? renglon = null;
+    				// RENGLON es manual y opcional: se guarda tal cual lo escribio el usuario (o null si
+    				// lo dejo vacio), sin auto-numerarse. A diferencia de agregar, editar este valor NO
+    				// reposiciona el renglon -- para eso estan las flechas subir/bajar de la grilla.
+    				int? renglon = DecimalHelper.ParseIntRobust(txtRenglonEdit.Text);
     				if (costo.HasValue && cantidad.HasValue)
     				{
     					total = (float)Math.Round(cantidad.Value * costo.Value, 2);
@@ -964,8 +960,6 @@ namespace sitemaCompras.viewsGeneral
     				}
     				if (odbusuario.gestionarDetallesSolicitudes(id, txtDecsContentEdit.Text, renglon, cantidad2, txtUnidadContentEdit.Text, txtDecsContentEdit.Text, costo2, total2, idDoc, 2))
     				{
-    					if (posicionDestino.HasValue) ReubicarRenglon(idDoc, id, posicionDestino.Value);
-    					RenumerarRenglones(idDoc);
     					RefrescarGridContenido(idDoc);
     					ScriptManager.RegisterStartupScript(this, GetType(), "Pop", "alert('Renglon editado');", addScriptTags: true);
     				}
@@ -1045,26 +1039,6 @@ namespace sitemaCompras.viewsGeneral
     			odbusuario = new BaseDatos();
     			if (!odbusuario.actualizarPosicionRenglon(idSolicitud, idRenglon, subir)) break;
     		}
-    	}
-
-    	/// <summary>
-    	/// Reescribe la columna visible RENGLON como 1..N siguiendo el orden actual de posiciones, sin
-    	/// huecos ni duplicados. Es necesario porque el reporte PDF (reporteBody) muestra el valor
-    	/// almacenado en "renglones" pero ordena las filas por posicion: si no se sincronizan, el PDF
-    	/// sale con la numeracion desordenada.
-    	///
-    	/// Un solo round-trip a la base (SP renumerarRenglonesSolicitud), sin importar cuantas filas
-    	/// necesiten corregirse. ANTES esto se hacia con un loop en C# que abria una conexion nueva por
-    	/// cada fila desalineada -- en produccion se detecto que solicitudes viejas con muchos renglones
-    	/// historicamente desalineados (ej. una con 48, casi todos con el numero mal) hacian que agregar
-    	/// UN renglon se congelara varios segundos antes de fallar, porque disparaba ~48 llamadas
-    	/// secuenciales a la base en un mismo request. En local nunca se noto porque los datos de prueba
-    	/// eran chicos y ya estaban bien numerados desde el principio.
-    	/// </summary>
-    	private void RenumerarRenglones(int idSolicitud)
-    	{
-    		odbusuario = new BaseDatos();
-    		odbusuario.renumerarRenglonesSolicitud(idSolicitud);
     	}
 
      	protected void gridArchivo_RowCommand(object sender, GridViewCommandEventArgs e)

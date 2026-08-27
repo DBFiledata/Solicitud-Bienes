@@ -68,7 +68,7 @@
                     <div class="d-flex align-items-center justify-content-center mt-1 col-12">
                         <div class="form-group col-1">
                             <asp:Label ID="Label8" runat="server" Text="Renglon:"></asp:Label>
-                            <asp:TextBox ID="txtRenglonEdit" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Posición a la que se moverá el renglón. La numeración se recalcula sola." runat="server"></asp:TextBox>
+                            <asp:TextBox ID="txtRenglonEdit" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Número de renglón (opcional, puede dejarse vacío). Para reordenar, use las flechas de la grilla." runat="server"></asp:TextBox>
                         </div>
                         <div class="form-group col-1">
                             <asp:Label ID="Label19" runat="server" Text="Cantidad:"></asp:Label>
@@ -286,7 +286,7 @@
 
                                             <div class="form-group col-1">
                                                 <asp:Label ID="Label13" runat="server" Text="Renglon:"></asp:Label>
-                                                <asp:TextBox ID="txtRenglon" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Posición en la que se insertará el renglón. Vacío = al final. La numeración se recalcula sola." runat="server"></asp:TextBox>
+                                                <asp:TextBox ID="txtRenglon" CssClass="form-control" TextMode="Number" min="1" step="1" ToolTip="Número de renglón (opcional, puede dejarse vacío). Si lo completa, también se usa como posición de inserción." runat="server"></asp:TextBox>
                                             </div>
                                             <div class="form-group col-2">
                                                 <asp:Label ID="Label9" runat="server" Text="Cantidad:"></asp:Label>
